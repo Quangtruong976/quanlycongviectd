@@ -42,19 +42,21 @@ export async function GET() {
 /* ===== POST ===== */
 export async function POST(req: Request) {
   const body = await req.json();
-  console.log("BODY NHẬN ĐƯỢC:", body);
+  console.log("BODY:", body);
 
   const now = new Date();
+  const nv = body.nhiemVu;
 
   const { data, error } = await supabase
     .from("nhiem_vu")
     .insert([
       {
-        ten: body.ten,
-        noi_dung: body.noi_dung,
-        can_bo_thuc_hien: body.can_bo_thuc_hien,
-        ngay_giao: body.ngay_giao,
-        han_hoan_thanh: body.han_hoan_thanh,
+        ten: nv.ten,
+        giao: nv.giao,
+        han: nv.han,
+        san_pham: nv.sanPham,
+        can_bo: nv.canBo,
+        trang_thai: nv.trangThai,
         linh_vuc_con_id: body.linhVucConId,
         thang: now.getMonth() + 1,
         nam: now.getFullYear(),
@@ -62,12 +64,10 @@ export async function POST(req: Request) {
     ])
     .select();
 
-  console.log("INSERT DATA:", data);
-  console.log("INSERT ERROR:", error);
-
   if (error) {
     return NextResponse.json({ error }, { status: 500 });
   }
 
   return NextResponse.json({ data });
 }
+

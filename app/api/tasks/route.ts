@@ -1,56 +1,51 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { createClient } from "@supabase/supabase-js";
 
-const filePath = path.join(process.cwd(), "data", "tasks.json");
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SECRET_KEY!
+);
 
 /* ===== GET ===== */
 export async function GET() {
-  const fileData = fs.readFileSync(filePath, "utf-8");
-  const data = JSON.parse(fileData);
+  const { data, error } = await supabase
+    .from("nhiem_vu")
+    .select("*");
 
-  return NextResponse.json({
-    linhVucLon: data.linhVucLon || []
-  });
+  if (error) {
+    return NextResponse.json({ error }, { status: 500 });
+  }
+
+  return NextResponse.json({ linhVucLon: data });
 }
 
 /* ===== POST ===== */
 export async function POST(req: Request) {
   const body = await req.json();
 
-  if (!body.linhVucLonId || !body.linhVucConId || !body.nhiemVu) {
+  if (!body.linhVucConId || !body.nhiemVu) {
     return NextResponse.json(
       { error: "Thiếu dữ liệu bắt buộc" },
       { status: 400 }
     );
   }
 
-  const fileData = fs.readFileSync(filePath, "utf-8");
-  const data = JSON.parse(fileData);
-
-  const linhVucLon = data.linhVucLon.find(
-    (lv: any) => lv.id === body.linhVucLonId
-  );
-  if (!linhVucLon)
-    return NextResponse.json({ error: "Không tìm thấy lĩnh vực lớn" }, { status: 400 });
-
-  const linhVucCon = linhVucLon.linhVucCon.find(
-    (lv: any) => lv.id === body.linhVucConId
-  );
-  if (!linhVucCon)
-    return NextResponse.json({ error: "Không tìm thấy lĩnh vực con" }, { status: 400 });
-
   const now = new Date();
 
-  linhVucCon.nhiemVu.push({
-    id: crypto.randomUUID(),
-    ...body.nhiemVu,
-    thang: now.getMonth() + 1,
-    nam: now.getFullYear(),
-    createdAt: now.toISOString()
-  });
+  const { error } = await supabase
+    .from("nhiem_vu")
+    .insert([
+      {
+        ...body.nhiemVu,
+        linh_vuc_con_id: body.linhVucConId,
+        thang: now.getMonth() + 1,
+        nam: now.getFullYear(),
+      },
+    ]);
 
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+  if (error) {
+    return NextResponse.json({ error }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true });
 }

@@ -9,16 +9,24 @@ const supabase = createClient(
 
 /* ===== GET ===== */
 export async function GET() {
-  const { data, error } = await supabase
-    .from("nhiem_vu")
+  const { data: linhVucLon, error: err1 } = await supabase
+    .from("linh_vuc_lon")
     .select("*");
 
-  if (error) {
-    return NextResponse.json({ error }, { status: 500 });
+  const { data: linhVucCon, error: err2 } = await supabase
+    .from("linh_vuc_con")
+    .select("*");
+
+  if (err1 || err2) {
+    return NextResponse.json({ error: err1 || err2 }, { status: 500 });
   }
 
-  return NextResponse.json({ linhVucLon: data });
+  return NextResponse.json({
+    linhVucLon,
+    linhVucCon,
+  });
 }
+
 
 /* ===== POST ===== */
 export async function POST(req: Request) {

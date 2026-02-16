@@ -1,4 +1,6 @@
 "use client";
+import { supabase } from "@/lib/supabase";
+import { useEffect } from "react";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -23,6 +25,20 @@ export default function HomePage() {
     const u = localStorage.getItem("user");
     if (u) setUser(JSON.parse(u));
   }, []);
+/* ===== LẤY USER ĐÃ ĐĂNG NHẬP ===== */
+  useEffect(() => {
+    const testSupabase = async () => {
+      const { data, error } = await supabase
+        .from("nhiem_vu")
+        .select("*");
+  
+      console.log("DATA:", data);
+      console.log("ERROR:", error);
+    };
+  
+    testSupabase();
+  }, []);
+  
 
   /* ===== LOAD + THỐNG KÊ ===== */
   useEffect(() => {

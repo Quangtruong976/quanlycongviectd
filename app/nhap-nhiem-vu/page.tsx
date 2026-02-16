@@ -118,12 +118,19 @@ export default function NhapNhiemVuPage() {
         </select>
 
         {/* FORM */}
-        <input
-          placeholder="Nội dung nhiệm vụ"
-          className="border p-2 w-full"
-          value={form.ten}
-          onChange={(e) => setForm({ ...form, ten: e.target.value })}
-        />
+        <div className="space-y-1">
+  <label className="font-semibold text-sm">
+    Nội dung nhiệm vụ
+  </label>
+  <input
+    className="border p-2 w-full"
+    value={form.ten}
+    onChange={(e) =>
+      setForm({ ...form, ten: e.target.value })
+    }
+  />
+</div>
+
 
 <input
   type="date"

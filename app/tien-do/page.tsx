@@ -27,27 +27,60 @@ export default function TienDoPage() {
 
   /* ===== LOAD DATA ===== */
   const loadData = () => {
+    
     fetch("/api/tasks")
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          console.log("LỖI API:", text);
-          throw new Error("API lỗi");
-        }
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((raw) => {
-        console.log("DATA API:", raw);
-        ...
+        const { linhVucLon = [], linhVucCon = [], nhiemVu = [] } = raw;
+  
+        const grouped = linhVucLon.map((lvLon: any, index: number) => {
+          const conTheoLon = linhVucCon.filter(
+            (lv: any) => lv.linh_vuc_lon_id === lvLon.id
+          );
+  
+          return {
+            stt: index + 1,
+            tenLinhVucLon: lvLon.ten,
+            linhVucCon: conTheoLon.map((lv: any) => {
+              const tasks = nhiemVu
+                .filter((nv: any) => nv.linh_vuc_con_id === lv.id)
+                .filter((nv: any) =>
+                  thang ? String(nv.thang) === thang : true
+                )
+                .map((nv: any, i: number) => ({
+                  id: nv.id,
+                  stt: i + 1,
+                  noiDung: nv.ten || "",
+                  loai: "Công việc",
+                  giao: nv.giao || "",
+                  han: nv.han || "",
+                  hoanThanh: nv.hoan_thanh || "",
+                  sanpham: nv.san_pham || "",
+                  canBo: nv.can_bo || "",
+                  ketQua:
+                    nv.trang_thai === "dung_han"
+                      ? "Hoàn thành đúng hạn"
+                      : nv.trang_thai === "qua_han"
+                      ? "Hoàn thành quá hạn"
+                      : "Chưa hoàn thành",
+                }));
+  
+              return {
+                ten: lv.ten,
+                tasks,
+              };
+            }),
+          };
+        });
+  
         setData(grouped);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.log("FETCH ERROR:", err);
         setLoading(false);
       });
   };
   
+  useEffect(() => {
+    loadData();
+  }, [thang]);
   /* ===== XOÁ NHIỆM VỤ (ADMIN) ===== */
   function xoaNhiemVu(id: string) {
     if (!confirm("Xóa nhiệm vụ này?")) return;

@@ -9,6 +9,7 @@ export default function NhapNhiemVuPage() {
   const [user, setUser] = useState<any>(null);
   const [linhVucLon, setLinhVucLon] = useState<any[]>([]);
   const [linhVucLonId, setLinhVucLonId] = useState("");
+  const [linhVucCon, setLinhVucCon] = useState<any[]>([]);
   const [linhVucConId, setLinhVucConId] = useState("");
 
   const [form, setForm] = useState({
@@ -35,6 +36,7 @@ export default function NhapNhiemVuPage() {
       .then((res) => res.json())
       .then((data) => {
         setLinhVucLon(data.linhVucLon || []);
+        setLinhVucCon(data.linhVucCon || []);
 
         if (parsed.role !== "admin") {
           setLinhVucLonId(parsed.role);
@@ -43,8 +45,10 @@ export default function NhapNhiemVuPage() {
   }, [router]);
 
   /* ===== LẤY LĨNH VỰC CON ===== */
-  const dsLinhVucCon =
-    linhVucLon.find((lv) => lv.id === linhVucLonId)?.linhVucCon || [];
+  const dsLinhVucCon = linhVucCon.filter(
+    (lv) => lv.linh_vuc_lon_id === linhVucLonId
+  );
+  
 
   /* ===== SUBMIT ===== */
   function handleSubmit() {

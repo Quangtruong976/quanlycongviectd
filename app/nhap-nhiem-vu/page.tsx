@@ -125,19 +125,25 @@ export default function NhapNhiemVuPage() {
           onChange={(e) => setForm({ ...form, ten: e.target.value })}
         />
 
-        <input
-          placeholder="Ngày giao (dd/mm/yyyy)"
-          className="border p-2 w-full"
-          value={form.giao}
-          onChange={(e) => setForm({ ...form, giao: e.target.value })}
-        />
+<input
+  type="date"
+  className="border p-2 w-full"
+  value={form.giao}
+  onChange={(e) =>
+    setForm({ ...form, giao: e.target.value })
+  }
+/>
 
-        <input
-          placeholder="Thời hạn"
-          className="border p-2 w-full"
-          value={form.han}
-          onChange={(e) => setForm({ ...form, han: e.target.value })}
-        />
+
+<input
+  type="date"
+  className="border p-2 w-full"
+  value={form.han}
+  onChange={(e) =>
+    setForm({ ...form, han: e.target.value })
+  }
+/>
+
 
         <input
           placeholder="Sản phẩm"

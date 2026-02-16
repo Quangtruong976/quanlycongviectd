@@ -8,6 +8,7 @@ const supabase = createClient(
 
 
 /* ===== GET ===== */
+/* ===== GET ===== */
 export async function GET() {
   const { data: linhVucLon, error: err1 } = await supabase
     .from("linh_vuc_lon")
@@ -17,15 +18,25 @@ export async function GET() {
     .from("linh_vuc_con")
     .select("*");
 
-  if (err1 || err2) {
-    return NextResponse.json({ error: err1 || err2 }, { status: 500 });
+  const { data: nhiemVu, error: err3 } = await supabase
+    .from("nhiem_vu")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (err1 || err2 || err3) {
+    return NextResponse.json(
+      { error: err1 || err2 || err3 },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({
     linhVucLon,
     linhVucCon,
+    nhiemVu,
   });
 }
+
 
 
 /* ===== POST ===== */

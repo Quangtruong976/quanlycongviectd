@@ -45,34 +45,30 @@ export default function HomePage() {
       .then((res) => res.json())
       .then((raw) => {
         const thongKe: any = {};
-        const linhVucLon = raw.linhVucLon || [];
-
-        linhVucLon.forEach((lvLon: any) => {
-          (lvLon.linhVucCon || []).forEach((lv: any) => {
-            (lv.nhiemVu || []).forEach((nv: any) => {
-              if (!nv.canBo) return;
-
-              const thangNV = nv.giao?.split("/")?.[1];
-              if (String(thang).padStart(2, "0") !== thangNV) return;
-
-              if (!thongKe[nv.canBo]) {
-                thongKe[nv.canBo] = {
-                  ten: nv.canBo,
-                  tong: 0,
-                  dungHan: 0,
-                  quaHan: 0,
-                  chuaHT: 0,
-                };
-              }
-
-              thongKe[nv.canBo].tong++;
-              if (nv.trangThai === "dung_han") thongKe[nv.canBo].dungHan++;
-              else if (nv.trangThai === "qua_han") thongKe[nv.canBo].quaHan++;
-              else thongKe[nv.canBo].chuaHT++;
-            });
-          });
+        const danhSachNV = raw.nhiemVu || [];
+  
+        danhSachNV.forEach((nv: any) => {
+          if (!nv.can_bo) return;
+  
+          if (nv.thang !== thang) return;
+  
+          if (!thongKe[nv.can_bo]) {
+            thongKe[nv.can_bo] = {
+              ten: nv.can_bo,
+              tong: 0,
+              dungHan: 0,
+              quaHan: 0,
+              chuaHT: 0,
+            };
+          }
+  
+          thongKe[nv.can_bo].tong++;
+  
+          if (nv.trang_thai === "dung_han") thongKe[nv.can_bo].dungHan++;
+          else if (nv.trang_thai === "qua_han") thongKe[nv.can_bo].quaHan++;
+          else thongKe[nv.can_bo].chuaHT++;
         });
-
+  
         const ketQua = Object.values(thongKe).map((cb: any) => {
           let xepLoai = "D";
           if (cb.chuaHT === 0 && cb.quaHan === 0) xepLoai = "A";
@@ -80,10 +76,11 @@ export default function HomePage() {
           else if (cb.quaHan <= 3) xepLoai = "C";
           return { ...cb, xepLoai };
         });
-
+  
         setData(ketQua);
       });
   }, [thang]);
+  
 
   /* ===== LỌC ===== */
   let danhSach = data.filter((cb) =>

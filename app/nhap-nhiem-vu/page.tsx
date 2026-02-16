@@ -132,39 +132,64 @@ export default function NhapNhiemVuPage() {
 </div>
 
 
-<input
-  type="date"
-  className="border p-2 w-full"
-  value={form.giao}
-  onChange={(e) =>
-    setForm({ ...form, giao: e.target.value })
-  }
-/>
+<div className="space-y-1">
+  <label className="font-semibold text-sm">
+    Ngày giao
+  </label>
+  <input
+    type="date"
+    className="border p-2 w-full"
+    value={form.giao}
+    onChange={(e) =>
+      setForm({ ...form, giao: e.target.value })
+    }
+  />
+</div>
 
 
-<input
-  type="date"
-  className="border p-2 w-full"
-  value={form.han}
-  onChange={(e) =>
-    setForm({ ...form, han: e.target.value })
-  }
-/>
+<div className="space-y-1">
+  <label className="font-semibold text-sm">
+    Thời hạn
+  </label>
+  <input
+    type="date"
+    className="border p-2 w-full"
+    value={form.han}
+    onChange={(e) =>
+      setForm({ ...form, han: e.target.value })
+    }
+  />
+</div>
 
 
-        <input
-          placeholder="Sản phẩm"
-          className="border p-2 w-full"
-          value={form.sanPham}
-          onChange={(e) => setForm({ ...form, sanPham: e.target.value })}
-        />
 
-        <input
-          placeholder="Cán bộ thực hiện"
-          className="border p-2 w-full"
-          value={form.canBo}
-          onChange={(e) => setForm({ ...form, canBo: e.target.value })}
-        />
+<div className="space-y-1">
+  <label className="font-semibold text-sm">
+    Sản phẩm
+  </label>
+  <input
+    className="border p-2 w-full"
+    value={form.sanPham}
+    onChange={(e) =>
+      setForm({ ...form, sanPham: e.target.value })
+    }
+  />
+</div>
+
+
+<div className="space-y-1">
+  <label className="font-semibold text-sm">
+    Cán bộ thực hiện
+  </label>
+  <input
+    className="border p-2 w-full"
+    value={form.canBo}
+    onChange={(e) =>
+      setForm({ ...form, canBo: e.target.value })
+    }
+  />
+</div>
+
 
         <button
           onClick={handleSubmit}

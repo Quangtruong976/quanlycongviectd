@@ -42,30 +42,32 @@ export async function GET() {
 /* ===== POST ===== */
 export async function POST(req: Request) {
   const body = await req.json();
-
-  if (!body.linhVucConId || !body.nhiemVu) {
-    return NextResponse.json(
-      { error: "Thiếu dữ liệu bắt buộc" },
-      { status: 400 }
-    );
-  }
+  console.log("BODY NHẬN ĐƯỢC:", body);
 
   const now = new Date();
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("nhiem_vu")
     .insert([
       {
-        ...body.nhiemVu,
+        ten: body.ten,
+        noi_dung: body.noi_dung,
+        can_bo_thuc_hien: body.can_bo_thuc_hien,
+        ngay_giao: body.ngay_giao,
+        han_hoan_thanh: body.han_hoan_thanh,
         linh_vuc_con_id: body.linhVucConId,
         thang: now.getMonth() + 1,
         nam: now.getFullYear(),
       },
-    ]);
+    ])
+    .select();
+
+  console.log("INSERT DATA:", data);
+  console.log("INSERT ERROR:", error);
 
   if (error) {
     return NextResponse.json({ error }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ data });
 }

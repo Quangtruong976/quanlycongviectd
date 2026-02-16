@@ -32,8 +32,7 @@ export default function HomePage() {
         .from("nhiem_vu")
         .select("*");
   
-      console.log("DATA:", data);
-      console.log("ERROR:", error);
+   
     };
   
     testSupabase();

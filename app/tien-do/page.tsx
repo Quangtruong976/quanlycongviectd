@@ -51,7 +51,7 @@ export default function TienDoPage() {
                   stt: i + 1,
                   noiDung: nv.ten || "",
                   loai: "Công việc",
-                  giao: nv.ngay_giao || "",
+                  giao: nv.giao || "",
                   han: nv.han || "",
                   hoanThanh: nv.hoan_thanh || "",
                   sanpham: nv.san_pham || "",

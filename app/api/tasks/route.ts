@@ -42,32 +42,28 @@ export async function GET() {
 /* ===== POST ===== */
 export async function POST(req: Request) {
   const body = await req.json();
-  console.log("BODY:", body);
 
-  const now = new Date();
-  const nv = body.nhiemVu;
+  const { linhVucLonId, linhVucConId, nhiemVu } = body;
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("nhiem_vu")
     .insert([
       {
-        ten: nv.ten,
-        giao: nv.giao,
-        han: nv.han,
-        san_pham: nv.sanPham,
-        can_bo: nv.canBo,
-        trang_thai: nv.trangThai,
-        linh_vuc_con_id: body.linhVucConId,
-        thang: now.getMonth() + 1,
-        nam: now.getFullYear(),
+        linh_vuc_lon_id: linhVucLonId,
+        linh_vuc_con_id: linhVucConId,
+        ten: nhiemVu.ten,
+        giao: nhiemVu.giao,
+        han: nhiemVu.han,
+        san_pham: nhiemVu.sanPham,
+        can_bo: nhiemVu.canBo,
+        trang_thai: nhiemVu.trangThai,
       },
-    ])
-    .select();
+    ]);
 
   if (error) {
+    console.error(error);
     return NextResponse.json({ error }, { status: 500 });
   }
 
-  return NextResponse.json({ data });
+  return NextResponse.json({ success: true });
 }
-

@@ -1,90 +1,196 @@
-"use client"
+"use client";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
-import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
+/* ===== MÀU XẾP LOẠI ===== */
+const mauXepLoai = (x: string) => {
+  if (x === "A") return "bg-green-600 text-white";
+  if (x === "B") return "bg-yellow-400 text-black";
+  if (x === "C") return "bg-orange-400 text-white";
+  return "bg-red-600 text-white";
+};
 
-type NhiemVu = {
-  id: number
-  noi_dung: string | null
-  can_bo_thuc_hien: string | null
-  han_hoan_thanh: string | null
-}
+export default function HomePage() {
+  const [thang, setThang] = useState<number>(new Date().getMonth() + 1);
+  const [tuKhoa, setTuKhoa] = useState("");
+  const [locXepLoai, setLocXepLoai] = useState("ALL");
+  const [data, setData] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
 
-export default function Home() {
-  const [data, setData] = useState<NhiemVu[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-
+  /* ===== LẤY USER ===== */
   useEffect(() => {
-    fetchData()
-  }, [])
+    const u = localStorage.getItem("user");
+    if (u) setUser(JSON.parse(u));
+  }, []);
 
-  async function fetchData() {
-    setLoading(true)
+  /* ===== LOAD + THỐNG KÊ TRỰC TIẾP TỪ SUPABASE ===== */
+  useEffect(() => {
+    const loadData = async () => {
+      const { data: danhSachNV, error } = await supabase
+        .from("nhiem_vu")
+        .select("*")
+        .eq("thang", thang);
 
-    const { data, error } = await supabase
-      .from("nhiem_vu")
-      .select("*")
-      .limit(10)
+      if (error) {
+        console.error("Supabase error:", error.message);
+        setData([]);
+        return;
+      }
 
-    if (error) {
-      setError(error.message)
-      setData([])
-    } else {
-      setData(data as NhiemVu[])
-      setError(null)
-    }
+      const thongKe: any = {};
 
-    setLoading(false)
+      (danhSachNV || []).forEach((nv: any) => {
+        if (!nv.can_bo) return;
+
+        if (!thongKe[nv.can_bo]) {
+          thongKe[nv.can_bo] = {
+            ten: nv.can_bo,
+            tong: 0,
+            dungHan: 0,
+            quaHan: 0,
+            chuaHT: 0,
+          };
+        }
+
+        thongKe[nv.can_bo].tong++;
+
+        if (nv.trang_thai === "dung_han") thongKe[nv.can_bo].dungHan++;
+        else if (nv.trang_thai === "qua_han") thongKe[nv.can_bo].quaHan++;
+        else thongKe[nv.can_bo].chuaHT++;
+      });
+
+      const ketQua = Object.values(thongKe).map((cb: any) => {
+        let xepLoai = "D";
+        if (cb.chuaHT === 0 && cb.quaHan === 0) xepLoai = "A";
+        else if (cb.quaHan <= 1) xepLoai = "B";
+        else if (cb.quaHan <= 3) xepLoai = "C";
+        return { ...cb, xepLoai };
+      });
+
+      setData(ketQua);
+    };
+
+    loadData();
+  }, [thang]);
+
+  /* ===== LỌC ===== */
+  let danhSach = data.filter((cb) =>
+    cb.ten.toLowerCase().includes(tuKhoa.toLowerCase())
+  );
+
+  if (locXepLoai !== "ALL") {
+    danhSach = danhSach.filter((cb) => cb.xepLoai === locXepLoai);
   }
 
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1 style={{ marginBottom: "20px" }}>TRANG CHỦ</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
+      {/* ===== HEADER ===== */}
+      <header className="bg-blue-900 text-white">
+        <div className="flex flex-col items-center py-4">
+          <img src="/logo-doan.png" className="h-20 mb-2" />
+          <h1 className="text-xl md:text-2xl font-bold text-center">
+            ỨNG DỤNG QUẢN LÝ THEO DÕI CÔNG VIỆC
+          </h1>
+        </div>
 
-      {loading && <p>Đang tải dữ liệu...</p>}
+        <nav className="bg-blue-800">
+          <ul className="flex justify-center gap-8 py-2 text-sm font-semibold">
+            <li className="underline">Trang chủ</li>
+            <li>
+              <Link href="/tien-do" className="hover:underline">
+                Theo dõi tiến độ
+              </Link>
+            </li>
+            <li>
+              <Link href="/login" className="hover:underline">
+                Đăng nhập
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </header>
 
-      {error && (
-        <p style={{ color: "red", fontWeight: "bold" }}>
-          Lỗi: {error}
-        </p>
-      )}
+      {/* ===== MAIN ===== */}
+      <main className="flex-1 flex justify-center p-4">
+        <div className="bg-white w-full max-w-6xl rounded-2xl shadow-2xl p-4 md:p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <h2 className="font-semibold text-blue-700">
+              Thống kê kết quả thực hiện nhiệm vụ
+            </h2>
+            <select
+              value={thang}
+              onChange={(e) => setThang(Number(e.target.value))}
+              className="border rounded px-3 py-1"
+            >
+              {Array.from({ length: 12 }).map((_, i) => (
+                <option key={i} value={i + 1}>
+                  Tháng {i + 1}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {!loading && !error && (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse"
-          }}
-        >
-          <thead>
-            <tr style={{ backgroundColor: "#1e293b", color: "white" }}>
-              <th style={{ padding: "10px" }}>STT</th>
-              <th style={{ padding: "10px" }}>Nội dung</th>
-              <th style={{ padding: "10px" }}>Cán bộ</th>
-              <th style={{ padding: "10px" }}>Hạn hoàn thành</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((item, index) => (
-              <tr key={item.id}>
-                <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                  {index + 1}
-                </td>
-                <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                  {item.noi_dung}
-                </td>
-                <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                  {item.can_bo_thuc_hien}
-                </td>
-                <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                  {item.han_hoan_thanh}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          <div className="flex flex-col md:flex-row gap-3 mb-4">
+            <input
+              placeholder="Gõ họ tên để lọc"
+              value={tuKhoa}
+              onChange={(e) => setTuKhoa(e.target.value)}
+              className="border rounded px-3 py-2 w-full md:w-1/2"
+            />
+            <select
+              value={locXepLoai}
+              onChange={(e) => setLocXepLoai(e.target.value)}
+              className="border rounded px-3 py-2"
+            >
+              <option value="ALL">Tất cả xếp loại</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead className="bg-blue-50">
+                <tr>
+                  <th className="border px-2 py-2">STT</th>
+                  <th className="border px-2 text-left">Cán bộ</th>
+                  <th className="border px-2">Tổng</th>
+                  <th className="border px-2">Đúng hạn</th>
+                  <th className="border px-2">Quá hạn</th>
+                  <th className="border px-2">Chưa HT</th>
+                  <th className="border px-2">Xếp loại</th>
+                </tr>
+              </thead>
+              <tbody>
+                {danhSach.map((cb, i) => (
+                  <tr key={i}>
+                    <td className="border px-2 text-center">{i + 1}</td>
+                    <td className="border px-2">{cb.ten}</td>
+                    <td className="border px-2 text-center">{cb.tong}</td>
+                    <td className="border px-2 text-center">{cb.dungHan}</td>
+                    <td className="border px-2 text-center">{cb.quaHan}</td>
+                    <td className="border px-2 text-center">{cb.chuaHT}</td>
+                    <td
+                      className={`border px-2 text-center font-bold ${mauXepLoai(
+                        cb.xepLoai
+                      )}`}
+                    >
+                      {cb.xepLoai}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <footer className="bg-blue-900 text-white text-center text-sm py-3">
+        © 2026 Tỉnh đoàn Lâm Đồng
+      </footer>
     </div>
-  )
+  );
 }

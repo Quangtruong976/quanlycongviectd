@@ -1,0 +1,64 @@
+{
+  "linhVucLon": [
+    {
+      "id": "van-phong-xd-tuyen-truyen",
+      "nhom": "I. Lĩnh vực Văn phòng – Xây dựng Đoàn – Tuyên giáo",
+      "linhVucCon": [
+        {
+          "id": "van-phong",
+          "ten": "Văn phòng",
+          "user": "vanphong",
+          "nhiemVu": []
+        },
+        {
+          "id": "xay-dung-doan",
+          "ten": "Xây dựng Đoàn",
+          "user": "xaydungdoan",
+          "nhiemVu": []
+        },
+        {
+          "id": "tuyen-giao",
+          "ten": "Tuyên giáo",
+          "user": "tuyengiao",
+          "nhiemVu": []
+        }
+      ]
+    },
+    {
+      "id": "phong-trao-hoi-lhtn",
+      "nhom": "II. Lĩnh vực Phong trào – Hội LHTN Việt Nam tỉnh",
+      "linhVucCon": [
+        {
+          "id": "phong-trao",
+          "ten": "Phong trào",
+          "user": "phongtrao",
+          "nhiemVu": []
+        },
+        {
+          "id": "hoi-lhtn",
+          "ten": "Hội LHTN Việt Nam tỉnh",
+          "user": "hoilhtn",
+          "nhiemVu": []
+        }
+      ]
+    },
+    {
+      "id": "truong-hoc-hoi-sv",
+      "nhom": "III. Lĩnh vực Trường học – Hội Sinh viên",
+      "linhVucCon": [
+        {
+          "id": "truong-hoc",
+          "ten": "Trường học",
+          "user": "truonghoc",
+          "nhiemVu": []
+        },
+        {
+          "id": "hoi-sinh-vien",
+          "ten": "Hội Sinh viên",
+          "user": "hoisv",
+          "nhiemVu": []
+        }
+      ]
+    }
+  ]
+}

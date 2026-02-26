@@ -1,5 +1,6 @@
 "use client";
 import { supabase } from "@/lib/supabase";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -24,28 +25,28 @@ export default function HomePage() {
     if (u) setUser(JSON.parse(u));
   }, []);
 
-  /* ===== LOAD + THỐNG KÊ TRỰC TIẾP TỪ SUPABASE ===== */
+  /* ===== LOAD DỮ LIỆU TRỰC TIẾP TỪ SUPABASE ===== */
   useEffect(() => {
     const loadData = async () => {
-      const { data: danhSachNV, error } = await supabase
+      const { data: raw, error } = await supabase
         .from("nhiem_vu")
         .select("*")
         .eq("thang", thang);
 
       if (error) {
-        console.error("Supabase error:", error.message);
+        console.error("Supabase error:", error);
         setData([]);
         return;
       }
 
       const thongKe: any = {};
 
-      (danhSachNV || []).forEach((nv: any) => {
-        if (!nv.can_bo) return;
+      (raw || []).forEach((nv: any) => {
+        if (!nv.can_bo_thuc_hien) return;
 
-        if (!thongKe[nv.can_bo]) {
-          thongKe[nv.can_bo] = {
-            ten: nv.can_bo,
+        if (!thongKe[nv.can_bo_thuc_hien]) {
+          thongKe[nv.can_bo_thuc_hien] = {
+            ten: nv.can_bo_thuc_hien,
             tong: 0,
             dungHan: 0,
             quaHan: 0,
@@ -53,11 +54,14 @@ export default function HomePage() {
           };
         }
 
-        thongKe[nv.can_bo].tong++;
+        thongKe[nv.can_bo_thuc_hien].tong++;
 
-        if (nv.trang_thai === "dung_han") thongKe[nv.can_bo].dungHan++;
-        else if (nv.trang_thai === "qua_han") thongKe[nv.can_bo].quaHan++;
-        else thongKe[nv.can_bo].chuaHT++;
+        if (nv.ghi_chu === "dung_han")
+          thongKe[nv.can_bo_thuc_hien].dungHan++;
+        else if (nv.ghi_chu === "qua_han")
+          thongKe[nv.can_bo_thuc_hien].quaHan++;
+        else
+          thongKe[nv.can_bo_thuc_hien].chuaHT++;
       });
 
       const ketQua = Object.values(thongKe).map((cb: any) => {
@@ -85,7 +89,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
-      {/* ===== HEADER ===== */}
+      {/* HEADER */}
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
@@ -111,7 +115,7 @@ export default function HomePage() {
         </nav>
       </header>
 
-      {/* ===== MAIN ===== */}
+      {/* MAIN */}
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-6xl rounded-2xl shadow-2xl p-4 md:p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">

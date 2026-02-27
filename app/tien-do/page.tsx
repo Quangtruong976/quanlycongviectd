@@ -3,14 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-/* ===== USER / PHÂN QUYỀN ===== */
-const user =
-  typeof window !== "undefined"
-    ? JSON.parse(localStorage.getItem("user") || "null")
-    : null;
-
-const isAdmin = user?.role === "admin";
-
 /* ===== HÀM MÀU KẾT QUẢ ===== */
 const mauKetQua = (kq: string) => {
   if (kq === "Hoàn thành đúng hạn") return "bg-green-200 text-green-800";
@@ -24,85 +16,115 @@ export default function TienDoPage() {
   const [thang, setThang] = useState("");
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+
+  const isAdmin = user?.role === "admin";
+
+  /* ===== LẤY USER AN TOÀN ===== */
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const u = localStorage.getItem("user");
+      if (u) setUser(JSON.parse(u));
+    }
+  }, []);
 
   /* ===== LOAD DATA ===== */
-  const loadData = () => {
-    
-    fetch("/api/tasks")
-      .then((res) => res.json())
-      .then((raw) => {
-        const { linhVucLon = [], linhVucCon = [], nhiemVu = [] } = raw;
-  
-        const grouped = linhVucLon.map((lvLon: any, index: number) => {
-          const conTheoLon = linhVucCon.filter(
-            (lv: any) => lv.linh_vuc_lon_id === lvLon.id
-          );
-  
-          return {
-            stt: index + 1,
-            tenLinhVucLon: lvLon.ten,
-            linhVucCon: conTheoLon.map((lv: any) => {
-              const tasks = nhiemVu
-                .filter((nv: any) => nv.linh_vuc_con_id === lv.id)
-                .filter((nv: any) =>
-                  thang ? String(nv.thang) === thang : true
-                )
-                .map((nv: any, i: number) => ({
-                  id: nv.id,
-                  stt: i + 1,
-                  noiDung: nv.ten || "",
-                  loai: "Công việc",
-                  giao: nv.giao || "",
-                  han: nv.han || "",
-                  hoanThanh: nv.hoan_thanh || "",
-                  sanpham: nv.san_pham || "",
-                  canBo: nv.can_bo || "",
-                  ketQua:
-                    nv.trang_thai === "dung_han"
-                      ? "Hoàn thành đúng hạn"
-                      : nv.trang_thai === "qua_han"
-                      ? "Hoàn thành quá hạn"
-                      : "Chưa hoàn thành",
-                }));
-  
-              return {
-                ten: lv.ten,
-                tasks,
-              };
-            }),
-          };
-        });
-  
-        setData(grouped);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/tasks");
+
+      if (!res.ok) {
+        setData([]);
         setLoading(false);
+        return;
+      }
+
+      const raw = await res.json();
+      const { linhVucLon = [], linhVucCon = [], nhiemVu = [] } = raw;
+
+      const grouped = linhVucLon.map((lvLon: any, index: number) => {
+        const conTheoLon = linhVucCon.filter(
+          (lv: any) => lv.linh_vuc_lon_id === lvLon.id
+        );
+
+        return {
+          id: lvLon.id,
+          stt: index + 1,
+          tenLinhVucLon: lvLon.ten,
+          linhVucCon: conTheoLon.map((lv: any) => {
+            const tasks = nhiemVu
+              .filter((nv: any) => nv.linh_vuc_con_id === lv.id)
+              .filter((nv: any) =>
+                thang ? String(nv.thang) === thang : true
+              )
+              .map((nv: any, i: number) => ({
+                id: nv.id,
+                stt: i + 1,
+                noiDung: nv.ten || "",
+                loai: "Công việc",
+                giao: nv.giao || "",
+                han: nv.han || "",
+                hoanThanh: nv.hoan_thanh || "",
+                sanpham: nv.san_pham || "",
+                canBo: nv.can_bo_thuc_hien || "",
+                ketQua:
+                  nv.trang_thai === "dung_han"
+                    ? "Hoàn thành đúng hạn"
+                    : nv.trang_thai === "qua_han"
+                    ? "Hoàn thành quá hạn"
+                    : "Chưa hoàn thành",
+              }));
+
+            return {
+              id: lv.id,
+              ten: lv.ten,
+              tasks,
+            };
+          }),
+        };
       });
+
+      setData(grouped);
+      setLoading(false);
+    } catch (err) {
+      console.error("Load data error:", err);
+      setData([]);
+      setLoading(false);
+    }
   };
-  
+
   useEffect(() => {
     loadData();
   }, [thang]);
-  /* ===== XOÁ NHIỆM VỤ (ADMIN) ===== */
-  function xoaNhiemVu(id: string) {
+
+  /* ===== XOÁ ===== */
+  async function xoaNhiemVu(id: string) {
     if (!confirm("Xóa nhiệm vụ này?")) return;
 
-    fetch(`/api/tasks?id=${id}`, {
+    await fetch(`/api/tasks?id=${id}`, {
       method: "DELETE",
-    }).then(() => loadData());
+    });
+
+    loadData();
   }
 
-  /* ===== SỬA NHIỆM VỤ (ADMIN) ===== */
-  function suaNhiemVu(task: any) {
+  /* ===== SỬA ===== */
+  async function suaNhiemVu(task: any) {
     const noiDungMoi = prompt("Sửa nội dung nhiệm vụ:", task.noiDung);
     if (!noiDungMoi) return;
 
-    fetch("/api/tasks", {
+    await fetch("/api/tasks", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: task.id,
         ten: noiDungMoi,
       }),
-    }).then(() => loadData());
+    });
+
+    loadData();
   }
 
   return (
@@ -110,7 +132,7 @@ export default function TienDoPage() {
       className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col"
       style={{ fontFamily: "Times New Roman, serif" }}
     >
-      {/* ===== HEADER ===== */}
+      {/* HEADER */}
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
@@ -135,10 +157,10 @@ export default function TienDoPage() {
         </nav>
       </header>
 
-      {/* ===== MAIN ===== */}
+      {/* MAIN */}
       <main className="flex-1 p-4 flex justify-center">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-xl p-6 space-y-4">
-          {/* FILTER */}
+
           <div className="flex flex-wrap gap-4 items-center">
             <input
               value={keyword}
@@ -166,28 +188,27 @@ export default function TienDoPage() {
               Đang tải dữ liệu...
             </div>
           ) : (
-            data.map((nhom, idx) => (
-              <div key={idx}>
+            data.map((nhom) => (
+              <div key={nhom.id}>
                 <h2 className="text-lg font-bold mb-3">
                   {nhom.tenLinhVucLon}
                 </h2>
 
-                {nhom.linhVucCon.map((lv: any, i: number) => {
+                {nhom.linhVucCon.map((lv: any) => {
                   const filteredTasks = lv.tasks.filter((t: any) => {
-                    const matchKeyword =
+                    return (
                       t.noiDung
                         .toLowerCase()
                         .includes(keyword.toLowerCase()) ||
                       lv.ten
                         .toLowerCase()
-                        .includes(keyword.toLowerCase());
-
-                    return matchKeyword;
+                        .includes(keyword.toLowerCase())
+                    );
                   });
 
                   return (
                     <div
-                      key={i}
+                      key={lv.id}
                       className="border border-blue-200 overflow-hidden"
                     >
                       <div className="bg-blue-100 px-3 py-2 font-bold text-blue-900">
@@ -228,8 +249,8 @@ export default function TienDoPage() {
                               </td>
                             </tr>
                           ) : (
-                            filteredTasks.map((t: any, j: number) => (
-                              <tr key={j} className="hover:bg-gray-50">
+                            filteredTasks.map((t: any) => (
+                              <tr key={t.id} className="hover:bg-gray-50">
                                 <td className="border p-2 text-center">
                                   {t.stt}
                                 </td>

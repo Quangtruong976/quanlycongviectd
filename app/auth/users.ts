@@ -1,4 +1,10 @@
-export const USERS = [
+type User = {
+  username: string;
+  password: string;
+  role: string;
+};
+
+const USERS: User[] = [
   {
     username: "admin",
     password: "123",
@@ -21,8 +27,32 @@ export const USERS = [
   },
 ];
 
+/* =====================================================
+   LOGIN
+===================================================== */
+
 export function login(username: string, password: string) {
-  return USERS.find(
-    (u) => u.username === username && u.password === password
+  if (!username || !password) return null;
+
+  const user = USERS.find(
+    (u) =>
+      u.username.trim() === username.trim() &&
+      u.password === password
   );
+
+  if (!user) return null;
+
+  // Không trả password ra ngoài
+  return {
+    username: user.username,
+    role: user.role,
+  };
+}
+
+/* =====================================================
+   KIỂM TRA ROLE
+===================================================== */
+
+export function isAdmin(role: string) {
+  return role === "admin";
 }

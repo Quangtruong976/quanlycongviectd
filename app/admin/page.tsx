@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
+  const router = useRouter();
+
   const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const [linhVucLonId, setLinhVucLonId] = useState("");
   const [linhVucConId, setLinhVucConId] = useState("");
@@ -14,47 +18,78 @@ export default function AdminPage() {
   const [sanPham, setSanPham] = useState("");
   const [canBo, setCanBo] = useState("");
 
-  /* ===== LOAD DANH MỤC LĨNH VỰC ===== */
+  /* ===== KIỂM TRA ADMIN ===== */
   useEffect(() => {
-    fetch("/api/tasks")
-      .then((res) => res.json())
-      .then((res) => setData(res));
-  }, []);
+    const u = localStorage.getItem("user");
+    if (!u) {
+      router.replace("/login");
+      return;
+    }
+
+    const parsed = JSON.parse(u);
+    if (parsed.role !== "admin") {
+      router.replace("/");
+      return;
+    }
+
+    fetch("/api/tasks", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Lỗi tải dữ liệu");
+        return res.json();
+      })
+      .then((res) => setData(res))
+      .catch(() => alert("Không thể tải dữ liệu"))
+      .finally(() => setLoading(false));
+  }, [router]);
+
+  /* ===== LỌC LĨNH VỰC CON ===== */
+  const dsLinhVucCon =
+    data?.linhVucCon?.filter(
+      (lv: any) => lv.linh_vuc_lon_id === linhVucLonId
+    ) || [];
 
   async function handleSubmit() {
-    if (!linhVucLonId || !linhVucConId || !ten) {
+    if (!linhVucLonId || !linhVucConId || !ten.trim()) {
       alert("Nhập chưa đủ thông tin");
       return;
     }
 
-    await fetch("/api/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        linhVucLonId,
-        linhVucConId,
-        nhiemVu: {
-          ten,
-          giao,
-          han,
-          sanPham,
-          canBo,
-          trangThai: "chua_hoan_thanh",
-        },
-      }),
-    });
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({
+          linhVucLonId,
+          linhVucConId,
+          nhiemVu: {
+            ten: ten.trim(),
+            giao,
+            han,
+            sanPham,
+            canBo,
+            trangThai: "chua_ht",
+          },
+        }),
+      });
 
-    alert("Đã lưu nhiệm vụ");
-    setTen("");
-    setSanPham("");
-    setCanBo("");
+      if (!res.ok) throw new Error();
+
+      alert("Đã lưu nhiệm vụ");
+
+      setTen("");
+      setGiao("");
+      setHan("");
+      setSanPham("");
+      setCanBo("");
+      setLinhVucConId("");
+    } catch {
+      alert("Lưu thất bại");
+    }
   }
 
-  if (!data) return <div className="p-6">Đang tải...</div>;
-
-  const linhVucLon = data.linhVucLon.find(
-    (lv: any) => lv.id === linhVucLonId
-  );
+  if (loading) return <div className="p-6">Đang tải...</div>;
+  if (!data) return null;
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -82,14 +117,14 @@ export default function AdminPage() {
           </select>
 
           {/* LĨNH VỰC CON */}
-          {linhVucLon && (
+          {linhVucLonId && (
             <select
               className="border p-2 w-full"
               value={linhVucConId}
               onChange={(e) => setLinhVucConId(e.target.value)}
             >
               <option value="">-- Chọn lĩnh vực con --</option>
-              {linhVucLon.linhVucCon.map((lv: any) => (
+              {dsLinhVucCon.map((lv: any) => (
                 <option key={lv.id} value={lv.id}>
                   {lv.ten}
                 </option>

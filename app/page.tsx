@@ -1,6 +1,5 @@
 "use client";
 import { supabase } from "@/lib/supabase";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -12,37 +11,43 @@ const mauXepLoai = (x: string) => {
   return "bg-red-600 text-white";
 };
 
+type ThongKe = {
+  ten: string;
+  tong: number;
+  dungHan: number;
+  quaHan: number;
+  chuaHT: number;
+  xepLoai: string;
+};
+
 export default function HomePage() {
   const [thang, setThang] = useState<number>(new Date().getMonth() + 1);
   const [tuKhoa, setTuKhoa] = useState("");
   const [locXepLoai, setLocXepLoai] = useState("ALL");
-  const [data, setData] = useState<any[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [data, setData] = useState<ThongKe[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  /* ===== LẤY USER ===== */
-  useEffect(() => {
-    const u = localStorage.getItem("user");
-    if (u) setUser(JSON.parse(u));
-  }, []);
-
-  /* ===== LOAD DỮ LIỆU TRỰC TIẾP TỪ SUPABASE ===== */
+  /* ===== LOAD DỮ LIỆU TỪ SUPABASE ===== */
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
+
       const { data: raw, error } = await supabase
         .from("nhiem_vu")
-        .select("*")
+        .select("can_bo_thuc_hien, ghi_chu")
         .eq("thang", thang);
 
       if (error) {
         console.error("Supabase error:", error);
         setData([]);
+        setLoading(false);
         return;
       }
 
-      const thongKe: any = {};
+      const thongKe: Record<string, any> = {};
 
       (raw || []).forEach((nv: any) => {
-        if (!nv.can_bo_thuc_hien) return;
+        if (!nv?.can_bo_thuc_hien) return;
 
         if (!thongKe[nv.can_bo_thuc_hien]) {
           thongKe[nv.can_bo_thuc_hien] = {
@@ -64,15 +69,25 @@ export default function HomePage() {
           thongKe[nv.can_bo_thuc_hien].chuaHT++;
       });
 
-      const ketQua = Object.values(thongKe).map((cb: any) => {
+      const ketQua: ThongKe[] = Object.values(thongKe).map((cb: any) => {
         let xepLoai = "D";
+
         if (cb.chuaHT === 0 && cb.quaHan === 0) xepLoai = "A";
         else if (cb.quaHan <= 1) xepLoai = "B";
         else if (cb.quaHan <= 3) xepLoai = "C";
+
         return { ...cb, xepLoai };
       });
 
+      // Sắp xếp theo xếp loại rồi theo tên
+      ketQua.sort((a, b) => {
+        if (a.xepLoai !== b.xepLoai)
+          return a.xepLoai.localeCompare(b.xepLoai);
+        return a.ten.localeCompare(b.ten);
+      });
+
       setData(ketQua);
+      setLoading(false);
     };
 
     loadData();
@@ -169,23 +184,37 @@ export default function HomePage() {
                 </tr>
               </thead>
               <tbody>
-                {danhSach.map((cb, i) => (
-                  <tr key={i}>
-                    <td className="border px-2 text-center">{i + 1}</td>
-                    <td className="border px-2">{cb.ten}</td>
-                    <td className="border px-2 text-center">{cb.tong}</td>
-                    <td className="border px-2 text-center">{cb.dungHan}</td>
-                    <td className="border px-2 text-center">{cb.quaHan}</td>
-                    <td className="border px-2 text-center">{cb.chuaHT}</td>
-                    <td
-                      className={`border px-2 text-center font-bold ${mauXepLoai(
-                        cb.xepLoai
-                      )}`}
-                    >
-                      {cb.xepLoai}
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-4">
+                      Đang tải dữ liệu...
                     </td>
                   </tr>
-                ))}
+                ) : danhSach.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-4">
+                      Không có dữ liệu
+                    </td>
+                  </tr>
+                ) : (
+                  danhSach.map((cb, i) => (
+                    <tr key={cb.ten}>
+                      <td className="border px-2 text-center">{i + 1}</td>
+                      <td className="border px-2">{cb.ten}</td>
+                      <td className="border px-2 text-center">{cb.tong}</td>
+                      <td className="border px-2 text-center">{cb.dungHan}</td>
+                      <td className="border px-2 text-center">{cb.quaHan}</td>
+                      <td className="border px-2 text-center">{cb.chuaHT}</td>
+                      <td
+                        className={`border px-2 text-center font-bold ${mauXepLoai(
+                          cb.xepLoai
+                        )}`}
+                      >
+                        {cb.xepLoai}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -178,8 +178,8 @@ export default function HomePage() {
                   <th className="border px-2 text-left"> Họ tên Cán bộ</th>
                   <th className="border px-2">Tổng số nhiệm vụ được giao</th>
                   <th className="border px-2">Hoàn thành đúng hạn</th>
-                  <th className="border px-2">Hoàn thành đuá hạn</th>
-                  <th className="border px-2">Chưa Hthàntoàn thành</th>
+                  <th className="border px-2">Hoàn thành quá hạn</th>
+                  <th className="border px-2">Chưa hoàn thành</th>
                   <th className="border px-2">Xếp loại</th>
                 </tr>
               </thead>

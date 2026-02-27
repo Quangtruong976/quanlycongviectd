@@ -1,145 +1,207 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function NhapNhiemVuPage() {
-  const [linhVucLon, setLinhVucLon] = useState<any[]>([]);
-  const [linhVucCon, setLinhVucCon] = useState<any[]>([]);
+  const user =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("user") || "null")
+      : null;
 
-  const [linhVucLonId, setLinhVucLonId] = useState("");
-  const [linhVucConId, setLinhVucConId] = useState("");
+  const isAdmin = user?.role === "admin";
 
-  const [tenNhiemVu, setTenNhiemVu] = useState("");
-  const [moTa, setMoTa] = useState("");
+  const [form, setForm] = useState({
+    linh_vuc_lon: "",
+    linh_vuc_con: "",
+    ten_nhiem_vu: "",
+    don_vi: "",
+    thoi_gian: "",
+    tien_do: "",
+    ghi_chu: "",
+  });
+
   const [loading, setLoading] = useState(false);
 
-  // Load lĩnh vực lớn
-  useEffect(() => {
-    const fetchLinhVucLon = async () => {
-      const { data } = await supabase.from("linh_vuc_lon").select("*").order("id");
-      setLinhVucLon(data || []);
-    };
-    fetchLinhVucLon();
-  }, []);
+  if (!isAdmin) {
+    return (
+      <div className="content">
+        <div className="box">
+          <h2>Không có quyền truy cập</h2>
+        </div>
+      </div>
+    );
+  }
 
-  // Khi chọn lĩnh vực lớn → load lĩnh vực con tương ứng
-  useEffect(() => {
-    if (!linhVucLonId) {
-      setLinhVucCon([]);
-      return;
-    }
-
-    const fetchLinhVucCon = async () => {
-      const { data } = await supabase
-        .from("linh_vuc_con")
-        .select("*")
-        .eq("linh_vuc_lon_id", linhVucLonId)
-        .order("id");
-
-      setLinhVucCon(data || []);
-    };
-
-    fetchLinhVucCon();
-  }, [linhVucLonId]);
-
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
-    if (!tenNhiemVu || !linhVucLonId || !linhVucConId) {
-      alert("Phải chọn đầy đủ lĩnh vực và nhập tên nhiệm vụ.");
+  async function handleSubmit() {
+    if (!form.ten_nhiem_vu) {
+      alert("Nhập tên nhiệm vụ");
       return;
     }
 
     setLoading(true);
 
-    const { error } = await supabase.from("nhiem_vu").insert({
-      ten_nhiem_vu: tenNhiemVu,
-      mo_ta: moTa,
-      linh_vuc_lon_id: parseInt(linhVucLonId),
-      linh_vuc_con_id: parseInt(linhVucConId),
-      trang_thai: "Chưa thực hiện",
-    });
+    const { error } = await supabase.from("nhiem_vu").insert([form]);
 
     setLoading(false);
 
     if (error) {
-      alert("Lỗi: " + error.message);
+      alert("Lỗi khi lưu");
     } else {
-      alert("Thêm nhiệm vụ thành công!");
-      setTenNhiemVu("");
-      setMoTa("");
-      setLinhVucLonId("");
-      setLinhVucConId("");
-      setLinhVucCon([]);
+      alert("Đã thêm nhiệm vụ");
+
+      setForm({
+        linh_vuc_lon: "",
+        linh_vuc_con: "",
+        ten_nhiem_vu: "",
+        don_vi: "",
+        thoi_gian: "",
+        tien_do: "",
+        ghi_chu: "",
+      });
     }
-  };
+  }
 
   return (
-    <div style={{ padding: 30, maxWidth: 700 }}>
-      <h2>NHẬP NHIỆM VỤ MỚI</h2>
+    <div className="content">
+      <div className="box">
+        <h2 className="title">NHẬP NHIỆM VỤ</h2>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+        <table className="form-table">
+          <tbody>
+            <tr>
+              <td>Lĩnh vực lớn</td>
+              <td>
+                <input
+                  value={form.linh_vuc_lon}
+                  onChange={(e) =>
+                    setForm({ ...form, linh_vuc_lon: e.target.value })
+                  }
+                />
+              </td>
 
-        <div>
-          <label>Lĩnh vực lớn</label>
-          <select
-            value={linhVucLonId}
-            onChange={(e) => setLinhVucLonId(e.target.value)}
-          >
-            <option value="">-- Chọn lĩnh vực lớn --</option>
-            {linhVucLon.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.ten}
-              </option>
-            ))}
-          </select>
+              <td>Lĩnh vực con</td>
+              <td>
+                <input
+                  value={form.linh_vuc_con}
+                  onChange={(e) =>
+                    setForm({ ...form, linh_vuc_con: e.target.value })
+                  }
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <td>Tên nhiệm vụ</td>
+              <td colSpan={3}>
+                <input
+                  value={form.ten_nhiem_vu}
+                  onChange={(e) =>
+                    setForm({ ...form, ten_nhiem_vu: e.target.value })
+                  }
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <td>Đơn vị thực hiện</td>
+              <td>
+                <input
+                  value={form.don_vi}
+                  onChange={(e) =>
+                    setForm({ ...form, don_vi: e.target.value })
+                  }
+                />
+              </td>
+
+              <td>Thời gian</td>
+              <td>
+                <input
+                  value={form.thoi_gian}
+                  onChange={(e) =>
+                    setForm({ ...form, thoi_gian: e.target.value })
+                  }
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <td>Tiến độ (%)</td>
+              <td>
+                <input
+                  value={form.tien_do}
+                  onChange={(e) =>
+                    setForm({ ...form, tien_do: e.target.value })
+                  }
+                />
+              </td>
+
+              <td>Ghi chú</td>
+              <td>
+                <input
+                  value={form.ghi_chu}
+                  onChange={(e) =>
+                    setForm({ ...form, ghi_chu: e.target.value })
+                  }
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ marginTop: 20 }}>
+          <button className="btn-primary" onClick={handleSubmit} disabled={loading}>
+            {loading ? "Đang lưu..." : "LƯU NHIỆM VỤ"}
+          </button>
         </div>
+      </div>
 
-        <div>
-          <label>Lĩnh vực con</label>
-          <select
-            value={linhVucConId}
-            onChange={(e) => setLinhVucConId(e.target.value)}
-            disabled={!linhVucLonId}
-          >
-            <option value="">-- Chọn lĩnh vực con --</option>
-            {linhVucCon.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.ten}
-              </option>
-            ))}
-          </select>
-        </div>
+      <style jsx>{`
+        .content {
+          padding: 20px;
+        }
 
-        <div>
-          <label>Tên nhiệm vụ</label>
-          <input
-            type="text"
-            value={tenNhiemVu}
-            onChange={(e) => setTenNhiemVu(e.target.value)}
-          />
-        </div>
+        .box {
+          background: #fff;
+          padding: 25px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
 
-        <div>
-          <label>Mô tả</label>
-          <textarea
-            value={moTa}
-            onChange={(e) => setMoTa(e.target.value)}
-            rows={4}
-          />
-        </div>
+        .title {
+          margin-bottom: 20px;
+        }
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Đang lưu..." : "Lưu nhiệm vụ"}
-        </button>
+        .form-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
 
-      </form>
+        .form-table td {
+          border: 1px solid #e5e5e5;
+          padding: 10px;
+        }
+
+        .form-table input {
+          width: 100%;
+          padding: 6px 8px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+        }
+
+        .btn-primary {
+          background: #1677ff;
+          color: #fff;
+          padding: 8px 18px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+
+        .btn-primary:hover {
+          background: #0958d9;
+        }
+      `}</style>
     </div>
   );
 }

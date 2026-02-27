@@ -1,11 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
+type NhiemVu = {
+  id: number;
+  linh_vuc_lon: string;
+  linh_vuc_con: string;
+  ten: string;
+  ngay_giao: string;
+  han_hoan_thanh: string;
+  ngay_hoan_thanh: string | null;
+  san_pham: string | null;
+  tien_do: string | null;
+  can_bo_tham_muu: string;
+  can_bo_phu_trach: string;
+  thang: number;
+};
+
 export default function TienDoPage() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<NhiemVu[]>([]);
   const [loading, setLoading] = useState(true);
   const [thang, setThang] = useState("ALL");
 
@@ -14,32 +29,41 @@ export default function TienDoPage() {
   }, [thang]);
 
   async function fetchData() {
+    setLoading(true);
+
     let query = supabase.from("nhiem_vu").select("*");
 
     if (thang !== "ALL") {
       query = query.eq("thang", Number(thang));
     }
 
-    const { data } = await query.order("linh_vuc_lon").order("linh_vuc_con");
+    const { data } = await query
+      .order("linh_vuc_lon")
+      .order("linh_vuc_con");
 
-    setData(data || []);
+    setData((data as NhiemVu[]) || []);
     setLoading(false);
   }
 
-  const grouped = data.reduce((acc: any, item) => {
-    if (!acc[item.linh_vuc_lon]) acc[item.linh_vuc_lon] = {};
-    if (!acc[item.linh_vuc_lon][item.linh_vuc_con])
-      acc[item.linh_vuc_lon][item.linh_vuc_con] = [];
-    acc[item.linh_vuc_lon][item.linh_vuc_con].push(item);
-    return acc;
-  }, {});
+  const grouped = useMemo(() => {
+    return data.reduce<Record<string, Record<string, NhiemVu[]>>>(
+      (acc, item) => {
+        if (!acc[item.linh_vuc_lon]) acc[item.linh_vuc_lon] = {};
+        if (!acc[item.linh_vuc_lon][item.linh_vuc_con])
+          acc[item.linh_vuc_lon][item.linh_vuc_con] = [];
+
+        acc[item.linh_vuc_lon][item.linh_vuc_con].push(item);
+        return acc;
+      },
+      {}
+    );
+  }, [data]);
 
   let stt = 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
-      {/* HEADER GIỮ NGUYÊN */}
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
@@ -60,18 +84,20 @@ export default function TienDoPage() {
         </nav>
       </header>
 
-      {/* NỘI DUNG GIỮ KHUNG TRẮNG Ở GIỮA */}
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          {/* Bộ lọc tháng */}
-          <div className="flex justify-end mb-4">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-6">
+            <h2 className="font-semibold text-blue-700 text-lg">
+              Theo dõi tiến độ công việc
+            </h2>
+
             <select
               value={thang}
               onChange={(e) => setThang(e.target.value)}
-              className="border px-3 py-2 rounded"
+              className="border px-3 py-2 rounded w-full md:w-48"
             >
-              <option value="ALL">Tất cả tháng</option>
+              <option value="ALL">Tất cả</option>
               {Array.from({ length: 12 }).map((_, i) => (
                 <option key={i} value={i + 1}>
                   Tháng {i + 1}
@@ -86,9 +112,9 @@ export default function TienDoPage() {
             <div className="overflow-x-auto">
               <table className="min-w-full border border-gray-300 text-sm">
                 <thead>
-                  <tr className="bg-gray-200 text-center font-semibold">
-                    <th className="border p-2">Stt</th>
-                    <th className="border p-2 min-w-[250px]">Văn bản / Công việc</th>
+                  <tr className="bg-blue-100 text-blue-900 text-center font-semibold">
+                    <th className="border p-2">STT</th>
+                    <th className="border p-2 min-w-[250px] text-left">Văn bản / Công việc</th>
                     <th className="border p-2">Ngày giao</th>
                     <th className="border p-2">Thời hạn HT</th>
                     <th className="border p-2">Ngày HT</th>
@@ -100,40 +126,54 @@ export default function TienDoPage() {
                 </thead>
 
                 <tbody>
-                  {Object.entries(grouped).map(([lvLon, lvConObj]: any, index) => (
-                    <>
-                      {/* Lĩnh vực lớn */}
-                      <tr key={lvLon} className="bg-gray-100 font-bold">
+                  {Object.entries(grouped).map(([lvLon, lvConObj], index) => (
+                    <tbody key={lvLon}>
+                      <tr className="bg-blue-50 font-bold text-blue-800">
                         <td colSpan={9} className="border p-2 text-base">
                           {index + 1}. {lvLon}
                         </td>
                       </tr>
 
-                      {Object.entries(lvConObj).map(([lvCon, tasks]: any) => (
-                        <>
-                          {/* Lĩnh vực con */}
-                          <tr key={lvLon + lvCon} className="bg-gray-50 font-semibold">
+                      {Object.entries(lvConObj).map(([lvCon, tasks]) => (
+                        <tbody key={lvLon + lvCon}>
+                          <tr className="bg-gray-100 font-semibold">
                             <td colSpan={9} className="border p-2">
                               * {lvCon}
                             </td>
                           </tr>
 
-                          {tasks.map((nv: any) => (
+                          {tasks.map((nv) => (
                             <tr key={nv.id} className="hover:bg-gray-50">
-                              <td className="border p-2 text-center">{stt++}</td>
+                              <td className="border p-2 text-center">
+                                {stt++}
+                              </td>
                               <td className="border p-2">{nv.ten}</td>
-                              <td className="border p-2 text-center">{nv.ngay_giao}</td>
-                              <td className="border p-2 text-center">{nv.han_hoan_thanh}</td>
-                              <td className="border p-2 text-center">{nv.ngay_hoan_thanh || ""}</td>
-                              <td className="border p-2">{nv.san_pham || ""}</td>
-                              <td className="border p-2 text-center">{nv.tien_do}</td>
-                              <td className="border p-2">{nv.can_bo_tham_muu}</td>
-                              <td className="border p-2">{nv.can_bo_phu_trach}</td>
+                              <td className="border p-2 text-center">
+                                {nv.ngay_giao}
+                              </td>
+                              <td className="border p-2 text-center">
+                                {nv.han_hoan_thanh}
+                              </td>
+                              <td className="border p-2 text-center">
+                                {nv.ngay_hoan_thanh || ""}
+                              </td>
+                              <td className="border p-2">
+                                {nv.san_pham || ""}
+                              </td>
+                              <td className="border p-2 text-center">
+                                {nv.tien_do || ""}
+                              </td>
+                              <td className="border p-2">
+                                {nv.can_bo_tham_muu}
+                              </td>
+                              <td className="border p-2">
+                                {nv.can_bo_phu_trach}
+                              </td>
                             </tr>
                           ))}
-                        </>
+                        </tbody>
                       ))}
-                    </>
+                    </tbody>
                   ))}
                 </tbody>
               </table>

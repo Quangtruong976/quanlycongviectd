@@ -1,8 +1,14 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+
+type RawItem = {
+  can_bo: string;
+  ghi_chu: string | null;
+  thang: number;
+};
 
 type ThongKe = {
   can_bo: string;
@@ -22,7 +28,6 @@ export default function ThongKePage() {
 
   const [search, setSearch] = useState("");
   const [selectedCanBo, setSelectedCanBo] = useState("");
-  const [allCanBo, setAllCanBo] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
@@ -39,22 +44,17 @@ export default function ThongKePage() {
       query = query.eq("thang", Number(thang));
     }
 
-    const { data: raw } = await query;
-    if (!raw) {
+    const { data: raw, error } = await query;
+
+    if (error || !raw) {
       setData([]);
       setLoading(false);
       return;
     }
 
-    const uniqueNames = Array.from(
-      new Set(raw.map((r: any) => r.can_bo))
-    ).sort();
-
-    setAllCanBo(uniqueNames);
-
     const map: Record<string, ThongKe> = {};
 
-    raw.forEach((item: any) => {
+    (raw as RawItem[]).forEach((item) => {
       if (!map[item.can_bo]) {
         map[item.can_bo] = {
           can_bo: item.can_bo,
@@ -86,13 +86,13 @@ export default function ThongKePage() {
       }
     });
 
-    const result = Object.values(map).map((cb) => {
+    const result: ThongKe[] = Object.values(map).map((cb) => {
       const hoanThanh = cb.vuot + cb.dungHan + cb.quaHan;
       const diem =
         cb.tong > 0 ? Math.round((hoanThanh / cb.tong) * 100) : 0;
 
       let xepLoai = "";
-      if (diem >= 90 && hoanThanh === cb.tong)
+      if (diem >= 90 && cb.chuaHT === 0)
         xepLoai = "Hoàn thành xuất sắc";
       else if (diem >= 70)
         xepLoai = "Hoàn thành tốt";
@@ -104,16 +104,30 @@ export default function ThongKePage() {
     });
 
     result.sort((a, b) => b.diem - a.diem);
+
     setData(result);
     setLoading(false);
   };
 
-  const filteredData = data.filter((cb) =>
-    selectedCanBo ? cb.can_bo === selectedCanBo : true
+  const allCanBo = useMemo(
+    () => data.map((d) => d.can_bo).sort(),
+    [data]
   );
 
-  const suggestedNames = allCanBo.filter((name) =>
-    name.toLowerCase().includes(search.toLowerCase())
+  const suggestedNames = useMemo(
+    () =>
+      allCanBo.filter((name) =>
+        name.toLowerCase().includes(search.toLowerCase())
+      ),
+    [search, allCanBo]
+  );
+
+  const filteredData = useMemo(
+    () =>
+      selectedCanBo
+        ? data.filter((cb) => cb.can_bo === selectedCanBo)
+        : data,
+    [selectedCanBo, data]
   );
 
   const getColor = (xepLoai: string) => {
@@ -131,7 +145,6 @@ export default function ThongKePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
-
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
@@ -155,7 +168,6 @@ export default function ThongKePage() {
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          {/* Bộ lọc */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
 
             <select
@@ -202,44 +214,46 @@ export default function ThongKePage() {
             </div>
           </div>
 
-          {/* Bảng có kẻ ô */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300 text-sm">
-              <thead>
-                <tr className="bg-blue-100 text-blue-900">
-                  <th className="border px-3 py-2">STT</th>
-                  <th className="border px-3 py-2 text-left">Cán bộ</th>
-                  <th className="border px-3 py-2">Tổng</th>
-                  <th className="border px-3 py-2">Vượt</th>
-                  <th className="border px-3 py-2">Đúng hạn</th>
-                  <th className="border px-3 py-2">Quá hạn</th>
-                  <th className="border px-3 py-2">Chưa HT</th>
-                  <th className="border px-3 py-2">Điểm</th>
-                  <th className="border px-3 py-2">Xếp loại</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredData.map((cb, index) => (
-                  <tr key={cb.can_bo} className="hover:bg-gray-50">
-                    <td className="border px-3 py-2 text-center">{index + 1}</td>
-                    <td className="border px-3 py-2">{cb.can_bo}</td>
-                    <td className="border px-3 py-2 text-center">{cb.tong}</td>
-                    <td className="border px-3 py-2 text-center text-pink-600 font-semibold">{cb.vuot}</td>
-                    <td className="border px-3 py-2 text-center text-green-600 font-semibold">{cb.dungHan}</td>
-                    <td className="border px-3 py-2 text-center text-yellow-600 font-semibold">{cb.quaHan}</td>
-                    <td className="border px-3 py-2 text-center text-red-600 font-semibold">{cb.chuaHT}</td>
-                    <td className="border px-3 py-2 text-center font-bold">{cb.diem}</td>
-                    <td className="border px-3 py-2 text-center">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getColor(cb.xepLoai)}`}>
-                        {cb.xepLoai}
-                      </span>
-                    </td>
+          {loading ? (
+            <div className="text-center py-10">Đang tải dữ liệu...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-300 text-sm">
+                <thead>
+                  <tr className="bg-blue-100 text-blue-900">
+                    <th className="border px-3 py-2">STT</th>
+                    <th className="border px-3 py-2 text-left">Cán bộ</th>
+                    <th className="border px-3 py-2">Tổng</th>
+                    <th className="border px-3 py-2">Vượt</th>
+                    <th className="border px-3 py-2">Đúng hạn</th>
+                    <th className="border px-3 py-2">Quá hạn</th>
+                    <th className="border px-3 py-2">Chưa HT</th>
+                    <th className="border px-3 py-2">Điểm</th>
+                    <th className="border px-3 py-2">Xếp loại</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredData.map((cb, index) => (
+                    <tr key={cb.can_bo} className="hover:bg-gray-50">
+                      <td className="border px-3 py-2 text-center">{index + 1}</td>
+                      <td className="border px-3 py-2">{cb.can_bo}</td>
+                      <td className="border px-3 py-2 text-center">{cb.tong}</td>
+                      <td className="border px-3 py-2 text-center text-pink-600 font-semibold">{cb.vuot}</td>
+                      <td className="border px-3 py-2 text-center text-green-600 font-semibold">{cb.dungHan}</td>
+                      <td className="border px-3 py-2 text-center text-yellow-600 font-semibold">{cb.quaHan}</td>
+                      <td className="border px-3 py-2 text-center text-red-600 font-semibold">{cb.chuaHT}</td>
+                      <td className="border px-3 py-2 text-center font-bold">{cb.diem}</td>
+                      <td className="border px-3 py-2 text-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getColor(cb.xepLoai)}`}>
+                          {cb.xepLoai}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
         </div>
       </main>

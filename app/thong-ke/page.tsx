@@ -2,7 +2,6 @@
 
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
-import * as XLSX from "xlsx";
 import Link from "next/link";
 
 type ThongKe = {
@@ -21,6 +20,10 @@ export default function ThongKePage() {
   const [data, setData] = useState<ThongKe[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [search, setSearch] = useState("");
+  const [selectedCanBo, setSelectedCanBo] = useState("");
+  const [allCanBo, setAllCanBo] = useState<string[]>([]);
+
   useEffect(() => {
     loadData();
   }, [thang]);
@@ -36,19 +39,18 @@ export default function ThongKePage() {
       query = query.eq("thang", Number(thang));
     }
 
-    const { data: raw, error } = await query;
-
-    if (error) {
-      console.error("Supabase error:", error);
-      setLoading(false);
-      return;
-    }
-
+    const { data: raw } = await query;
     if (!raw) {
       setData([]);
       setLoading(false);
       return;
     }
+
+    const uniqueNames = Array.from(
+      new Set(raw.map((r: any) => r.can_bo))
+    ).sort();
+
+    setAllCanBo(uniqueNames);
 
     const map: Record<string, ThongKe> = {};
 
@@ -86,14 +88,10 @@ export default function ThongKePage() {
 
     const result = Object.values(map).map((cb) => {
       const hoanThanh = cb.vuot + cb.dungHan + cb.quaHan;
-
       const diem =
-        cb.tong > 0
-          ? Math.round((hoanThanh / cb.tong) * 100)
-          : 0;
+        cb.tong > 0 ? Math.round((hoanThanh / cb.tong) * 100) : 0;
 
       let xepLoai = "";
-
       if (diem >= 90 && hoanThanh === cb.tong)
         xepLoai = "Hoàn thành xuất sắc";
       else if (diem >= 70)
@@ -106,54 +104,53 @@ export default function ThongKePage() {
     });
 
     result.sort((a, b) => b.diem - a.diem);
-
     setData(result);
     setLoading(false);
   };
 
-  const exportExcel = () => {
-    if (data.length === 0) return;
+  const filteredData = data.filter((cb) =>
+    selectedCanBo ? cb.can_bo === selectedCanBo : true
+  );
 
-    const exportData = data.map((cb, index) => ({
-      STT: index + 1,
-      "Cán bộ": cb.can_bo,
-      "Tổng nhiệm vụ": cb.tong,
-      "Vượt tiến độ": cb.vuot,
-      "Đúng hạn": cb.dungHan,
-      "Quá hạn": cb.quaHan,
-      "Chưa hoàn thành": cb.chuaHT,
-      "Điểm (100)": cb.diem,
-      "Xếp loại": cb.xepLoai,
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "ThongKe");
-
-    XLSX.writeFile(
-      wb,
-      `ThongKe_${thang === "ALL" ? "TatCa" : "Thang_" + thang}.xlsx`
-    );
-  };
+  const suggestedNames = allCanBo.filter((name) =>
+    name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
-      <header className="bg-blue-900 text-white text-center py-4">
-        <h1 className="text-xl md:text-2xl font-bold">
-          THỐNG KÊ CHI TIẾT CÁN BỘ
-        </h1>
+      {/* HEADER GIỐNG TRANG CHỦ */}
+      <header className="bg-blue-900 text-white">
+        <div className="flex flex-col items-center py-4">
+          <img src="/logo-doan.png" className="h-20 mb-2" />
+          <h1 className="text-xl md:text-2xl font-bold text-center">
+            HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
+          </h1>
+          <p className="text-sm md:text-base font-semibold text-blue-200">
+            TỈNH ĐOÀN LÂM ĐỒNG
+          </p>
+        </div>
+
+        <nav className="bg-blue-800">
+          <ul className="flex justify-center gap-8 py-2 text-sm font-semibold">
+            <li><Link href="/">Trang chủ</Link></li>
+            <li><Link href="/tien-do">Theo dõi tiến độ</Link></li>
+            <li><Link href="/login">Đăng nhập</Link></li>
+          </ul>
+        </nav>
       </header>
 
+      {/* MAIN */}
       <main className="flex-1 flex justify-center p-4">
-        <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4 md:p-6 overflow-x-auto">
+        <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          <div className="flex flex-col md:flex-row md:justify-between gap-3 mb-6">
+          <div className="flex flex-col md:flex-row md:justify-between gap-4 mb-6">
 
+            {/* Lọc tháng */}
             <select
               value={thang}
               onChange={(e) => setThang(e.target.value)}
-              className="border rounded px-3 py-2 w-full md:w-48"
+              className="border rounded-lg px-3 py-2 w-full md:w-48 shadow-sm"
             >
               <option value="ALL">Tất cả</option>
               {Array.from({ length: 12 }).map((_, i) => (
@@ -163,68 +160,79 @@ export default function ThongKePage() {
               ))}
             </select>
 
-            <button
-              onClick={exportExcel}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              Xuất Excel
-            </button>
+            {/* Lọc tên thông minh */}
+            <div className="relative w-full md:w-72">
+              <input
+                type="text"
+                placeholder="Tìm cán bộ..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setSelectedCanBo("");
+                }}
+                className="w-full border rounded-lg px-3 py-2 shadow-sm"
+              />
+
+              {search && !selectedCanBo && (
+                <div className="absolute bg-white border w-full mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto z-10">
+                  {suggestedNames.map((name) => (
+                    <div
+                      key={name}
+                      onClick={() => {
+                        setSelectedCanBo(name);
+                        setSearch(name);
+                      }}
+                      className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+                    >
+                      {name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
           </div>
 
           {loading ? (
             <div className="text-center py-10">Đang tải dữ liệu...</div>
           ) : (
-            <table className="min-w-full border text-sm">
-              <thead className="bg-blue-700 text-white">
-                <tr>
-                  <th className="p-2 border">STT</th>
-                  <th className="p-2 border text-left">Cán bộ</th>
-                  <th className="p-2 border">Tổng NV</th>
-                  <th className="p-2 border">Vượt</th>
-                  <th className="p-2 border">Đúng hạn</th>
-                  <th className="p-2 border">Quá hạn</th>
-                  <th className="p-2 border">Chưa HT</th>
-                  <th className="p-2 border">Điểm</th>
-                  <th className="p-2 border">Xếp loại</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((cb, index) => (
-                  <tr key={cb.can_bo} className="text-center hover:bg-gray-100">
-                    <td className="border p-2">{index + 1}</td>
-                    <td className="border p-2 text-left font-medium">
-                      {cb.can_bo}
-                    </td>
-                    <td className="border p-2">{cb.tong}</td>
-                    <td className="border p-2 text-green-600 font-semibold">
-                      {cb.vuot}
-                    </td>
-                    <td className="border p-2 text-blue-600 font-semibold">
-                      {cb.dungHan}
-                    </td>
-                    <td className="border p-2 text-orange-500 font-semibold">
-                      {cb.quaHan}
-                    </td>
-                    <td className="border p-2 text-red-600 font-semibold">
-                      {cb.chuaHT}
-                    </td>
-                    <td className="border p-2 font-bold">{cb.diem}</td>
-                    <td className="border p-2 font-semibold">{cb.xepLoai}</td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="bg-blue-100 text-blue-900 uppercase text-xs">
+                    <th className="px-4 py-3 text-left">STT</th>
+                    <th className="px-4 py-3 text-left">Cán bộ</th>
+                    <th className="px-4 py-3">Tổng NV</th>
+                    <th className="px-4 py-3">Vượt</th>
+                    <th className="px-4 py-3">Đúng hạn</th>
+                    <th className="px-4 py-3">Quá hạn</th>
+                    <th className="px-4 py-3">Chưa HT</th>
+                    <th className="px-4 py-3">Điểm</th>
+                    <th className="px-4 py-3">Xếp loại</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredData.map((cb, index) => (
+                    <tr key={cb.can_bo} className="hover:bg-blue-50 transition">
+                      <td className="px-4 py-3">{index + 1}</td>
+                      <td className="px-4 py-3 font-medium">{cb.can_bo}</td>
+                      <td className="px-4 py-3 text-center">{cb.tong}</td>
+                      <td className="px-4 py-3 text-center text-green-600 font-semibold">{cb.vuot}</td>
+                      <td className="px-4 py-3 text-center text-blue-600 font-semibold">{cb.dungHan}</td>
+                      <td className="px-4 py-3 text-center text-orange-500 font-semibold">{cb.quaHan}</td>
+                      <td className="px-4 py-3 text-center text-red-600 font-semibold">{cb.chuaHT}</td>
+                      <td className="px-4 py-3 text-center font-bold">{cb.diem}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                          {cb.xepLoai}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-
-          <div className="mt-6 text-center">
-            <Link
-              href="/"
-              className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800"
-            >
-              ← Quay lại Trang chủ
-            </Link>
-          </div>
 
         </div>
       </main>

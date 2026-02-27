@@ -157,12 +157,24 @@ export default function ThongKePage() {
         </div>
 
         <nav className="bg-blue-800">
-          <ul className="flex justify-center gap-8 py-2 text-sm font-semibold">
-            <li><Link href="/">Trang chủ</Link></li>
-            <li><Link href="/tien-do">Theo dõi tiến độ</Link></li>
-            <li><Link href="/login">Đăng nhập</Link></li>
-          </ul>
-        </nav>
+  <ul className="flex justify-center gap-8 py-2 text-sm font-semibold">
+    <li>
+      <Link href="/thong-ke" className="hover:underline">
+        Thống kê chi tiết
+      </Link>
+    </li>
+    <li>
+      <Link href="/tien-do" className="hover:underline">
+        Theo dõi tiến độ công việc
+      </Link>
+    </li>
+    <li>
+      <Link href="/login" className="hover:underline">
+        Đăng nhập
+      </Link>
+    </li>
+  </ul>
+</nav>
       </header>
 
       <main className="flex-1 flex justify-center p-4">

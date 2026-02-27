@@ -7,26 +7,61 @@ import Link from "next/link";
 export default function TienDoPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [thang, setThang] = useState("ALL");
+  const [lvConFilter, setLvConFilter] = useState("ALL");
+
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  /* ================= FETCH DATABASE ================= */
 
   useEffect(() => {
     fetchData();
-  }, [thang]);
+  }, [thang, lvConFilter]);
 
   async function fetchData() {
+    setLoading(true);
+
     let query = supabase.from("nhiem_vu").select("*");
 
     if (thang !== "ALL") {
       query = query.eq("thang", Number(thang));
     }
 
-    const { data } = await query.order("linh_vuc_lon").order("linh_vuc_con");
+    if (lvConFilter !== "ALL") {
+      query = query.eq("linh_vuc_con", lvConFilter);
+    }
+
+    const { data } = await query
+      .order("linh_vuc_lon")
+      .order("linh_vuc_con");
 
     setData(data || []);
     setLoading(false);
   }
 
-  const grouped = data.reduce((acc: any, item) => {
+  /* ================= DEBOUNCE ================= */
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  /* ================= FILTER CLIENT ================= */
+
+  const filteredData = data.filter((item) =>
+    (item.noi_dung || item.ten || "")
+      .toLowerCase()
+      .includes(debouncedSearch.toLowerCase())
+  );
+
+  /* ================= GROUP ================= */
+
+  const grouped = filteredData.reduce((acc: any, item) => {
     if (!acc[item.linh_vuc_lon]) acc[item.linh_vuc_lon] = {};
     if (!acc[item.linh_vuc_lon][item.linh_vuc_con])
       acc[item.linh_vuc_lon][item.linh_vuc_con] = [];
@@ -34,12 +69,31 @@ export default function TienDoPage() {
     return acc;
   }, {});
 
+  /* ================= HIGHLIGHT ================= */
+
+  function highlight(text: string) {
+    if (!debouncedSearch) return text;
+
+    const regex = new RegExp(`(${debouncedSearch})`, "gi");
+    const parts = text.split(regex);
+
+    return parts.map((part, i) =>
+      part.toLowerCase() === debouncedSearch.toLowerCase() ? (
+        <mark key={i} className="bg-yellow-300">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  }
+
   let stt = 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
-      {/* HEADER GIỮ NGUYÊN */}
+      {/* HEADER */}
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
@@ -60,12 +114,13 @@ export default function TienDoPage() {
         </nav>
       </header>
 
-      {/* NỘI DUNG GIỮ KHUNG TRẮNG Ở GIỮA */}
+      {/* CONTENT */}
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          {/* Bộ lọc tháng */}
-          <div className="flex justify-end mb-4">
+          {/* Bộ lọc */}
+          <div className="grid md:grid-cols-3 gap-3 mb-6">
+
             <select
               value={thang}
               onChange={(e) => setThang(e.target.value)}
@@ -78,6 +133,24 @@ export default function TienDoPage() {
                 </option>
               ))}
             </select>
+
+            <input
+              type="text"
+              placeholder="Tìm nội dung văn bản / công việc..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="border px-3 py-2 rounded"
+            />
+
+            <input
+              type="text"
+              placeholder="Lọc lĩnh vực con..."
+              value={lvConFilter === "ALL" ? "" : lvConFilter}
+              onChange={(e) =>
+                setLvConFilter(e.target.value || "ALL")
+              }
+              className="border px-3 py-2 rounded"
+            />
           </div>
 
           {loading ? (
@@ -88,32 +161,30 @@ export default function TienDoPage() {
                 <thead>
                   <tr className="bg-gray-200 text-center font-semibold">
                     <th className="border p-2">Stt</th>
-                    <th className="border p-2 min-w-[250px]">Văn bản / Công việc</th>
+                    <th className="border p-2 min-w-[300px]">
+                      Nội dung văn bản / Công việc
+                    </th>
                     <th className="border p-2">Ngày giao</th>
-                    <th className="border p-2">Thời hạn HT</th>
-                    <th className="border p-2">Ngày HT</th>
-                    <th className="border p-2 min-w-[150px]">Sản phẩm</th>
+                    <th className="border p-2">Hạn hoàn thành</th>
+                    <th className="border p-2">Ngày hoàn thành</th>
                     <th className="border p-2">Tiến độ</th>
-                    <th className="border p-2 min-w-[140px]">Cán bộ tham mưu</th>
-                    <th className="border p-2 min-w-[140px]">TT phụ trách</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {Object.entries(grouped).map(([lvLon, lvConObj]: any, index) => (
                     <>
-                      {/* Lĩnh vực lớn */}
+
                       <tr key={lvLon} className="bg-gray-100 font-bold">
-                        <td colSpan={9} className="border p-2 text-base">
+                        <td colSpan={6} className="border p-2 text-base">
                           {index + 1}. {lvLon}
                         </td>
                       </tr>
 
                       {Object.entries(lvConObj).map(([lvCon, tasks]: any) => (
                         <>
-                          {/* Lĩnh vực con */}
                           <tr key={lvLon + lvCon} className="bg-gray-50 font-semibold">
-                            <td colSpan={9} className="border p-2">
+                            <td colSpan={6} className="border p-2">
                               * {lvCon}
                             </td>
                           </tr>
@@ -121,20 +192,25 @@ export default function TienDoPage() {
                           {tasks.map((nv: any) => (
                             <tr key={nv.id} className="hover:bg-gray-50">
                               <td className="border p-2 text-center">{stt++}</td>
-                              <td className="border p-2">{nv.ten}</td>
-                              <td className="border p-2 text-center">{nv.ngay_giao}</td>
-                              <td className="border p-2 text-center">{nv.han_hoan_thanh}</td>
-                              <td className="border p-2 text-center">{nv.ngay_hoan_thanh || ""}</td>
-                              <td className="border p-2">{nv.san_pham || ""}</td>
-                              <td className="border p-2 text-center">{nv.tien_do}</td>
-                              <td className="border p-2">{nv.can_bo_tham_muu}</td>
-                              <td className="border p-2">{nv.can_bo_phu_trach}</td>
+                              <td className="border p-2">
+                                {highlight(nv.noi_dung || nv.ten || "")}
+                              </td>
+                              <td className="border p-2 text-center">
+                                {nv.ngay_giao}
+                              </td>
+                              <td className="border p-2 text-center">
+                                {nv.han_hoan_thanh}
+                              </td>
+                              <td className="border p-2 text-center">
+                                {nv.ngay_hoan_thanh || ""}
+                              </td>
+                              <td className="border p-2 text-center">
+                                {nv.tien_do}
+                              </td>
                             </tr>
                           ))}
                         </>
                       ))}
-                    </>
-                  ))}
                 </tbody>
               </table>
             </div>

@@ -83,7 +83,7 @@ export default function HomePage() {
             </li>
             <li>
               <Link href="/tien-do" className="hover:underline">
-                Theo dõi tiến độ
+                Theo dõi tiến độ công việc
               </Link>
             </li>
             <li>

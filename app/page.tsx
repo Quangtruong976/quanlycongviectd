@@ -12,7 +12,9 @@ type TongQuan = {
 };
 
 export default function HomePage() {
-  const [thang] = useState<number>(new Date().getMonth() + 1);
+  const [thang, setThang] = useState<string>(
+    (new Date().getMonth() + 1).toString()
+  );
   const [data, setData] = useState<TongQuan>({
     tong: 0,
     dungHan: 0,
@@ -25,10 +27,14 @@ export default function HomePage() {
     const loadTongQuan = async () => {
       setLoading(true);
 
-      const { data: raw, error } = await supabase
-        .from("nhiem_vu")
-        .select("ghi_chu")
-        .eq("thang", thang);
+      let query = supabase.from("nhiem_vu").select("ghi_chu");
+
+      // Nếu không phải "ALL" thì mới lọc tháng
+      if (thang !== "ALL") {
+        query = query.eq("thang", Number(thang));
+      }
+
+      const { data: raw, error } = await query;
 
       if (error) {
         console.error(error);
@@ -37,8 +43,10 @@ export default function HomePage() {
       }
 
       const tong = raw?.length || 0;
-      const dungHan = raw?.filter((r) => r.ghi_chu === "dung_han").length || 0;
-      const quaHan = raw?.filter((r) => r.ghi_chu === "qua_han").length || 0;
+      const dungHan =
+        raw?.filter((r) => r.ghi_chu === "dung_han").length || 0;
+      const quaHan =
+        raw?.filter((r) => r.ghi_chu === "qua_han").length || 0;
       const chuaHT =
         raw?.filter((r) => !r.ghi_chu || r.ghi_chu === "").length || 0;
 
@@ -81,13 +89,29 @@ export default function HomePage() {
         </nav>
       </header>
 
-      {/* MAIN DASHBOARD */}
+      {/* MAIN */}
       <main className="flex-1 flex justify-center p-6">
         <div className="bg-white w-full max-w-6xl rounded-2xl shadow-2xl p-6">
 
-          <h2 className="text-xl font-bold text-blue-700 mb-6">
-            Tổng quan nhiệm vụ tháng {thang}
-          </h2>
+          {/* Bộ lọc tháng */}
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-blue-700">
+              Tổng quan nhiệm vụ
+            </h2>
+
+            <select
+              value={thang}
+              onChange={(e) => setThang(e.target.value)}
+              className="border rounded px-3 py-2"
+            >
+              <option value="ALL">Tất cả</option>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <option key={i} value={i + 1}>
+                  Tháng {i + 1}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {loading ? (
             <p>Đang tải dữ liệu...</p>

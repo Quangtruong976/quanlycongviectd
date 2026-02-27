@@ -109,13 +109,13 @@ export default function HomePage() {
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
           <h1 className="text-xl md:text-2xl font-bold text-center">
-            ỨNG DỤNG QUẢN LÝ THEO DÕI CÔNG VIỆC
+            ỨNG DỤNG QUẢN LÝ THEO DÕI CÔNG VIỆC TỈNH ĐOÀN
           </h1>
         </div>
 
         <nav className="bg-blue-800">
           <ul className="flex justify-center gap-8 py-2 text-sm font-semibold">
-            <li className="underline">Trang chủ</li>
+            <li className="underline">Thống kê</li>
             <li>
               <Link href="/tien-do" className="hover:underline">
                 Theo dõi tiến độ

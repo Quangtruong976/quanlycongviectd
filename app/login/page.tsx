@@ -1,51 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "../auth/users";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
-  /* ===== NẾU ĐÃ ĐĂNG NHẬP THÌ CHUYỂN HƯỚNG ===== */
-  useEffect(() => {
-    const u = localStorage.getItem("user");
-    if (u) {
-      router.replace("/nhap-nhiem-vu");
-    }
-  }, [router]);
-
-  /* ===== LOGIN ===== */
-  function handleLogin() {
-    if (!username.trim() || !password.trim()) {
+  async function handleLogin() {
+    if (!email || !password) {
       alert("Nhập đầy đủ tài khoản và mật khẩu");
       return;
     }
 
-    if (loading) return;
-
     setLoading(true);
 
-    try {
-      const user = login(username.trim(), password);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (!user) {
-        alert("Sai tài khoản hoặc mật khẩu");
-        setLoading(false);
-        return;
-      }
-
-      localStorage.setItem("user", JSON.stringify(user));
-
-      router.replace("/nhap-nhiem-vu");
-    } catch (error) {
-      alert("Có lỗi xảy ra");
+    if (error) {
+      alert("Sai tài khoản hoặc mật khẩu");
       setLoading(false);
+      return;
     }
+
+    router.replace("/nhap-nhiem-vu");
   }
 
   return (
@@ -56,10 +41,11 @@ export default function LoginPage() {
         </h2>
 
         <input
-          placeholder="Tên đăng nhập"
+          type="email"
+          placeholder="Email"
           className="border w-full mb-3 p-2"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
 
         <input

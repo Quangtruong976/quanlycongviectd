@@ -1,242 +1,145 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function NhapNhiemVuPage() {
-  const router = useRouter();
-
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
   const [linhVucLon, setLinhVucLon] = useState<any[]>([]);
-  const [linhVucLonId, setLinhVucLonId] = useState("");
-
   const [linhVucCon, setLinhVucCon] = useState<any[]>([]);
+
+  const [linhVucLonId, setLinhVucLonId] = useState("");
   const [linhVucConId, setLinhVucConId] = useState("");
 
-  const [form, setForm] = useState({
-    ten: "",
-    giao: "",
-    han: "",
-    sanPham: "",
-    canBo: "",
-    trangThai: "chua_ht",
-  });
+  const [tenNhiemVu, setTenNhiemVu] = useState("");
+  const [moTa, setMoTa] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  /* ===== KIỂM TRA ĐĂNG NHẬP ===== */
+  // Load lĩnh vực lớn
   useEffect(() => {
-    const u = localStorage.getItem("user");
+    const fetchLinhVucLon = async () => {
+      const { data } = await supabase.from("linh_vuc_lon").select("*").order("id");
+      setLinhVucLon(data || []);
+    };
+    fetchLinhVucLon();
+  }, []);
 
-    if (!u) {
-      router.replace("/login");
+  // Khi chọn lĩnh vực lớn → load lĩnh vực con tương ứng
+  useEffect(() => {
+    if (!linhVucLonId) {
+      setLinhVucCon([]);
       return;
     }
 
-    try {
-      const parsed = JSON.parse(u);
-      setUser(parsed);
+    const fetchLinhVucCon = async () => {
+      const { data } = await supabase
+        .from("linh_vuc_con")
+        .select("*")
+        .eq("linh_vuc_lon_id", linhVucLonId)
+        .order("id");
 
-      fetch("/api/tasks", { cache: "no-store" })
-        .then(async (res) => {
-          if (!res.ok) throw new Error("Lỗi tải dữ liệu");
-          return res.json();
-        })
-        .then((data) => {
-          setLinhVucLon(data.linhVucLon || []);
-          setLinhVucCon(data.linhVucCon || []);
+      setLinhVucCon(data || []);
+    };
 
-          if (parsed.role !== "admin") {
-            setLinhVucLonId(parsed.role);
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          alert("Không thể tải dữ liệu lĩnh vực");
-        })
-        .finally(() => setLoading(false));
-    } catch (error) {
-      localStorage.removeItem("user");
-      router.replace("/login");
-    }
-  }, [router]);
-
-  /* ===== LỌC LĨNH VỰC CON ===== */
-  const dsLinhVucCon = linhVucCon.filter(
-    (lv) => lv.linh_vuc_lon_id === linhVucLonId
-  );
-
-  /* ===== RESET LĨNH VỰC CON KHI ĐỔI LỚN ===== */
-  useEffect(() => {
-    setLinhVucConId("");
+    fetchLinhVucCon();
   }, [linhVucLonId]);
 
-  /* ===== SUBMIT ===== */
-  async function handleSubmit() {
-    if (!linhVucLonId || !linhVucConId || !form.ten.trim()) {
-      alert("Nhập đầy đủ thông tin bắt buộc");
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    if (!tenNhiemVu || !linhVucLonId || !linhVucConId) {
+      alert("Phải chọn đầy đủ lĩnh vực và nhập tên nhiệm vụ.");
       return;
     }
 
-    try {
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache: "no-store",
-        body: JSON.stringify({
-          linhVucLonId,
-          linhVucConId,
-          nhiemVu: form,
-        }),
-      });
+    setLoading(true);
 
-      if (!res.ok) {
-        throw new Error("Lưu thất bại");
-      }
+    const { error } = await supabase.from("nhiem_vu").insert({
+      ten_nhiem_vu: tenNhiemVu,
+      mo_ta: moTa,
+      linh_vuc_lon_id: parseInt(linhVucLonId),
+      linh_vuc_con_id: parseInt(linhVucConId),
+      trang_thai: "Chưa thực hiện",
+    });
 
-      alert("Đã lưu nhiệm vụ");
+    setLoading(false);
 
-      setForm({
-        ten: "",
-        giao: "",
-        han: "",
-        sanPham: "",
-        canBo: "",
-        trangThai: "chua_ht",
-      });
-
+    if (error) {
+      alert("Lỗi: " + error.message);
+    } else {
+      alert("Thêm nhiệm vụ thành công!");
+      setTenNhiemVu("");
+      setMoTa("");
+      setLinhVucLonId("");
       setLinhVucConId("");
-    } catch (error) {
-      console.error(error);
-      alert("Có lỗi xảy ra khi lưu nhiệm vụ");
+      setLinhVucCon([]);
     }
-  }
-
-  if (loading) return null;
-  if (!user) return null;
+  };
 
   return (
-    <div className="min-h-screen bg-blue-700 flex justify-center p-6">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl p-6 space-y-4">
-        <h2 className="text-xl font-bold text-blue-700">
-          Xin chào {user.username}
-        </h2>
+    <div style={{ padding: 30, maxWidth: 700 }}>
+      <h2>NHẬP NHIỆM VỤ MỚI</h2>
 
-        {/* ADMIN CHỌN LĨNH VỰC */}
-        {user.role === "admin" && (
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+
+        <div>
+          <label>Lĩnh vực lớn</label>
           <select
-            className="border p-2 w-full"
             value={linhVucLonId}
             onChange={(e) => setLinhVucLonId(e.target.value)}
           >
             <option value="">-- Chọn lĩnh vực lớn --</option>
-            {linhVucLon.map((lv) => (
-              <option key={lv.id} value={lv.id}>
-                {lv.ten}
+            {linhVucLon.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.ten}
               </option>
             ))}
           </select>
-        )}
+        </div>
 
-        {/* LĨNH VỰC CON */}
-        <select
-          className="border p-2 w-full"
-          value={linhVucConId}
-          onChange={(e) => setLinhVucConId(e.target.value)}
-        >
-          <option value="">-- Chọn lĩnh vực con --</option>
-          {dsLinhVucCon.map((lv: any) => (
-            <option key={lv.id} value={lv.id}>
-              {lv.ten}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label>Lĩnh vực con</label>
+          <select
+            value={linhVucConId}
+            onChange={(e) => setLinhVucConId(e.target.value)}
+            disabled={!linhVucLonId}
+          >
+            <option value="">-- Chọn lĩnh vực con --</option>
+            {linhVucCon.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.ten}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {/* FORM */}
-        <div className="space-y-1">
-          <label className="font-semibold text-sm">
-            Nội dung nhiệm vụ
-          </label>
+        <div>
+          <label>Tên nhiệm vụ</label>
           <input
-            className="border p-2 w-full"
-            value={form.ten}
-            onChange={(e) =>
-              setForm({ ...form, ten: e.target.value })
-            }
+            type="text"
+            value={tenNhiemVu}
+            onChange={(e) => setTenNhiemVu(e.target.value)}
           />
         </div>
 
-        <div className="space-y-1">
-          <label className="font-semibold text-sm">
-            Ngày giao
-          </label>
-          <input
-            type="date"
-            className="border p-2 w-full"
-            value={form.giao}
-            onChange={(e) =>
-              setForm({ ...form, giao: e.target.value })
-            }
+        <div>
+          <label>Mô tả</label>
+          <textarea
+            value={moTa}
+            onChange={(e) => setMoTa(e.target.value)}
+            rows={4}
           />
         </div>
 
-        <div className="space-y-1">
-          <label className="font-semibold text-sm">
-            Thời hạn
-          </label>
-          <input
-            type="date"
-            className="border p-2 w-full"
-            value={form.han}
-            onChange={(e) =>
-              setForm({ ...form, han: e.target.value })
-            }
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-semibold text-sm">
-            Sản phẩm
-          </label>
-          <input
-            className="border p-2 w-full"
-            value={form.sanPham}
-            onChange={(e) =>
-              setForm({ ...form, sanPham: e.target.value })
-            }
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="font-semibold text-sm">
-            Cán bộ thực hiện
-          </label>
-          <input
-            className="border p-2 w-full"
-            value={form.canBo}
-            onChange={(e) =>
-              setForm({ ...form, canBo: e.target.value })
-            }
-          />
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-        >
-          Lưu nhiệm vụ
+        <button type="submit" disabled={loading}>
+          {loading ? "Đang lưu..." : "Lưu nhiệm vụ"}
         </button>
 
-        <Link
-          href="/"
-          className="block text-center text-blue-700 underline"
-        >
-          ← Quay về trang chủ
-        </Link>
-      </div>
+      </form>
     </div>
   );
 }

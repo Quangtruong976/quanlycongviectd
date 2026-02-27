@@ -77,12 +77,11 @@ export default function TienDoPage() {
         </div>
 
         <nav className="bg-blue-800">
-  <div className="flex justify-center items-center gap-8 py-2 text-sm font-semibold relative">
+  <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 
-    {/* Nút Home icon */}
     <Link
       href="/"
-      className="absolute left-4 text-white hover:text-yellow-300 transition"
+      className="text-white hover:text-yellow-300 transition flex items-center"
       title="Trang chủ"
     >
       <Home size={20} />
@@ -99,6 +98,7 @@ export default function TienDoPage() {
     <Link href="/login" className="hover:underline">
       Đăng nhập
     </Link>
+
   </div>
 </nav>
       </header>

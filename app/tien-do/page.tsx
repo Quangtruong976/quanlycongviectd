@@ -1,217 +1,272 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import Link from "next/link";
-import { Home } from "lucide-react";
 
 type NhiemVu = {
   id: number;
   linh_vuc_lon: string;
   linh_vuc_con: string;
-  ten: string;
-  ngay_giao: string;
-  han_hoan_thanh: string;
-  ngay_hoan_thanh: string | null;
-  san_pham: string | null;
-  tien_do: string | null;
-  can_bo_tham_muu: string;
-  can_bo_phu_trach: string;
-  thang: number;
+  ten_nhiem_vu: string;
+  don_vi: string;
+  thoi_gian: string;
+  tien_do: string;
+  ghi_chu: string;
 };
 
 export default function TienDoPage() {
   const [data, setData] = useState<NhiemVu[]>([]);
   const [loading, setLoading] = useState(true);
-  const [thang, setThang] = useState("ALL");
-  const [search, setSearch] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  const user =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("user") || "null")
+      : null;
+
+  const isAdmin = user?.role === "admin";
+
+  const [form, setForm] = useState({
+    linh_vuc_lon: "",
+    linh_vuc_con: "",
+    ten_nhiem_vu: "",
+    don_vi: "",
+    thoi_gian: "",
+    tien_do: "",
+    ghi_chu: "",
+  });
 
   useEffect(() => {
     fetchData();
-  }, [thang, search]);
+  }, []);
 
   async function fetchData() {
     setLoading(true);
+    const { data, error } = await supabase
+      .from("nhiem_vu")
+      .select("*")
+      .order("id", { ascending: true });
 
-    let query = supabase.from("nhiem_vu").select("*");
-
-    if (thang !== "ALL") {
-      query = query.eq("thang", Number(thang));
+    if (!error && data) {
+      setData(data);
     }
-
-    if (search.trim() !== "") {
-      query = query.ilike("ten", `%${search}%`);
-    }
-
-    const { data } = await query
-      .order("linh_vuc_lon")
-      .order("linh_vuc_con");
-
-    setData((data as NhiemVu[]) || []);
     setLoading(false);
   }
 
-  const grouped = useMemo(() => {
-    return data.reduce<Record<string, Record<string, NhiemVu[]>>>(
-      (acc, item) => {
-        if (!acc[item.linh_vuc_lon]) acc[item.linh_vuc_lon] = {};
-        if (!acc[item.linh_vuc_lon][item.linh_vuc_con])
-          acc[item.linh_vuc_lon][item.linh_vuc_con] = [];
+  async function handleSubmit() {
+    if (!form.ten_nhiem_vu) return alert("Nhập tên nhiệm vụ");
 
-        acc[item.linh_vuc_lon][item.linh_vuc_con].push(item);
-        return acc;
-      },
-      {}
-    );
-  }, [data]);
+    if (editingId) {
+      await supabase
+        .from("nhiem_vu")
+        .update(form)
+        .eq("id", editingId);
+    } else {
+      await supabase.from("nhiem_vu").insert([form]);
+    }
+
+    setForm({
+      linh_vuc_lon: "",
+      linh_vuc_con: "",
+      ten_nhiem_vu: "",
+      don_vi: "",
+      thoi_gian: "",
+      tien_do: "",
+      ghi_chu: "",
+    });
+
+    setEditingId(null);
+    fetchData();
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("Xóa nhiệm vụ này?")) return;
+    await supabase.from("nhiem_vu").delete().eq("id", id);
+    fetchData();
+  }
+
+  function handleEdit(item: NhiemVu) {
+    setEditingId(item.id);
+    setForm(item);
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
-      <header className="bg-blue-900 text-white">
-        <div className="flex flex-col items-center py-4">
-          <img src="/logo-doan.png" className="h-20 mb-2" />
-          <h1 className="text-xl md:text-2xl font-bold text-center">
-            HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
-          </h1>
-          <p className="text-sm md:text-base font-semibold text-blue-200">
-            TỈNH ĐOÀN LÂM ĐỒNG
-          </p>
+    <div style={{ padding: 20 }}>
+      <h2>THEO DÕI TIẾN ĐỘ CÔNG VIỆC</h2>
+
+      {/* ===== BẢNG TIẾN ĐỘ ===== */}
+      <div style={{ overflowX: "auto", marginTop: 20 }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            minWidth: 1200,
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={th}>Lĩnh vực lớn</th>
+              <th style={th}>Lĩnh vực con</th>
+              <th style={th}>Tên nhiệm vụ</th>
+              <th style={th}>Đơn vị</th>
+              <th style={th}>Thời gian</th>
+              <th style={th}>Tiến độ</th>
+              <th style={th}>Ghi chú</th>
+              {isAdmin && <th style={th}>Thao tác</th>}
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={8} style={td}>
+                  Đang tải...
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={8} style={td}>
+                  Chưa có dữ liệu
+                </td>
+              </tr>
+            ) : (
+              data.map((item) => (
+                <tr key={item.id}>
+                  <td style={td}>{item.linh_vuc_lon}</td>
+                  <td style={td}>{item.linh_vuc_con}</td>
+                  <td style={td}>{item.ten_nhiem_vu}</td>
+                  <td style={td}>{item.don_vi}</td>
+                  <td style={td}>{item.thoi_gian}</td>
+                  <td style={td}>{item.tien_do}</td>
+                  <td style={td}>{item.ghi_chu}</td>
+
+                  {isAdmin && (
+                    <td style={td}>
+                      <button onClick={() => handleEdit(item)}>Sửa</button>{" "}
+                      <button onClick={() => handleDelete(item.id)}>
+                        Xóa
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ===== FORM NHẬP (CHỈ ADMIN THẤY) ===== */}
+      {isAdmin && (
+        <div style={{ marginTop: 30 }}>
+          <h3>{editingId ? "CẬP NHẬT NHIỆM VỤ" : "THÊM NHIỆM VỤ"}</h3>
+
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              minWidth: 1200,
+            }}
+          >
+            <tbody>
+              <tr>
+                <td style={tdInput}>
+                  <input
+                    placeholder="Lĩnh vực lớn"
+                    value={form.linh_vuc_lon}
+                    onChange={(e) =>
+                      setForm({ ...form, linh_vuc_lon: e.target.value })
+                    }
+                  />
+                </td>
+
+                <td style={tdInput}>
+                  <input
+                    placeholder="Lĩnh vực con"
+                    value={form.linh_vuc_con}
+                    onChange={(e) =>
+                      setForm({ ...form, linh_vuc_con: e.target.value })
+                    }
+                  />
+                </td>
+
+                <td style={tdInput}>
+                  <input
+                    placeholder="Tên nhiệm vụ"
+                    value={form.ten_nhiem_vu}
+                    onChange={(e) =>
+                      setForm({ ...form, ten_nhiem_vu: e.target.value })
+                    }
+                  />
+                </td>
+
+                <td style={tdInput}>
+                  <input
+                    placeholder="Đơn vị"
+                    value={form.don_vi}
+                    onChange={(e) =>
+                      setForm({ ...form, don_vi: e.target.value })
+                    }
+                  />
+                </td>
+
+                <td style={tdInput}>
+                  <input
+                    placeholder="Thời gian"
+                    value={form.thoi_gian}
+                    onChange={(e) =>
+                      setForm({ ...form, thoi_gian: e.target.value })
+                    }
+                  />
+                </td>
+
+                <td style={tdInput}>
+                  <input
+                    placeholder="Tiến độ"
+                    value={form.tien_do}
+                    onChange={(e) =>
+                      setForm({ ...form, tien_do: e.target.value })
+                    }
+                  />
+                </td>
+
+                <td style={tdInput}>
+                  <input
+                    placeholder="Ghi chú"
+                    value={form.ghi_chu}
+                    onChange={(e) =>
+                      setForm({ ...form, ghi_chu: e.target.value })
+                    }
+                  />
+                </td>
+
+                <td style={tdInput}>
+                  <button onClick={handleSubmit}>
+                    {editingId ? "Cập nhật" : "Thêm"}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <nav className="bg-blue-800">
-          <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-            <Link
-              href="/"
-              className="text-white hover:text-yellow-300 transition flex items-center"
-              title="Trang chủ"
-            >
-              <Home size={20} />
-            </Link>
-
-            <Link href="/thong-ke" className="hover:underline">
-              Thống kê chi tiết
-            </Link>
-
-            <Link href="/tien-do" className="hover:underline">
-              Theo dõi tiến độ công việc
-            </Link>
-
-            <Link href="/login" className="hover:underline">
-              Đăng nhập
-            </Link>
-          </div>
-        </nav>
-      </header>
-
-      <main className="flex-1 flex justify-center p-4">
-        <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
-
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-6">
-            <h2 className="font-semibold text-blue-700 text-lg">
-              Theo dõi tiến độ công việc
-            </h2>
-
-            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-              <input
-                type="text"
-                placeholder="Tìm văn bản / công việc..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border px-3 py-2 rounded w-full md:w-64"
-              />
-
-              <select
-                value={thang}
-                onChange={(e) => setThang(e.target.value)}
-                className="border px-3 py-2 rounded w-full md:w-48"
-              >
-                <option value="ALL">Tất cả</option>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <option key={i} value={i + 1}>
-                    Tháng {i + 1}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-10">Đang tải dữ liệu...</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300 text-sm">
-                <thead>
-                  <tr className="bg-blue-100 text-blue-900 text-center font-semibold">
-                    <th className="border p-2">STT</th>
-                    <th className="border p-2 min-w-[250px] text-left">Văn bản / Công việc</th>
-                    <th className="border p-2">Ngày giao</th>
-                    <th className="border p-2">Thời hạn HT</th>
-                    <th className="border p-2">Ngày HT</th>
-                    <th className="border p-2 min-w-[150px]">Sản phẩm</th>
-                    <th className="border p-2">Tiến độ</th>
-                    <th className="border p-2 min-w-[140px]">Cán bộ tham mưu</th>
-                    <th className="border p-2 min-w-[140px]">TT phụ trách</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {Object.entries(grouped).map(([lvLon, lvConObj], index) => {
-                    let stt = 1;
-                    return (
-                      <>
-                        <tr key={lvLon} className="bg-blue-50 font-bold text-blue-800">
-                          <td colSpan={9} className="border p-2 text-base">
-                            {index + 1}. {lvLon}
-                          </td>
-                        </tr>
-
-                        {Object.entries(lvConObj).map(([lvCon, tasks]) => (
-                          <>
-                            <tr key={lvLon + lvCon} className="bg-gray-100 font-semibold">
-                              <td colSpan={9} className="border p-2">
-                                * {lvCon}
-                              </td>
-                            </tr>
-
-                            {tasks.map((nv) => (
-                              <tr key={nv.id} className="hover:bg-gray-50">
-                                <td className="border p-2 text-center">
-                                  {stt++}
-                                </td>
-                                <td className="border p-2">{nv.ten}</td>
-                                <td className="border p-2 text-center">{nv.ngay_giao}</td>
-                                <td className="border p-2 text-center">{nv.han_hoan_thanh}</td>
-                                <td className="border p-2 text-center">
-                                  {nv.ngay_hoan_thanh || ""}
-                                </td>
-                                <td className="border p-2">{nv.san_pham || ""}</td>
-                                <td className="border p-2 text-center">
-                                  {nv.tien_do || ""}
-                                </td>
-                                <td className="border p-2">
-                                  {nv.can_bo_tham_muu}
-                                </td>
-                                <td className="border p-2">
-                                  {nv.can_bo_phu_trach}
-                                </td>
-                              </tr>
-                            ))}
-                          </>
-                        ))}
-                      </>
-                    );
-                  })}
-                </tbody>
-
-              </table>
-            </div>
-          )}
-        </div>
-      </main>
-
-      <footer className="bg-blue-900 text-white text-center text-sm py-3">
-        © 2026 Tỉnh đoàn Lâm Đồng
-      </footer>
+      )}
     </div>
   );
 }
+
+const th = {
+  border: "1px solid #ccc",
+  padding: 8,
+  background: "#f3f3f3",
+  textAlign: "center" as const,
+};
+
+const td = {
+  border: "1px solid #ccc",
+  padding: 8,
+  textAlign: "center" as const,
+};
+
+const tdInput = {
+  border: "1px solid #ccc",
+  padding: 4,
+};

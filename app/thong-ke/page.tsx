@@ -116,10 +116,22 @@ export default function ThongKePage() {
     name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const getColor = (xepLoai: string) => {
+    switch (xepLoai) {
+      case "Hoàn thành xuất sắc":
+        return "bg-pink-100 text-pink-700";
+      case "Hoàn thành tốt":
+        return "bg-green-100 text-green-700";
+      case "Hoàn thành nhiệm vụ":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-red-100 text-red-700";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
-      {/* HEADER GIỐNG TRANG CHỦ */}
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
@@ -140,17 +152,16 @@ export default function ThongKePage() {
         </nav>
       </header>
 
-      {/* MAIN */}
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          <div className="flex flex-col md:flex-row md:justify-between gap-4 mb-6">
+          {/* Bộ lọc */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
 
-            {/* Lọc tháng */}
             <select
               value={thang}
               onChange={(e) => setThang(e.target.value)}
-              className="border rounded-lg px-3 py-2 w-full md:w-48 shadow-sm"
+              className="border px-3 py-2 rounded w-full md:w-48"
             >
               <option value="ALL">Tất cả</option>
               {Array.from({ length: 12 }).map((_, i) => (
@@ -160,7 +171,6 @@ export default function ThongKePage() {
               ))}
             </select>
 
-            {/* Lọc tên thông minh */}
             <div className="relative w-full md:w-72">
               <input
                 type="text"
@@ -170,11 +180,11 @@ export default function ThongKePage() {
                   setSearch(e.target.value);
                   setSelectedCanBo("");
                 }}
-                className="w-full border rounded-lg px-3 py-2 shadow-sm"
+                className="w-full border px-3 py-2 rounded"
               />
 
               {search && !selectedCanBo && (
-                <div className="absolute bg-white border w-full mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto z-10">
+                <div className="absolute bg-white border w-full mt-1 rounded shadow max-h-60 overflow-y-auto z-10">
                   {suggestedNames.map((name) => (
                     <div
                       key={name}
@@ -190,49 +200,46 @@ export default function ThongKePage() {
                 </div>
               )}
             </div>
-
           </div>
 
-          {loading ? (
-            <div className="text-center py-10">Đang tải dữ liệu...</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="bg-blue-100 text-blue-900 uppercase text-xs">
-                    <th className="px-4 py-3 text-left">STT</th>
-                    <th className="px-4 py-3 text-left">Cán bộ</th>
-                    <th className="px-4 py-3">Tổng NV</th>
-                    <th className="px-4 py-3">Vượt</th>
-                    <th className="px-4 py-3">Đúng hạn</th>
-                    <th className="px-4 py-3">Quá hạn</th>
-                    <th className="px-4 py-3">Chưa HT</th>
-                    <th className="px-4 py-3">Điểm</th>
-                    <th className="px-4 py-3">Xếp loại</th>
+          {/* Bảng có kẻ ô */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 text-sm">
+              <thead>
+                <tr className="bg-blue-100 text-blue-900">
+                  <th className="border px-3 py-2">STT</th>
+                  <th className="border px-3 py-2 text-left">Cán bộ</th>
+                  <th className="border px-3 py-2">Tổng</th>
+                  <th className="border px-3 py-2">Vượt</th>
+                  <th className="border px-3 py-2">Đúng hạn</th>
+                  <th className="border px-3 py-2">Quá hạn</th>
+                  <th className="border px-3 py-2">Chưa HT</th>
+                  <th className="border px-3 py-2">Điểm</th>
+                  <th className="border px-3 py-2">Xếp loại</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredData.map((cb, index) => (
+                  <tr key={cb.can_bo} className="hover:bg-gray-50">
+                    <td className="border px-3 py-2 text-center">{index + 1}</td>
+                    <td className="border px-3 py-2">{cb.can_bo}</td>
+                    <td className="border px-3 py-2 text-center">{cb.tong}</td>
+                    <td className="border px-3 py-2 text-center text-pink-600 font-semibold">{cb.vuot}</td>
+                    <td className="border px-3 py-2 text-center text-green-600 font-semibold">{cb.dungHan}</td>
+                    <td className="border px-3 py-2 text-center text-yellow-600 font-semibold">{cb.quaHan}</td>
+                    <td className="border px-3 py-2 text-center text-red-600 font-semibold">{cb.chuaHT}</td>
+                    <td className="border px-3 py-2 text-center font-bold">{cb.diem}</td>
+                    <td className="border px-3 py-2 text-center">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getColor(cb.xepLoai)}`}>
+                        {cb.xepLoai}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredData.map((cb, index) => (
-                    <tr key={cb.can_bo} className="hover:bg-blue-50 transition">
-                      <td className="px-4 py-3">{index + 1}</td>
-                      <td className="px-4 py-3 font-medium">{cb.can_bo}</td>
-                      <td className="px-4 py-3 text-center">{cb.tong}</td>
-                      <td className="px-4 py-3 text-center text-green-600 font-semibold">{cb.vuot}</td>
-                      <td className="px-4 py-3 text-center text-blue-600 font-semibold">{cb.dungHan}</td>
-                      <td className="px-4 py-3 text-center text-orange-500 font-semibold">{cb.quaHan}</td>
-                      <td className="px-4 py-3 text-center text-red-600 font-semibold">{cb.chuaHT}</td>
-                      <td className="px-4 py-3 text-center font-bold">{cb.diem}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                          {cb.xepLoai}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                ))}
+              </tbody>
+            </table>
+          </div>
 
         </div>
       </main>

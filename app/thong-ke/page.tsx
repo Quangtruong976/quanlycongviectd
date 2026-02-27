@@ -205,7 +205,7 @@ export default function ThongKePage() {
             <div className="relative w-full md:w-72">
               <input
                 type="text"
-                placeholder="Tìm cán bộ..."
+                placeholder="Tìm theo tên cán bộ..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -242,11 +242,11 @@ export default function ThongKePage() {
                   <tr className="bg-blue-100 text-blue-900">
                     <th className="border px-3 py-2">STT</th>
                     <th className="border px-3 py-2 text-left">Cán bộ</th>
-                    <th className="border px-3 py-2">Tổng</th>
-                    <th className="border px-3 py-2">Vượt</th>
-                    <th className="border px-3 py-2">Đúng hạn</th>
-                    <th className="border px-3 py-2">Quá hạn</th>
-                    <th className="border px-3 py-2">Chưa HT</th>
+                    <th className="border px-3 py-2">Tổng nhiệm vụ được giao</th>
+                    <th className="border px-3 py-2">NV hoàn thành Vượt tiến độ</th>
+                    <th className="border px-3 py-2">NV hoàn thành đúng hạn</th>
+                    <th className="border px-3 py-2">NV hoàn thành quá hạn</th>
+                    <th className="border px-3 py-2">NV Chưa hoàn thành</th>
                     <th className="border px-3 py-2">Điểm</th>
                     <th className="border px-3 py-2">Xếp loại</th>
                   </tr>

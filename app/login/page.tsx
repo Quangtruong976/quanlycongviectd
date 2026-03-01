@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Home } from "lucide-react";
@@ -10,12 +10,28 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  // Nếu đã đăng nhập thì tự chuyển luôn
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (role === "admin") {
+      router.replace("/admin/nhap-tien-do");
+    }
+  }, [router]);
+
   const handleLogin = () => {
     if (username === "admin" && password === "123456") {
       localStorage.setItem("role", "admin");
-      router.push("/admin/nhap-tien-do");
+
+      // dùng replace để không quay lại login khi bấm back
+      router.replace("/admin/nhap-tien-do");
     } else {
       alert("Sai tài khoản hoặc mật khẩu");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleLogin();
     }
   };
 
@@ -65,6 +81,7 @@ export default function LoginPage() {
             className="border px-3 py-2 rounded w-full mb-4"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
 
           <input
@@ -73,6 +90,7 @@ export default function LoginPage() {
             className="border px-3 py-2 rounded w-full mb-6"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
 
           <button

@@ -60,19 +60,20 @@ export default function LoginPage() {
             <Link
               href="/"
               className="text-white hover:text-yellow-300 transition flex items-center"
+              title="Trang chủ"
             >
               <Home size={20} />
-            </Link>
-
-            <Link href="/thong-ke" className="hover:underline">
-              Thống kê chi tiết
             </Link>
 
             <Link href="/tien-do" className="hover:underline">
               Theo dõi tiến độ công việc
             </Link>
 
-            <Link href="/login" className="underline text-yellow-300">
+            <Link href="/thong-ke" className="hover:underline">
+              Thống kê chi tiết công việc cá nhân
+            </Link>
+            
+            <Link href="/login" className="hover:underline">
               Đăng nhập
             </Link>
           </div>

@@ -155,127 +155,53 @@ export default function TienDoPage() {
                 </thead>
 
                 <tbody>
+                  {Object.entries(grouped).map(([lvLon, lvConObj], index) => {
+                    let stt = 1;
+                    return (
+                      <>
+                        <tr key={lvLon} className="bg-blue-50 font-bold text-blue-800">
+                          <td colSpan={9} className="border p-2 text-base">
+                            {index + 1}. {lvLon}
+                          </td>
+                        </tr>
 
-  {/* I */}
-  <tr className="bg-gray-200 font-bold text-lg">
-    <td colSpan={9} className="border p-2">
-      I. Lĩnh vực Văn phòng – Tuyên giáo – Xây dựng Đoàn
-    </td>
-  </tr>
+                        {Object.entries(lvConObj).map(([lvCon, tasks]) => (
+                          <>
+                            <tr key={lvLon + lvCon} className="bg-gray-100 font-semibold">
+                              <td colSpan={9} className="border p-2">
+                                * {lvCon}
+                              </td>
+                            </tr>
 
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Văn phòng
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"vp"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Tuyên giáo
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"tg"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Xây dựng Đoàn
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"xd"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  {/* II */}
-  <tr className="bg-gray-200 font-bold text-lg">
-    <td colSpan={9} className="border p-2">
-      II. Lĩnh vực Phong trào - Hội LHTN
-    </td>
-  </tr>
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Phong trào
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"pt"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Hội LHTN Việt Nam tỉnh
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"hlhtn"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  {/* III */}
-  <tr className="bg-gray-200 font-bold text-lg">
-    <td colSpan={9} className="border p-2">
-      III. Lĩnh vực Trường học - Hội Sinh viên
-    </td>
-  </tr>
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Trường học
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"th"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Hội Sinh viên
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"hsv"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-</tbody>
+                            {tasks.map((nv) => (
+                              <tr key={nv.id} className="hover:bg-gray-50">
+                                <td className="border p-2 text-center">
+                                  {stt++}
+                                </td>
+                                <td className="border p-2">{nv.ten}</td>
+                                <td className="border p-2 text-center">{nv.ngay_giao}</td>
+                                <td className="border p-2 text-center">{nv.han_hoan_thanh}</td>
+                                <td className="border p-2 text-center">
+                                  {nv.ngay_hoan_thanh || ""}
+                                </td>
+                                <td className="border p-2">{nv.san_pham || ""}</td>
+                                <td className="border p-2 text-center">
+                                  {nv.tien_do || ""}
+                                </td>
+                                <td className="border p-2">
+                                  {nv.can_bo_tham_muu}
+                                </td>
+                                <td className="border p-2">
+                                  {nv.can_bo_phu_trach}
+                                </td>
+                              </tr>
+                            ))}
+                          </>
+                        ))}
+                      </>
+                    );
+                  })}
+                </tbody>
 
               </table>
             </div>

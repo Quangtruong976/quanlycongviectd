@@ -119,7 +119,7 @@ export default function HomePage() {
 
       {/* MAIN */}
       <main className="flex-1 flex justify-center p-4">
-        <div className="bg-white w-full max-w-6xl rounded-2xl shadow-2xl p-4 md:p-6">
+        <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4 md:p-6">
           {/* Bộ lọc tháng */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-6">
             <h2 className="font-semibold text-blue-700 text-lg">

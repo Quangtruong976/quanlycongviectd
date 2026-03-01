@@ -20,7 +20,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       
       {/* HEADER */}
       <header className="bg-blue-900 text-white">

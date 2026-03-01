@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase"; // chỉnh đúng đường dẫn của bạn
 
 type NhiemVu = {
-  id: number;
+  id?: number;
   ten: string;
   ngay_giao: string;
   han_hoan_thanh: string;
@@ -21,6 +22,7 @@ export default function AdminNhapTienDoPage() {
   const router = useRouter();
   const [adminName, setAdminName] = useState("");
   const [data, setData] = useState<NhiemVu[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -30,84 +32,152 @@ export default function AdminNhapTienDoPage() {
       router.replace("/login");
     } else {
       setAdminName(name || "Admin");
+      fetchData();
     }
-  }, [router]);
+  }, []);
 
-  const update = (id: number, field: string, value: string) => {
-    setData(data.map(item =>
-      item.id === id ? { ...item, [field]: value } : item
-    ));
+  const fetchData = async () => {
+    const { data, error } = await supabase
+      .from("nhiem_vu")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (!error && data) {
+      setData(data);
+    }
+  };
+
+  const update = (index: number, field: keyof NhiemVu, value: string) => {
+    const newData = [...data];
+    newData[index] = { ...newData[index], [field]: value };
+    setData(newData);
+  };
+
+  const addRow = () => {
+    setData([
+      ...data,
+      {
+        ten: "",
+        ngay_giao: "",
+        han_hoan_thanh: "",
+        ngay_hoan_thanh: "",
+        san_pham: "",
+        tien_do: "CHUA_HT",
+        can_bo_tham_muu: "",
+        can_bo_phu_trach: "",
+      },
+    ]);
+  };
+
+  const saveAll = async () => {
+    setLoading(true);
+
+    for (const item of data) {
+      if (item.id) {
+        await supabase.from("nhiem_vu").update(item).eq("id", item.id);
+      } else {
+        await supabase.from("nhiem_vu").insert(item);
+      }
+    }
+
+    setLoading(false);
+    alert("Đã lưu dữ liệu");
+    fetchData();
+  };
+
+  const deleteRow = async (id?: number, index?: number) => {
+    if (id) {
+      await supabase.from("nhiem_vu").delete().eq("id", id);
+      fetchData();
+    } else if (index !== undefined) {
+      const newData = [...data];
+      newData.splice(index, 1);
+      setData(newData);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
-      {/* HEADER giữ nguyên */}
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
-          <h1 className="text-xl md:text-2xl font-bold text-center">
+          <h1 className="text-xl font-bold text-center">
             HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
           </h1>
-          <p className="text-sm md:text-base font-semibold text-blue-200">
-            TỈNH ĐOÀN LÂM ĐỒNG
-          </p>
+          <p className="text-blue-200">TỈNH ĐOÀN LÂM ĐỒNG</p>
         </div>
 
-        <nav className="bg-blue-800">
-          <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-            <Link href="/" className="text-white hover:text-yellow-300">
-              <Home size={20} />
-            </Link>
+        <nav className="bg-blue-800 flex justify-center items-center gap-6 py-2 text-sm font-semibold">
+          <Link href="/" className="text-white hover:text-yellow-300">
+            <Home size={20} />
+          </Link>
 
-            <Link href="/tien-do" className="hover:underline">
-              Theo dõi tiến độ
-            </Link>
+          <Link href="/tien-do" className="hover:underline">
+            Theo dõi tiến độ
+          </Link>
 
-            <span className="text-yellow-300 font-bold">
-              Xin chào, {adminName}
-            </span>
+          <span className="text-yellow-300 font-bold">
+            Xin chào, {adminName}
+          </span>
 
-            <button
-              onClick={() => {
-                localStorage.clear();
-                router.replace("/login");
-              }}
-              className="hover:underline"
-            >
-              Đăng xuất
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              router.replace("/login");
+            }}
+          >
+            Đăng xuất
+          </button>
         </nav>
       </header>
 
-      {/* MAIN */}
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          <h2 className="font-semibold text-blue-700 text-lg mb-6">
-            Quản lý & cập nhật tiến độ nhiệm vụ
-          </h2>
+          <div className="flex justify-between mb-4">
+            <h2 className="font-semibold text-blue-700 text-lg">
+              Quản lý nhiệm vụ
+            </h2>
+
+            <div className="flex gap-2">
+              <button
+                onClick={addRow}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                + Thêm nhiệm vụ
+              </button>
+
+              <button
+                onClick={saveAll}
+                disabled={loading}
+                className="bg-green-600 text-white px-4 py-2 rounded"
+              >
+                {loading ? "Đang lưu..." : "Lưu vào hệ thống"}
+              </button>
+            </div>
+          </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-300 text-sm">
               <thead>
-                <tr className="bg-blue-100 text-blue-900 text-center font-semibold">
+                <tr className="bg-blue-100 text-center font-semibold">
                   <th className="border p-2">STT</th>
-                  <th className="border p-2 text-left">Văn bản / Công việc</th>
+                  <th className="border p-2">Công việc</th>
                   <th className="border p-2">Ngày giao</th>
                   <th className="border p-2">Hạn HT</th>
                   <th className="border p-2">Ngày HT</th>
                   <th className="border p-2">Sản phẩm</th>
-                  <th className="border p-2">Tiến độ (%)</th>
-                  <th className="border p-2">Cán bộ tham mưu</th>
-                  <th className="border p-2">TT phụ trách</th>
+                  <th className="border p-2">Trạng thái</th>
+                  <th className="border p-2">Tham mưu</th>
+                  <th className="border p-2">Phụ trách</th>
+                  <th className="border p-2">Xóa</th>
                 </tr>
               </thead>
 
               <tbody>
                 {data.map((item, index) => (
-                  <tr key={item.id}>
+                  <tr key={index}>
                     <td className="border p-2 text-center">{index + 1}</td>
 
                     <td className="border p-2">
@@ -115,7 +185,7 @@ export default function AdminNhapTienDoPage() {
                         className="border w-full px-2 py-1 rounded"
                         value={item.ten}
                         onChange={(e) =>
-                          update(item.id, "ten", e.target.value)
+                          update(index, "ten", e.target.value)
                         }
                       />
                     </td>
@@ -126,7 +196,7 @@ export default function AdminNhapTienDoPage() {
                         className="border w-full px-2 py-1 rounded"
                         value={item.ngay_giao}
                         onChange={(e) =>
-                          update(item.id, "ngay_giao", e.target.value)
+                          update(index, "ngay_giao", e.target.value)
                         }
                       />
                     </td>
@@ -137,7 +207,7 @@ export default function AdminNhapTienDoPage() {
                         className="border w-full px-2 py-1 rounded"
                         value={item.han_hoan_thanh}
                         onChange={(e) =>
-                          update(item.id, "han_hoan_thanh", e.target.value)
+                          update(index, "han_hoan_thanh", e.target.value)
                         }
                       />
                     </td>
@@ -148,7 +218,7 @@ export default function AdminNhapTienDoPage() {
                         className="border w-full px-2 py-1 rounded"
                         value={item.ngay_hoan_thanh}
                         onChange={(e) =>
-                          update(item.id, "ngay_hoan_thanh", e.target.value)
+                          update(index, "ngay_hoan_thanh", e.target.value)
                         }
                       />
                     </td>
@@ -158,20 +228,24 @@ export default function AdminNhapTienDoPage() {
                         className="border w-full px-2 py-1 rounded"
                         value={item.san_pham}
                         onChange={(e) =>
-                          update(item.id, "san_pham", e.target.value)
+                          update(index, "san_pham", e.target.value)
                         }
                       />
                     </td>
 
                     <td className="border p-2">
-                      <input
-                        type="number"
+                      <select
                         className="border w-full px-2 py-1 rounded"
                         value={item.tien_do}
                         onChange={(e) =>
-                          update(item.id, "tien_do", e.target.value)
+                          update(index, "tien_do", e.target.value)
                         }
-                      />
+                      >
+                        <option value="CHUA_HT">Chưa hoàn thành</option>
+                        <option value="DUNG_HAN">Hoàn thành đúng hạn</option>
+                        <option value="QUA_HAN">Hoàn thành quá hạn</option>
+                        <option value="VUOT">Hoàn thành vượt tiến độ</option>
+                      </select>
                     </td>
 
                     <td className="border p-2">
@@ -179,7 +253,7 @@ export default function AdminNhapTienDoPage() {
                         className="border w-full px-2 py-1 rounded"
                         value={item.can_bo_tham_muu}
                         onChange={(e) =>
-                          update(item.id, "can_bo_tham_muu", e.target.value)
+                          update(index, "can_bo_tham_muu", e.target.value)
                         }
                       />
                     </td>
@@ -189,16 +263,25 @@ export default function AdminNhapTienDoPage() {
                         className="border w-full px-2 py-1 rounded"
                         value={item.can_bo_phu_trach}
                         onChange={(e) =>
-                          update(item.id, "can_bo_phu_trach", e.target.value)
+                          update(index, "can_bo_phu_trach", e.target.value)
                         }
                       />
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      <button
+                        onClick={() => deleteRow(item.id, index)}
+                        className="text-red-600 font-bold"
+                      >
+                        X
+                      </button>
                     </td>
                   </tr>
                 ))}
 
                 {data.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="text-center p-6 text-gray-500">
+                    <td colSpan={10} className="text-center p-6 text-gray-500">
                       Chưa có nhiệm vụ
                     </td>
                   </tr>

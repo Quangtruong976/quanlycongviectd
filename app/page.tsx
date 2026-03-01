@@ -90,24 +90,30 @@ export default function HomePage() {
         </div>
 
         <nav className="bg-blue-800">
-          <ul className="flex justify-center gap-8 py-2 text-sm font-semibold">
-            <li>
-              <Link href="/thong-ke" className="hover:underline">
-                Thống kê chi tiết
-              </Link>
-            </li>
-            <li>
-              <Link href="/tien-do" className="hover:underline">
-                Theo dõi tiến độ công việc
-              </Link>
-            </li>
-            <li>
-              <Link href="/login" className="hover:underline">
-                Đăng nhập
-              </Link>
-            </li>
-          </ul>
-        </nav>
+  <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
+
+    <Link
+      href="/"
+      className="text-white hover:text-yellow-300 transition flex items-center"
+      title="Trang chủ"
+    >
+      <Home size={20} />
+    </Link>
+
+    <Link href="/thong-ke" className="hover:underline">
+      Thống kê chi tiết
+    </Link>
+
+    <Link href="/tien-do" className="hover:underline">
+      Theo dõi tiến độ công việc
+    </Link>
+
+    <Link href="/login" className="hover:underline">
+      Đăng nhập
+    </Link>
+
+  </div>
+</nav>
       </header>
 
       {/* MAIN */}

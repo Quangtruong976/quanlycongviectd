@@ -17,10 +17,10 @@ export default function NhapTienDoPage() {
   const router = useRouter();
   const [data, setData] = useState<NhiemVu[]>([]);
 
-  useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (role !== "admin") router.push("/login");
-  }, []);
+ // useEffect(() => {
+  //  const role = localStorage.getItem("role");
+   // if (role !== "admin") router.push("/login");
+ // }, []);
 
   const addRow = () => {
     setData([

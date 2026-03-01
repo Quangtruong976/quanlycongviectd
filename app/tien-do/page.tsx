@@ -79,28 +79,30 @@ export default function TienDoPage() {
         </div>
 
         <nav className="bg-blue-800">
-          <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-            <Link
-              href="/"
-              className="text-white hover:text-yellow-300 transition flex items-center"
-              title="Trang chủ"
-            >
-              <Home size={20} />
-            </Link>
+  <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 
-            <Link href="/thong-ke" className="hover:underline">
-              Thống kê chi tiết
-            </Link>
+    <Link
+      href="/"
+      className="text-white hover:text-yellow-300 transition flex items-center"
+      title="Trang chủ"
+    >
+      <Home size={20} />
+    </Link>
 
-            <Link href="/tien-do" className="hover:underline">
-              Theo dõi tiến độ công việc
-            </Link>
+    <Link href="/thong-ke" className="hover:underline">
+      Thống kê chi tiết
+    </Link>
 
-            <Link href="/login" className="hover:underline">
-              Đăng nhập
-            </Link>
-          </div>
-        </nav>
+    <Link href="/tien-do" className="hover:underline">
+      Theo dõi tiến độ công việc
+    </Link>
+
+    <Link href="/login" className="hover:underline">
+      Đăng nhập
+    </Link>
+
+  </div>
+</nav>
       </header>
 
       <main className="flex-1 flex justify-center p-4">

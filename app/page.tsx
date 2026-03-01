@@ -106,11 +106,9 @@ export default function HomePage() {
             </Link>
 
             <Link href="/thong-ke" className="hover:underline">
-              Thống kê kết quả thực hiện nhiệm vụ của cán bộ
+              Thống kê chi tiết công việc cá nhân
             </Link>
-
-          
-
+            
             <Link href="/login" className="hover:underline">
               Đăng nhập
             </Link>

@@ -2,69 +2,50 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  async function handleLogin() {
-    if (!email || !password) {
-      alert("Nhập đầy đủ tài khoản và mật khẩu");
-      return;
-    }
-
-    setLoading(true);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
+  const handleLogin = () => {
+    // Tạm thời hardcode admin
+    if (username === "admin" && password === "123456") {
+      localStorage.setItem("role", "admin");
+      router.push("/admin/nhap-tiendo");
+    } else {
       alert("Sai tài khoản hoặc mật khẩu");
-      setLoading(false);
-      return;
     }
-
-    router.replace("/nhap-nhiem-vu");
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-700">
-      <div className="bg-white p-6 rounded-xl w-[320px]">
-        <h2 className="text-xl font-bold mb-4 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded shadow w-96">
+        <h2 className="text-2xl font-bold mb-6 text-center">
           Đăng nhập hệ thống
         </h2>
 
         <input
-          type="email"
-          placeholder="Email"
-          className="border w-full mb-3 p-2"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="Tài khoản"
+          className="w-full border p-2 mb-4"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
 
         <input
           type="password"
           placeholder="Mật khẩu"
-          className="border w-full mb-4 p-2"
+          className="w-full border p-2 mb-6"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleLogin();
-          }}
         />
 
         <button
           onClick={handleLogin}
-          disabled={loading}
-          className="bg-blue-600 text-white w-full py-2 rounded"
+          className="w-full bg-blue-600 text-white p-2 font-semibold"
         >
-          {loading ? "Đang xử lý..." : "Đăng nhập"}
+          Đăng nhập
         </button>
       </div>
     </div>

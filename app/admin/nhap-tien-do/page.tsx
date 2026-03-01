@@ -1,127 +1,153 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Home } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export default function NhapTienDoPage() {
-  const [rows, setRows] = useState<any[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+export default function AdminNhapTienDoPage() {
+  const router = useRouter();
+  const [data, setData] = useState<any[]>([]);
+  const [adminName, setAdminName] = useState("");
+
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    const name = localStorage.getItem("name");
+
+    if (role !== "admin") {
+      router.replace("/login");
+    } else {
+      setAdminName(name || "Admin");
+    }
+
+    const saved = localStorage.getItem("nhiemvu");
+    if (saved) setData(JSON.parse(saved));
+  }, []);
 
   const addRow = () => {
-    setRows([
-      ...rows,
+    setData([
+      ...data,
       {
         ten: "",
-        ngay_giao: "",
         han: "",
-        ngay_ht: "",
-        san_pham: "",
         tien_do: "Chưa hoàn thành",
-        tham_muu: "",
         phu_trach: "",
       },
     ]);
-    setEditingIndex(rows.length);
   };
 
   const update = (index: number, field: string, value: string) => {
-    const newRows = [...rows];
-    newRows[index][field] = value;
-    setRows(newRows);
+    const newData = [...data];
+    newData[index][field] = value;
+    setData(newData);
   };
 
   const removeRow = (index: number) => {
-    setRows(rows.filter((_, i) => i !== index));
+    setData(data.filter((_, i) => i !== index));
+  };
+
+  const saveLocal = () => {
+    localStorage.setItem("nhiemvu", JSON.stringify(data));
+    alert("Đã lưu tạm trên máy");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
+
+      {/* HEADER */}
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
-          <h1 className="text-xl md:text-2xl font-bold text-center">
+          <h1 className="text-xl font-bold">
             HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
           </h1>
-          <p className="text-sm md:text-base font-semibold text-blue-200">
+          <p className="text-blue-200 font-semibold">
             TỈNH ĐOÀN LÂM ĐỒNG
           </p>
         </div>
 
         <nav className="bg-blue-800">
-          <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-            <Link href="/" className="flex items-center">
+          <div className="flex justify-center items-center gap-6 py-2 font-semibold">
+            <Link href="/">
               <Home size={20} />
             </Link>
+
             <Link href="/tien-do">Theo dõi tiến độ</Link>
+
+            <span className="text-yellow-300">
+              Xin chào, {adminName}
+            </span>
+
+            <button
+              onClick={() => {
+                localStorage.clear();
+                router.replace("/login");
+              }}
+            >
+              Đăng xuất
+            </button>
           </div>
         </nav>
       </header>
 
+      {/* MAIN */}
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
           <div className="flex justify-between mb-6">
             <h2 className="font-semibold text-blue-700 text-lg">
-              Nhập tiến độ công việc
+              Nhập nhiệm vụ
             </h2>
 
             <button
-              onClick={addRow}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              onClick={saveLocal}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
             >
-              + Thêm nhiệm vụ
+              Lưu
             </button>
           </div>
 
-          <div className="overflow-auto max-h-[600px] border">
-            <table className="min-w-[1200px] w-full border border-gray-300 text-sm">
-              <thead className="sticky top-0 bg-blue-100 z-10">
-                <tr className="text-center font-semibold text-blue-900">
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 text-sm">
+              <thead>
+                <tr className="bg-blue-100 text-center font-semibold">
                   <th className="border p-2">STT</th>
-                  <th className="border p-2 min-w-[250px] text-left">Văn bản / Công việc</th>
-                  <th className="border p-2">Ngày giao</th>
-                  <th className="border p-2">Thời hạn HT</th>
-                  <th className="border p-2">Ngày HT</th>
-                  <th className="border p-2 min-w-[150px]">Sản phẩm</th>
+                  <th className="border p-2">Công việc</th>
+                  <th className="border p-2">Hạn</th>
                   <th className="border p-2">Tiến độ</th>
-                  <th className="border p-2 min-w-[140px]">Cán bộ tham mưu</th>
-                  <th className="border p-2 min-w-[140px]">TT phụ trách</th>
-                  <th className="border p-2">Thao tác</th>
+                  <th className="border p-2">Phụ trách</th>
+                  <th className="border p-2">Xóa</th>
                 </tr>
               </thead>
 
               <tbody>
-                {rows.map((row, index) => (
+                {data.map((item, index) => (
                   <tr key={index}>
                     <td className="border p-2 text-center">{index + 1}</td>
 
-                    {[
-                      "ten",
-                      "ngay_giao",
-                      "han",
-                      "ngay_ht",
-                      "san_pham",
-                      "tham_muu",
-                      "phu_trach",
-                    ].map((field) => (
-                      <td
-                        key={field}
-                        contentEditable={editingIndex === index}
-                        suppressContentEditableWarning
-                        className="border p-2"
-                        onBlur={(e) =>
-                          update(index, field, e.currentTarget.innerText)
-                        }
-                      >
-                        {row[field]}
-                      </td>
-                    ))}
+                    <td
+                      contentEditable
+                      className="border p-2"
+                      onBlur={(e) =>
+                        update(index, "ten", e.currentTarget.innerText)
+                      }
+                    >
+                      {item.ten}
+                    </td>
+
+                    <td
+                      contentEditable
+                      className="border p-2 text-center"
+                      onBlur={(e) =>
+                        update(index, "han", e.currentTarget.innerText)
+                      }
+                    >
+                      {item.han}
+                    </td>
 
                     <td className="border p-2">
                       <select
-                        disabled={editingIndex !== index}
-                        value={row.tien_do}
+                        value={item.tien_do}
                         onChange={(e) =>
                           update(index, "tien_do", e.target.value)
                         }
@@ -134,37 +160,31 @@ export default function NhapTienDoPage() {
                       </select>
                     </td>
 
-                    <td className="border p-2 text-center space-x-2">
-                      {editingIndex === index ? (
-                        <button
-                          onClick={() => setEditingIndex(null)}
-                          className="text-green-600 font-semibold"
-                        >
-                          Lưu
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setEditingIndex(index)}
-                          className="text-blue-600 font-semibold"
-                        >
-                          Sửa
-                        </button>
-                      )}
+                    <td
+                      contentEditable
+                      className="border p-2"
+                      onBlur={(e) =>
+                        update(index, "phu_trach", e.currentTarget.innerText)
+                      }
+                    >
+                      {item.phu_trach}
+                    </td>
 
+                    <td className="border p-2 text-center">
                       <button
                         onClick={() => removeRow(index)}
-                        className="text-red-600 font-semibold"
+                        className="text-red-600 font-bold"
                       >
-                        Xóa
+                        X
                       </button>
                     </td>
                   </tr>
                 ))}
 
-                {rows.length === 0 && (
+                {data.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="text-center p-6 text-gray-500">
-                      Chưa có nhiệm vụ. Nhấn "Thêm nhiệm vụ".
+                    <td colSpan={6} className="text-center p-6 text-gray-500">
+                      Chưa có nhiệm vụ
                     </td>
                   </tr>
                 )}
@@ -172,10 +192,19 @@ export default function NhapTienDoPage() {
             </table>
           </div>
 
+          <div className="mt-6">
+            <button
+              onClick={addRow}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            >
+              + Thêm nhiệm vụ
+            </button>
+          </div>
+
         </div>
       </main>
 
-      <footer className="bg-blue-900 text-white text-center text-sm py-3">
+      <footer className="bg-blue-900 text-white text-center py-3">
         © 2026 Tỉnh đoàn Lâm Đồng
       </footer>
     </div>

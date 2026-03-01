@@ -1,69 +1,39 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Home } from "lucide-react";
 
-type NhiemVu = {
-  id: number;
-  linh_vuc_lon: string;
-  linh_vuc_con: string;
-  ten: string;
-  ngay_giao: string;
-  han_hoan_thanh: string;
-  ngay_hoan_thanh: string | null;
-  san_pham: string | null;
-  tien_do: string | null;
-  can_bo_tham_muu: string;
-  can_bo_phu_trach: string;
-  thang: number;
-};
+export default function NhapTienDoPage() {
+  const renderEditableRow = (key: string) => (
+    <tr key={key}>
+      <td className="border p-2 text-center"></td>
 
-export default function TienDoPage() {
-  const [data, setData] = useState<NhiemVu[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [thang, setThang] = useState("ALL");
-  const [search, setSearch] = useState("");
+      <td
+        contentEditable
+        className="border p-2 min-w-[250px] text-left"
+      ></td>
 
-  useEffect(() => {
-    fetchData();
-  }, [thang, search]);
+      <td contentEditable className="border p-2"></td>
 
-  async function fetchData() {
-    setLoading(true);
+      <td contentEditable className="border p-2"></td>
 
-    let query = supabase.from("nhiem_vu").select("*");
+      <td contentEditable className="border p-2"></td>
 
-    if (thang !== "ALL") {
-      query = query.eq("thang", Number(thang));
-    }
+      <td contentEditable className="border p-2 min-w-[150px]"></td>
 
-    if (search.trim() !== "") {
-      query = query.ilike("ten", `%${search}%`);
-    }
+      <td className="border p-2">
+        <select className="w-full border rounded px-2 py-1">
+          <option>Chưa hoàn thành</option>
+          <option>Hoàn thành đúng hạn</option>
+          <option>Hoàn thành quá hạn</option>
+          <option>Hoàn thành vượt tiến độ</option>
+        </select>
+      </td>
 
-    const { data } = await query
-      .order("linh_vuc_lon")
-      .order("linh_vuc_con");
-
-    setData((data as NhiemVu[]) || []);
-    setLoading(false);
-  }
-
-  const grouped = useMemo(() => {
-    return data.reduce<Record<string, Record<string, NhiemVu[]>>>(
-      (acc, item) => {
-        if (!acc[item.linh_vuc_lon]) acc[item.linh_vuc_lon] = {};
-        if (!acc[item.linh_vuc_lon][item.linh_vuc_con])
-          acc[item.linh_vuc_lon][item.linh_vuc_con] = [];
-
-        acc[item.linh_vuc_lon][item.linh_vuc_con].push(item);
-        return acc;
-      },
-      {}
-    );
-  }, [data]);
+      <td contentEditable className="border p-2 min-w-[140px]"></td>
+      <td contentEditable className="border p-2 min-w-[140px]"></td>
+    </tr>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
@@ -80,16 +50,8 @@ export default function TienDoPage() {
 
         <nav className="bg-blue-800">
           <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-            <Link
-              href="/"
-              className="text-white hover:text-yellow-300 transition flex items-center"
-              title="Trang chủ"
-            >
+            <Link href="/" className="flex items-center">
               <Home size={20} />
-            </Link>
-
-            <Link href="/thong-ke" className="hover:underline">
-              Thống kê chi tiết
             </Link>
 
             <Link href="/tien-do" className="hover:underline">
@@ -106,180 +68,109 @@ export default function TienDoPage() {
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-6">
-            <h2 className="font-semibold text-blue-700 text-lg">
-              Theo dõi tiến độ công việc
-            </h2>
+          <h2 className="font-semibold text-blue-700 text-lg mb-6">
+            Nhập tiến độ công việc
+          </h2>
 
-            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-              <input
-                type="text"
-                placeholder="Tìm văn bản / công việc..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border px-3 py-2 rounded w-full md:w-64"
-              />
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 text-sm">
+              <thead>
+                <tr className="bg-blue-100 text-blue-900 text-center font-semibold">
+                  <th className="border p-2">STT</th>
+                  <th className="border p-2 min-w-[250px] text-left">Văn bản / Công việc</th>
+                  <th className="border p-2">Ngày giao</th>
+                  <th className="border p-2">Thời hạn HT</th>
+                  <th className="border p-2">Ngày HT</th>
+                  <th className="border p-2 min-w-[150px]">Sản phẩm</th>
+                  <th className="border p-2">Tiến độ</th>
+                  <th className="border p-2 min-w-[140px]">Cán bộ tham mưu</th>
+                  <th className="border p-2 min-w-[140px]">TT phụ trách</th>
+                </tr>
+              </thead>
 
-              <select
-                value={thang}
-                onChange={(e) => setThang(e.target.value)}
-                className="border px-3 py-2 rounded w-full md:w-48"
-              >
-                <option value="ALL">Tất cả</option>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <option key={i} value={i + 1}>
-                    Tháng {i + 1}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <tbody>
+
+                {/* I */}
+                <tr className="bg-gray-200 font-bold text-lg">
+                  <td colSpan={9} className="border p-2">
+                    I. Lĩnh vực Văn phòng – Tuyên giáo – Xây dựng Đoàn
+                  </td>
+                </tr>
+
+                <tr className="bg-gray-100 font-semibold">
+                  <td colSpan={9} className="border p-2">
+                    * Văn phòng
+                  </td>
+                </tr>
+
+                {[...Array(2)].map((_, i) => renderEditableRow("vp" + i))}
+
+                <tr className="bg-gray-100 font-semibold">
+                  <td colSpan={9} className="border p-2">
+                    * Tuyên giáo
+                  </td>
+                </tr>
+
+                {[...Array(2)].map((_, i) => renderEditableRow("tg" + i))}
+
+                <tr className="bg-gray-100 font-semibold">
+                  <td colSpan={9} className="border p-2">
+                    * Xây dựng Đoàn
+                  </td>
+                </tr>
+
+                {[...Array(2)].map((_, i) => renderEditableRow("xd" + i))}
+
+                {/* II */}
+                <tr className="bg-gray-200 font-bold text-lg">
+                  <td colSpan={9} className="border p-2">
+                    II. Lĩnh vực Phong trào - Hội LHTN
+                  </td>
+                </tr>
+
+                <tr className="bg-gray-100 font-semibold">
+                  <td colSpan={9} className="border p-2">
+                    * Phong trào
+                  </td>
+                </tr>
+
+                {[...Array(2)].map((_, i) => renderEditableRow("pt" + i))}
+
+                <tr className="bg-gray-100 font-semibold">
+                  <td colSpan={9} className="border p-2">
+                    * Hội LHTN Việt Nam tỉnh
+                  </td>
+                </tr>
+
+                {[...Array(2)].map((_, i) => renderEditableRow("hlhtn" + i))}
+
+                {/* III */}
+                <tr className="bg-gray-200 font-bold text-lg">
+                  <td colSpan={9} className="border p-2">
+                    III. Lĩnh vực Trường học - Hội Sinh viên
+                  </td>
+                </tr>
+
+                <tr className="bg-gray-100 font-semibold">
+                  <td colSpan={9} className="border p-2">
+                    * Trường học
+                  </td>
+                </tr>
+
+                {[...Array(2)].map((_, i) => renderEditableRow("th" + i))}
+
+                <tr className="bg-gray-100 font-semibold">
+                  <td colSpan={9} className="border p-2">
+                    * Hội Sinh viên
+                  </td>
+                </tr>
+
+                {[...Array(2)].map((_, i) => renderEditableRow("hsv" + i))}
+
+              </tbody>
+            </table>
           </div>
 
-          {loading ? (
-            <div className="text-center py-10">Đang tải dữ liệu...</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300 text-sm">
-                <thead>
-                  <tr className="bg-blue-100 text-blue-900 text-center font-semibold">
-                    <th className="border p-2">STT</th>
-                    <th className="border p-2 min-w-[250px] text-left">Văn bản / Công việc</th>
-                    <th className="border p-2">Ngày giao</th>
-                    <th className="border p-2">Thời hạn HT</th>
-                    <th className="border p-2">Ngày HT</th>
-                    <th className="border p-2 min-w-[150px]">Sản phẩm</th>
-                    <th className="border p-2">Tiến độ</th>
-                    <th className="border p-2 min-w-[140px]">Cán bộ tham mưu</th>
-                    <th className="border p-2 min-w-[140px]">TT phụ trách</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-
-  {/* I */}
-  <tr className="bg-gray-200 font-bold text-lg">
-    <td colSpan={9} className="border p-2">
-      I. Lĩnh vực Văn phòng – Tuyên giáo – Xây dựng Đoàn
-    </td>
-  </tr>
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Văn phòng
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"vp"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Tuyên giáo
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"tg"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Xây dựng Đoàn
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"xd"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  {/* II */}
-  <tr className="bg-gray-200 font-bold text-lg">
-    <td colSpan={9} className="border p-2">
-      II. Lĩnh vực Phong trào - Hội LHTN
-    </td>
-  </tr>
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Phong trào
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"pt"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Hội LHTN Việt Nam tỉnh
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"hlhtn"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  {/* III */}
-  <tr className="bg-gray-200 font-bold text-lg">
-    <td colSpan={9} className="border p-2">
-      III. Lĩnh vực Trường học - Hội Sinh viên
-    </td>
-  </tr>
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Trường học
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"th"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-  <tr className="bg-gray-100 font-semibold">
-    <td colSpan={9} className="border p-2">
-      * Hội Sinh viên
-    </td>
-  </tr>
-
-  {[...Array(2)].map((_, i) => (
-    <tr key={"hsv"+i}>
-      {Array.from({ length: 9 }).map((_, idx) => (
-        <td key={idx} className="border p-2 h-10"></td>
-      ))}
-    </tr>
-  ))}
-
-</tbody>
-
-              </table>
-            </div>
-          )}
         </div>
       </main>
 

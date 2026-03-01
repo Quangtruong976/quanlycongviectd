@@ -1,44 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Home } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // Nếu đã đăng nhập thì tự chuyển luôn
-  useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (role === "admin") {
-      router.replace("/admin/nhap-tien-do");
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg("");
+
+    if (!email || !password) {
+      setErrorMsg("Vui lòng nhập đầy đủ thông tin.");
+      setLoading(false);
+      return;
     }
-  }, [router]);
 
-  const handleLogin = () => {
-    if (username === "admin" && password === "123456") {
-      localStorage.setItem("role", "admin");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      // dùng replace để không quay lại login khi bấm back
-      router.replace("/admin/nhap-tien-do");
-    } else {
-      alert("Sai tài khoản hoặc mật khẩu");
+    if (error) {
+      setErrorMsg("Email hoặc mật khẩu không đúng.");
+      setLoading(false);
+      return;
     }
-  };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleLogin();
-    }
-  };
+    // Đăng nhập thành công → chuyển trang
+    router.push("/");
+    router.refresh();
+  }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
       
-      {/* HEADER */}
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2" />
@@ -52,53 +57,76 @@ export default function LoginPage() {
 
         <nav className="bg-blue-800">
           <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-            <Link href="/" className="text-white hover:text-yellow-300">
+            <Link
+              href="/"
+              className="text-white hover:text-yellow-300 transition flex items-center"
+            >
               <Home size={20} />
             </Link>
+
             <Link href="/thong-ke" className="hover:underline">
               Thống kê chi tiết
             </Link>
+
             <Link href="/tien-do" className="hover:underline">
               Theo dõi tiến độ công việc
             </Link>
-            <Link href="/login" className="hover:underline text-yellow-300">
+
+            <Link href="/login" className="underline text-yellow-300">
               Đăng nhập
             </Link>
           </div>
         </nav>
       </header>
 
-      {/* MAIN */}
-      <main className="flex-1 flex justify-center items-center p-4">
+      <main className="flex-1 flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8">
-          <h2 className="text-blue-700 font-semibold text-lg mb-6 text-center">
-            ĐĂNG NHẬP QUẢN TRỊ
+          
+          <h2 className="text-xl font-bold text-blue-700 text-center mb-6">
+            Đăng nhập hệ thống
           </h2>
 
-          <input
-            type="text"
-            placeholder="Tên đăng nhập"
-            className="border px-3 py-2 rounded w-full mb-4"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                placeholder="Nhập email..."
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="border px-3 py-2 rounded w-full"
+              />
+            </div>
 
-          <input
-            type="password"
-            placeholder="Mật khẩu"
-            className="border px-3 py-2 rounded w-full mb-6"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
+            <div>
+              <label className="block text-sm font-semibold mb-1">
+                Mật khẩu
+              </label>
+              <input
+                type="password"
+                placeholder="Nhập mật khẩu..."
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="border px-3 py-2 rounded w-full"
+              />
+            </div>
 
-          <button
-            onClick={handleLogin}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2 rounded font-semibold"
-          >
-            Đăng nhập
-          </button>
+            {errorMsg && (
+              <div className="text-red-600 text-sm font-semibold text-center">
+                {errorMsg}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded transition"
+            >
+              {loading ? "Đang xử lý..." : "Đăng nhập"}
+            </button>
+          </form>
         </div>
       </main>
 

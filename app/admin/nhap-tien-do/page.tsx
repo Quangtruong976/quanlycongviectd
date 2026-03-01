@@ -1,30 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-type NhiemVu = {
-  id?: number;
-  linh_vuc_lon: string;
-  linh_vuc_con: string;
-  ten: string;
-  ngay_giao: string;
-  han_hoan_thanh: string;
-  ngay_hoan_thanh: string;
-  san_pham: string;
-  tien_do: string;
-  can_bo_tham_muu: string;
-  can_bo_phu_trach: string;
-  thang: number;
-};
-
 export default function AdminNhapTienDoPage() {
   const router = useRouter();
+  const [data, setData] = useState<any[]>([]);
   const [adminName, setAdminName] = useState("");
-  const [data, setData] = useState<NhiemVu[]>([]);
 
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -35,41 +19,36 @@ export default function AdminNhapTienDoPage() {
     } else {
       setAdminName(name || "Admin");
     }
-  }, [router]);
 
-  const addRow = (linh_vuc_lon: string, linh_vuc_con: string) => {
+    const saved = localStorage.getItem("nhiemvu");
+    if (saved) setData(JSON.parse(saved));
+  }, []);
+
+  const addRow = () => {
     setData([
       ...data,
       {
-        linh_vuc_lon,
-        linh_vuc_con,
         ten: "",
-        ngay_giao: "",
-        han_hoan_thanh: "",
-        ngay_hoan_thanh: "",
-        san_pham: "",
+        han: "",
         tien_do: "Chưa hoàn thành",
-        can_bo_tham_muu: "",
-        can_bo_phu_trach: "",
-        thang: new Date().getMonth() + 1,
+        phu_trach: "",
       },
     ]);
   };
 
-  const update = (index: number, field: keyof NhiemVu, value: any) => {
+  const update = (index: number, field: string, value: string) => {
     const newData = [...data];
     newData[index][field] = value;
     setData(newData);
   };
 
   const removeRow = (index: number) => {
-    const newData = data.filter((_, i) => i !== index);
-    setData(newData);
+    setData(data.filter((_, i) => i !== index));
   };
 
-  const saveAll = async () => {
-    const { error } = await supabase.from("nhiem_vu").insert(data);
-    if (!error) alert("Đã lưu dữ liệu");
+  const saveLocal = () => {
+    localStorage.setItem("nhiemvu", JSON.stringify(data));
+    alert("Đã lưu tạm trên máy");
   };
 
   return (
@@ -89,13 +68,11 @@ export default function AdminNhapTienDoPage() {
 
         <nav className="bg-blue-800">
           <div className="flex justify-center items-center gap-6 py-2 font-semibold">
-            <Link href="/" className="hover:text-yellow-300">
+            <Link href="/">
               <Home size={20} />
             </Link>
 
-            <Link href="/tien-do" className="hover:underline">
-              Theo dõi tiến độ
-            </Link>
+            <Link href="/tien-do">Theo dõi tiến độ</Link>
 
             <span className="text-yellow-300">
               Xin chào, {adminName}
@@ -106,7 +83,6 @@ export default function AdminNhapTienDoPage() {
                 localStorage.clear();
                 router.replace("/login");
               }}
-              className="hover:underline"
             >
               Đăng xuất
             </button>
@@ -120,14 +96,14 @@ export default function AdminNhapTienDoPage() {
 
           <div className="flex justify-between mb-6">
             <h2 className="font-semibold text-blue-700 text-lg">
-              Nhập & Cập nhật nhiệm vụ
+              Nhập nhiệm vụ
             </h2>
 
             <button
-              onClick={saveAll}
+              onClick={saveLocal}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
             >
-              Lưu vào hệ thống
+              Lưu
             </button>
           </div>
 
@@ -136,8 +112,8 @@ export default function AdminNhapTienDoPage() {
               <thead>
                 <tr className="bg-blue-100 text-center font-semibold">
                   <th className="border p-2">STT</th>
-                  <th className="border p-2">Văn bản / Công việc</th>
-                  <th className="border p-2">Hạn HT</th>
+                  <th className="border p-2">Công việc</th>
+                  <th className="border p-2">Hạn</th>
                   <th className="border p-2">Tiến độ</th>
                   <th className="border p-2">Phụ trách</th>
                   <th className="border p-2">Xóa</th>
@@ -146,13 +122,12 @@ export default function AdminNhapTienDoPage() {
 
               <tbody>
                 {data.map((item, index) => (
-                  <tr key={index} className="align-top">
+                  <tr key={index}>
                     <td className="border p-2 text-center">{index + 1}</td>
 
                     <td
                       contentEditable
-                      suppressContentEditableWarning
-                      className="border p-2 whitespace-pre-wrap break-words"
+                      className="border p-2"
                       onBlur={(e) =>
                         update(index, "ten", e.currentTarget.innerText)
                       }
@@ -162,13 +137,12 @@ export default function AdminNhapTienDoPage() {
 
                     <td
                       contentEditable
-                      suppressContentEditableWarning
                       className="border p-2 text-center"
                       onBlur={(e) =>
-                        update(index, "han_hoan_thanh", e.currentTarget.innerText)
+                        update(index, "han", e.currentTarget.innerText)
                       }
                     >
-                      {item.han_hoan_thanh}
+                      {item.han}
                     </td>
 
                     <td className="border p-2">
@@ -188,13 +162,12 @@ export default function AdminNhapTienDoPage() {
 
                     <td
                       contentEditable
-                      suppressContentEditableWarning
                       className="border p-2"
                       onBlur={(e) =>
-                        update(index, "can_bo_phu_trach", e.currentTarget.innerText)
+                        update(index, "phu_trach", e.currentTarget.innerText)
                       }
                     >
-                      {item.can_bo_phu_trach}
+                      {item.phu_trach}
                     </td>
 
                     <td className="border p-2 text-center">
@@ -211,7 +184,7 @@ export default function AdminNhapTienDoPage() {
                 {data.length === 0 && (
                   <tr>
                     <td colSpan={6} className="text-center p-6 text-gray-500">
-                      Chưa có nhiệm vụ — Nhấn thêm để tạo
+                      Chưa có nhiệm vụ
                     </td>
                   </tr>
                 )}
@@ -221,12 +194,7 @@ export default function AdminNhapTienDoPage() {
 
           <div className="mt-6">
             <button
-              onClick={() =>
-                addRow(
-                  "I. Văn phòng – Tuyên giáo – Xây dựng Đoàn",
-                  "Văn phòng"
-                )
-              }
+              onClick={addRow}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
             >
               + Thêm nhiệm vụ

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase"; // chỉnh đúng đường dẫn của bạn
+import { supabase } from "@/lib/supabase"; // chỉnh đúng path của bạn
 
 type NhiemVu = {
   id?: number;
+  linh_vuc_lon: string;
+  linh_vuc_con: string;
   ten: string;
   ngay_giao: string;
   han_hoan_thanh: string;
@@ -40,11 +42,11 @@ export default function AdminNhapTienDoPage() {
     const { data, error } = await supabase
       .from("nhiem_vu")
       .select("*")
-      .order("id", { ascending: true });
+      .order("linh_vuc_lon")
+      .order("linh_vuc_con")
+      .order("id");
 
-    if (!error && data) {
-      setData(data);
-    }
+    if (!error && data) setData(data);
   };
 
   const update = (index: number, field: keyof NhiemVu, value: string) => {
@@ -57,6 +59,8 @@ export default function AdminNhapTienDoPage() {
     setData([
       ...data,
       {
+        linh_vuc_lon: "",
+        linh_vuc_con: "",
         ten: "",
         ngay_giao: "",
         han_hoan_thanh: "",
@@ -73,6 +77,8 @@ export default function AdminNhapTienDoPage() {
     setLoading(true);
 
     for (const item of data) {
+      if (!item.ten || !item.linh_vuc_lon) continue;
+
       if (item.id) {
         await supabase.from("nhiem_vu").update(item).eq("id", item.id);
       } else {
@@ -137,7 +143,7 @@ export default function AdminNhapTienDoPage() {
 
           <div className="flex justify-between mb-4">
             <h2 className="font-semibold text-blue-700 text-lg">
-              Quản lý nhiệm vụ
+              Nhập & quản lý nhiệm vụ
             </h2>
 
             <div className="flex gap-2">
@@ -163,13 +169,11 @@ export default function AdminNhapTienDoPage() {
               <thead>
                 <tr className="bg-blue-100 text-center font-semibold">
                   <th className="border p-2">STT</th>
+                  <th className="border p-2">Lĩnh vực lớn</th>
+                  <th className="border p-2">Lĩnh vực con</th>
                   <th className="border p-2">Công việc</th>
-                  <th className="border p-2">Ngày giao</th>
                   <th className="border p-2">Hạn HT</th>
-                  <th className="border p-2">Ngày HT</th>
-                  <th className="border p-2">Sản phẩm</th>
                   <th className="border p-2">Trạng thái</th>
-                  <th className="border p-2">Tham mưu</th>
                   <th className="border p-2">Phụ trách</th>
                   <th className="border p-2">Xóa</th>
                 </tr>
@@ -183,20 +187,29 @@ export default function AdminNhapTienDoPage() {
                     <td className="border p-2">
                       <input
                         className="border w-full px-2 py-1 rounded"
-                        value={item.ten}
+                        value={item.linh_vuc_lon}
                         onChange={(e) =>
-                          update(index, "ten", e.target.value)
+                          update(index, "linh_vuc_lon", e.target.value)
                         }
                       />
                     </td>
 
                     <td className="border p-2">
                       <input
-                        type="date"
                         className="border w-full px-2 py-1 rounded"
-                        value={item.ngay_giao}
+                        value={item.linh_vuc_con}
                         onChange={(e) =>
-                          update(index, "ngay_giao", e.target.value)
+                          update(index, "linh_vuc_con", e.target.value)
+                        }
+                      />
+                    </td>
+
+                    <td className="border p-2">
+                      <input
+                        className="border w-full px-2 py-1 rounded"
+                        value={item.ten}
+                        onChange={(e) =>
+                          update(index, "ten", e.target.value)
                         }
                       />
                     </td>
@@ -213,27 +226,6 @@ export default function AdminNhapTienDoPage() {
                     </td>
 
                     <td className="border p-2">
-                      <input
-                        type="date"
-                        className="border w-full px-2 py-1 rounded"
-                        value={item.ngay_hoan_thanh}
-                        onChange={(e) =>
-                          update(index, "ngay_hoan_thanh", e.target.value)
-                        }
-                      />
-                    </td>
-
-                    <td className="border p-2">
-                      <input
-                        className="border w-full px-2 py-1 rounded"
-                        value={item.san_pham}
-                        onChange={(e) =>
-                          update(index, "san_pham", e.target.value)
-                        }
-                      />
-                    </td>
-
-                    <td className="border p-2">
                       <select
                         className="border w-full px-2 py-1 rounded"
                         value={item.tien_do}
@@ -242,20 +234,10 @@ export default function AdminNhapTienDoPage() {
                         }
                       >
                         <option value="CHUA_HT">Chưa hoàn thành</option>
-                        <option value="DUNG_HAN">Hoàn thành đúng hạn</option>
-                        <option value="QUA_HAN">Hoàn thành quá hạn</option>
-                        <option value="VUOT">Hoàn thành vượt tiến độ</option>
+                        <option value="DUNG_HAN">Đúng hạn</option>
+                        <option value="QUA_HAN">Quá hạn</option>
+                        <option value="VUOT">Vượt tiến độ</option>
                       </select>
-                    </td>
-
-                    <td className="border p-2">
-                      <input
-                        className="border w-full px-2 py-1 rounded"
-                        value={item.can_bo_tham_muu}
-                        onChange={(e) =>
-                          update(index, "can_bo_tham_muu", e.target.value)
-                        }
-                      />
                     </td>
 
                     <td className="border p-2">
@@ -281,7 +263,7 @@ export default function AdminNhapTienDoPage() {
 
                 {data.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="text-center p-6 text-gray-500">
+                    <td colSpan={8} className="text-center p-6 text-gray-500">
                       Chưa có nhiệm vụ
                     </td>
                   </tr>

@@ -26,44 +26,45 @@ export default function HomePage() {
     const loadData = async () => {
       setLoading(true);
 
-      let query = supabase
-        .from("nhiem_vu")
-        .select("ghi_chu, thang", { count: "exact" });
+      try {
+        let query = supabase
+          .from("nhiem_vu")
+          .select("ghi_chu, thang");
 
-      if (thang !== "ALL") {
-        query = query.eq("thang", Number(thang));
-      }
+        if (thang !== "ALL") {
+          query = query.eq("thang", Number(thang));
+        }
 
-      const { data: raw, error } = await query;
+        const { data: raw, error } = await query;
 
-      if (error) {
-        console.error(error);
-        setLoading(false);
-        return;
-      }
+        if (error) throw error;
 
-      if (!raw) {
+        if (!raw || raw.length === 0) {
+          setData({ tong: 0, dungHan: 0, quaHan: 0, chuaHT: 0 });
+          setLoading(false);
+          return;
+        }
+
+        let dungHan = 0;
+        let quaHan = 0;
+        let chuaHT = 0;
+
+        raw.forEach((item) => {
+          if (item.ghi_chu === "dung_han") dungHan++;
+          else if (item.ghi_chu === "qua_han") quaHan++;
+          else chuaHT++;
+        });
+
+        setData({
+          tong: raw.length,
+          dungHan,
+          quaHan,
+          chuaHT,
+        });
+      } catch (err) {
+        console.error("Lỗi load dữ liệu:", err);
         setData({ tong: 0, dungHan: 0, quaHan: 0, chuaHT: 0 });
-        setLoading(false);
-        return;
       }
-
-      let dungHan = 0;
-      let quaHan = 0;
-      let chuaHT = 0;
-
-      for (const item of raw) {
-        if (item.ghi_chu === "dung_han") dungHan++;
-        else if (item.ghi_chu === "qua_han") quaHan++;
-        else chuaHT++;
-      }
-
-      setData({
-        tong: raw.length,
-        dungHan,
-        quaHan,
-        chuaHT,
-      });
 
       setLoading(false);
     };
@@ -91,30 +92,30 @@ export default function HomePage() {
         </div>
 
         <nav className="bg-blue-800">
-  <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
+          <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
+            <Link
+              href="/"
+              className="text-white hover:text-yellow-300 transition flex items-center"
+              title="Trang chủ"
+            >
+              <Home size={20} />
+            </Link>
 
-    <Link
-      href="/"
-      className="text-white hover:text-yellow-300 transition flex items-center"
-      title="Trang chủ"
-    >
-      <Home size={20} />
-    </Link>
+            <Link href="/tien-do" className="hover:underline">
+              Theo dõi tiến độ công việc
+            </Link>
 
-    <Link href="/thong-ke" className="hover:underline">
-      Thống kê chi tiết
-    </Link>
+            <Link href="/thong-ke" className="hover:underline">
+              Thống kê kết quả thực hiện nhiệm vụ của cán bộ
+            </Link>
 
-    <Link href="/tien-do" className="hover:underline">
-      Theo dõi tiến độ công việc
-    </Link>
+          
 
-    <Link href="/login" className="hover:underline">
-      Đăng nhập
-    </Link>
-
-  </div>
-</nav>
+            <Link href="/login" className="hover:underline">
+              Đăng nhập
+            </Link>
+          </div>
+        </nav>
       </header>
 
       {/* MAIN */}

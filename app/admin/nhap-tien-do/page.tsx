@@ -72,7 +72,7 @@ export default function AdminNhapTienDoPage() {
               <Home size={20} />
             </Link>
 
-            <Link href="/tien-do">Theo dõi tiến độ</Link>
+           
 
             <span className="text-yellow-300">
               Xin chào, {adminName}

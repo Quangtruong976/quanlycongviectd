@@ -6,9 +6,9 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 
 type RawItem = {
-  can_bo: string;
+  can_bo: string | null;
   ghi_chu: string | null;
-  thang: number;
+  thang: number | null;
 };
 
 type ThongKe = {
@@ -37,99 +37,120 @@ export default function ThongKePage() {
   const loadData = async () => {
     setLoading(true);
 
-    let query = supabase
-      .from("nhiem_vu")
-      .select("can_bo, ghi_chu, thang");
+    try {
+      let query = supabase
+        .from("nhiem_vu")
+        .select("can_bo, ghi_chu, thang");
 
-    if (thang !== "ALL") {
-      query = query.eq("thang", Number(thang));
-    }
+      if (thang !== "ALL") {
+        query = query.eq("thang", Number(thang));
+      }
 
-    const { data: raw, error } = await query;
+      const { data: raw, error } = await query;
 
-    if (error || !raw) {
-      setData([]);
-      setLoading(false);
-      return;
-    }
+      if (error) {
+        console.error("Lỗi Supabase:", error.message);
+        setData([]);
+        setLoading(false);
+        return;
+      }
 
-    const map: Record<string, ThongKe> = {};
+      if (!raw || raw.length === 0) {
+        setData([]);
+        setLoading(false);
+        return;
+      }
 
-    (raw as RawItem[]).forEach((item) => {
-      if (!map[item.can_bo]) {
-        map[item.can_bo] = {
-          can_bo: item.can_bo,
-          tong: 0,
-          vuot: 0,
-          dungHan: 0,
-          quaHan: 0,
-          chuaHT: 0,
-          diem: 0,
-          xepLoai: "",
+      const map: Record<string, ThongKe> = {};
+
+      (raw as RawItem[]).forEach((item) => {
+        if (!item.can_bo || item.can_bo.trim() === "") return;
+
+        const ten = item.can_bo.trim();
+
+        if (!map[ten]) {
+          map[ten] = {
+            can_bo: ten,
+            tong: 0,
+            vuot: 0,
+            dungHan: 0,
+            quaHan: 0,
+            chuaHT: 0,
+            diem: 0,
+            xepLoai: "",
+          };
+        }
+
+        const cb = map[ten];
+        cb.tong++;
+
+        switch (item.ghi_chu) {
+          case "vuot_tien_do":
+            cb.vuot++;
+            break;
+          case "dung_han":
+            cb.dungHan++;
+            break;
+          case "qua_han":
+            cb.quaHan++;
+            break;
+          default:
+            cb.chuaHT++;
+        }
+      });
+
+      const result: ThongKe[] = Object.values(map).map((cb) => {
+        const hoanThanh = cb.vuot + cb.dungHan + cb.quaHan;
+
+        const diem =
+          cb.tong > 0 ? Math.round((hoanThanh / cb.tong) * 100) : 0;
+
+        let xepLoai = "";
+
+        if (diem >= 90 && cb.chuaHT === 0) {
+          xepLoai = "Hoàn thành xuất sắc";
+        } else if (diem >= 70) {
+          xepLoai = "Hoàn thành tốt";
+        } else if (diem >= 50) {
+          xepLoai = "Hoàn thành nhiệm vụ";
+        } else {
+          xepLoai = "Không hoàn thành";
+        }
+
+        return {
+          ...cb,
+          diem,
+          xepLoai,
         };
-      }
+      });
 
-      const cb = map[item.can_bo];
-      cb.tong++;
+      result.sort((a, b) => b.diem - a.diem);
 
-      switch (item.ghi_chu) {
-        case "vuot_tien_do":
-          cb.vuot++;
-          break;
-        case "dung_han":
-          cb.dungHan++;
-          break;
-        case "qua_han":
-          cb.quaHan++;
-          break;
-        default:
-          cb.chuaHT++;
-      }
-    });
+      setData(result);
+    } catch (err) {
+      console.error("Lỗi hệ thống:", err);
+      setData([]);
+    }
 
-    const result: ThongKe[] = Object.values(map).map((cb) => {
-      const hoanThanh = cb.vuot + cb.dungHan + cb.quaHan;
-      const diem =
-        cb.tong > 0 ? Math.round((hoanThanh / cb.tong) * 100) : 0;
-
-      let xepLoai = "";
-      if (diem >= 90 && cb.chuaHT === 0)
-        xepLoai = "Hoàn thành xuất sắc";
-      else if (diem >= 70)
-        xepLoai = "Hoàn thành tốt";
-      else if (diem >= 50)
-        xepLoai = "Hoàn thành nhiệm vụ";
-      else xepLoai = "Không hoàn thành";
-
-      return { ...cb, diem, xepLoai };
-    });
-
-    result.sort((a, b) => b.diem - a.diem);
-
-    setData(result);
     setLoading(false);
   };
 
-  const allCanBo = useMemo(
-    () => data.map((d) => d.can_bo).sort(),
-    [data]
-  );
+  const allCanBo = useMemo(() => {
+    const unique = new Set(data.map((d) => d.can_bo));
+    return Array.from(unique).sort();
+  }, [data]);
 
-  const suggestedNames = useMemo(
-    () =>
-      allCanBo.filter((name) =>
-        name.toLowerCase().includes(search.toLowerCase())
-      ),
-    [search, allCanBo]
-  );
+  const suggestedNames = useMemo(() => {
+    if (!search) return [];
+    return allCanBo.filter((name) =>
+      name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search, allCanBo]);
 
-  const filteredData = useMemo(
-    () =>
-      selectedCanBo
-        ? data.filter((cb) => cb.can_bo === selectedCanBo)
-        : data,
-    [selectedCanBo, data]
-  );
+  const filteredData = useMemo(() => {
+    if (!selectedCanBo) return data;
+    return data.filter((cb) => cb.can_bo === selectedCanBo);
+  }, [selectedCanBo, data]);
 
   const getColor = (xepLoai: string) => {
     switch (xepLoai) {
@@ -158,37 +179,33 @@ export default function ThongKePage() {
         </div>
 
         <nav className="bg-blue-800">
-  <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
+          <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
+            <Link
+              href="/"
+              className="text-white hover:text-yellow-300 transition flex items-center"
+              title="Trang chủ"
+            >
+              <Home size={20} />
+            </Link>
 
-    <Link
-      href="/"
-      className="text-white hover:text-yellow-300 transition flex items-center"
-      title="Trang chủ"
-    >
-      <Home size={20} />
-    </Link>
+            <Link href="/thong-ke" className="hover:underline">
+              Thống kê chi tiết
+            </Link>
 
-    <Link href="/thong-ke" className="hover:underline">
-      Thống kê chi tiết
-    </Link>
+            <Link href="/tien-do" className="hover:underline">
+              Theo dõi tiến độ công việc
+            </Link>
 
-    <Link href="/tien-do" className="hover:underline">
-      Theo dõi tiến độ công việc
-    </Link>
-
-    <Link href="/login" className="hover:underline">
-      Đăng nhập
-    </Link>
-
-  </div>
-</nav>
+            <Link href="/login" className="hover:underline">
+              Đăng nhập
+            </Link>
+          </div>
+        </nav>
       </header>
 
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
-
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-
             <select
               value={thang}
               onChange={(e) => setThang(e.target.value)}
@@ -271,9 +288,14 @@ export default function ThongKePage() {
                   ))}
                 </tbody>
               </table>
+
+              {filteredData.length === 0 && (
+                <div className="text-center py-6 text-gray-500">
+                  Không có dữ liệu
+                </div>
+              )}
             </div>
           )}
-
         </div>
       </main>
 

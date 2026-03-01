@@ -37,7 +37,7 @@ export default function LoginPage() {
     }
 
     // Đăng nhập thành công → chuyển trang
-    router.push("/");
+    router.push("/admin");
     router.refresh();
   }
 

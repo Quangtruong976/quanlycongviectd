@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 
 type NhiemVu = {
-  id: number;
+  id: string;
   linh_vuc_lon: string;
   linh_vuc_con: string;
   ten: string;

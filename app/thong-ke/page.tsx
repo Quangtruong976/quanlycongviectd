@@ -188,14 +188,14 @@ export default function ThongKePage() {
               <Home size={20} />
             </Link>
 
-            <Link href="/thong-ke" className="hover:underline">
-              Thống kê chi tiết
-            </Link>
-
             <Link href="/tien-do" className="hover:underline">
               Theo dõi tiến độ công việc
             </Link>
 
+            <Link href="/thong-ke" className="hover:underline">
+              Thống kê chi tiết công việc cá nhân
+            </Link>
+            
             <Link href="/login" className="hover:underline">
               Đăng nhập
             </Link>

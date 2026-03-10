@@ -21,43 +21,38 @@ type NhiemVu = {
 };
 
 export default function TienDoPage() {
+
+  const thangHienTai = new Date().getMonth() + 1;
+
   const [data, setData] = useState<NhiemVu[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [linhVucLon, setLinhVucLon] = useState(
-    "I. Văn phòng - Tuyên giáo - Xây dựng Đoàn"
-  );
-  const [thang, setThang] = useState("ALL");
+  const [linhVucLon, setLinhVucLon] = useState("");
+  const [thang, setThang] = useState(String(thangHienTai));
 
   useEffect(() => {
     fetchData();
   }, [linhVucLon, thang]);
 
   async function fetchData() {
+
     setLoading(true);
 
-    try {
-      let query = supabase
-        .from("nhiem_vu")
-        .select("*")
-        .eq("linh_vuc_lon", linhVucLon);
+    let query = supabase.from("nhiem_vu").select("*");
 
-      if (thang !== "ALL") {
-        query = query.eq("thang", Number(thang));
-      }
+    if (linhVucLon !== "") {
+      query = query.eq("linh_vuc_lon", linhVucLon);
+    }
 
-      const { data, error } = await query
-        .order("linh_vuc_con")
-        .order("han_hoan_thanh");
+    query = query.eq("thang", Number(thang));
 
-      if (error) {
-        console.error(error.message);
-        setData([]);
-      } else {
-        setData((data as NhiemVu[]) || []);
-      }
-    } catch (err) {
-      console.error(err);
+    const { data, error } = await query
+      .order("linh_vuc_con")
+      .order("han_hoan_thanh");
+
+    if (!error) {
+      setData((data as NhiemVu[]) || []);
+    } else {
       setData([]);
     }
 
@@ -66,52 +61,63 @@ export default function TienDoPage() {
 
   const grouped = useMemo(() => {
     return data.reduce<Record<string, NhiemVu[]>>((acc, item) => {
-      const lvCon = item.linh_vuc_con || "Khác";
 
-      if (!acc[lvCon]) acc[lvCon] = [];
+      const lv = item.linh_vuc_con || "Khác";
 
-      acc[lvCon].push(item);
+      if (!acc[lv]) acc[lv] = [];
+
+      acc[lv].push(item);
 
       return acc;
+
     }, {});
   }, [data]);
 
   const getTienDoColor = (tien_do: string | null) => {
+
     switch (tien_do) {
       case "Hoàn thành":
         return "bg-green-100 text-green-700";
+
       case "Đang thực hiện":
         return "bg-yellow-100 text-yellow-800";
+
       case "Quá hạn":
         return "bg-red-100 text-red-700";
+
       default:
         return "bg-gray-100 text-gray-700";
     }
+
   };
 
   let stt = 1;
 
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
       <header className="bg-blue-900 text-white">
+
         <div className="flex flex-col items-center py-4">
+
           <img src="/logo-doan.png" className="h-20 mb-2" />
+
           <h1 className="text-xl md:text-2xl font-bold text-center">
             HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
           </h1>
-          <p className="text-sm md:text-base font-semibold text-blue-200">
+
+          <p className="text-blue-200 font-semibold">
             TỈNH ĐOÀN LÂM ĐỒNG
           </p>
+
         </div>
 
         <nav className="bg-blue-800">
+
           <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 
-            <Link
-              href="/"
-              className="text-white hover:text-yellow-300 flex items-center"
-            >
+            <Link href="/" className="text-white hover:text-yellow-300 flex items-center">
               <Home size={20} />
             </Link>
 
@@ -128,86 +134,122 @@ export default function TienDoPage() {
             </Link>
 
           </div>
+
         </nav>
+
       </header>
 
-      <main className="flex-1 flex justify-center p-4">
-        <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          <div className="flex flex-col md:flex-row gap-3 mb-6">
+      <main className="flex-1 flex justify-center p-6">
+
+        <div className="bg-white w-full max-w-7xl rounded-2xl shadow-xl p-6">
+
+          {/* bộ lọc */}
+
+          <div className="flex flex-wrap gap-4 mb-6">
 
             <select
               value={linhVucLon}
               onChange={(e) => setLinhVucLon(e.target.value)}
-              className="border px-3 py-2 rounded w-full md:w-80"
+              className="border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
-              <option>
+
+              <option value="">
+                Chọn lĩnh vực
+              </option>
+
+              <option value="I. Văn phòng - Tuyên giáo - Xây dựng Đoàn">
                 I. Văn phòng - Tuyên giáo - Xây dựng Đoàn
               </option>
-              <option>
+
+              <option value="II. Phong trào - Hội LHTN">
                 II. Phong trào - Hội LHTN
               </option>
-              <option>
+
+              <option value="III. Trường học - Hội Sinh viên">
                 III. Trường học - Hội Sinh viên
               </option>
+
             </select>
+
 
             <select
               value={thang}
               onChange={(e) => setThang(e.target.value)}
-              className="border px-3 py-2 rounded w-full md:w-48"
+              className="border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
-              <option value="ALL">Tất cả tháng</option>
+
               {Array.from({ length: 12 }).map((_, i) => (
+
                 <option key={i} value={i + 1}>
                   Tháng {i + 1}
                 </option>
+
               ))}
+
             </select>
 
           </div>
 
+
           {loading ? (
+
             <div className="text-center py-10">
               Đang tải dữ liệu...
             </div>
+
           ) : (
+
             <div className="overflow-x-auto">
 
               <table className="min-w-full border border-gray-300 text-sm">
 
                 <thead>
+
                   <tr className="bg-blue-100 text-blue-900 text-center font-semibold">
+
                     <th className="border p-2">STT</th>
-                    <th className="border p-2 min-w-[250px] text-left">
+
+                    <th className="border p-2 text-left min-w-[250px]">
                       Văn bản / Công việc
                     </th>
+
                     <th className="border p-2">Ngày giao</th>
-                    <th className="border p-2">Thời hạn HT</th>
+
+                    <th className="border p-2">Hạn HT</th>
+
                     <th className="border p-2">Ngày HT</th>
+
                     <th className="border p-2 min-w-[150px]">
                       Sản phẩm
                     </th>
+
                     <th className="border p-2">Tiến độ</th>
+
                     <th className="border p-2 min-w-[140px]">
                       Cán bộ tham mưu
                     </th>
+
                     <th className="border p-2 min-w-[140px]">
                       TT phụ trách
                     </th>
+
                   </tr>
+
                 </thead>
 
                 <tbody>
 
                   {Object.entries(grouped).map(([lvCon, tasks]) => (
 
-                    <tbody key={lvCon}>
+                    <>
 
-                      <tr className="bg-gray-100 font-semibold">
+                      <tr key={lvCon} className="bg-gray-100 font-semibold">
+
                         <td colSpan={9} className="border p-2">
                           {lvCon}
                         </td>
+
                       </tr>
 
                       {tasks.map((task) => (
@@ -241,11 +283,11 @@ export default function TienDoPage() {
                           <td className="border p-2 text-center">
 
                             <span
-                              className={`px-2 py-1 rounded text-xs font-semibold ${getTienDoColor(
-                                task.tien_do
-                              )}`}
+                              className={`px-2 py-1 rounded text-xs font-semibold ${getTienDoColor(task.tien_do)}`}
                             >
+
                               {task.tien_do || "Chưa cập nhật"}
+
                             </span>
 
                           </td>
@@ -262,7 +304,7 @@ export default function TienDoPage() {
 
                       ))}
 
-                    </tbody>
+                    </>
 
                   ))}
 
@@ -271,15 +313,19 @@ export default function TienDoPage() {
               </table>
 
             </div>
+
           )}
 
         </div>
+
       </main>
 
-      <footer className="bg-blue-900 text-white text-center text-sm py-3">
+
+      <footer className="bg-blue-900 text-white text-center py-3 text-sm">
         © 2026 Tỉnh đoàn Lâm Đồng
       </footer>
 
     </div>
+
   );
 }

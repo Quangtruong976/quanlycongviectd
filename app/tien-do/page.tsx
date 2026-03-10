@@ -24,30 +24,26 @@ export default function TienDoPage() {
   const [data, setData] = useState<NhiemVu[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [linhVucLon, setLinhVucLon] = useState(
+    "I. Văn phòng - Tuyên giáo - Xây dựng Đoàn"
+  );
   const [thang, setThang] = useState("ALL");
-  const [search, setSearch] = useState("");
-  const [linhVucLon, setLinhVucLon] = useState("ALL");
 
   useEffect(() => {
     fetchData();
-  }, [thang, search, linhVucLon]);
+  }, [linhVucLon, thang]);
 
   async function fetchData() {
     setLoading(true);
 
     try {
-      let query = supabase.from("nhiem_vu").select("*");
-
-      if (linhVucLon !== "ALL") {
-        query = query.eq("linh_vuc_lon", linhVucLon);
-      }
+      let query = supabase
+        .from("nhiem_vu")
+        .select("*")
+        .eq("linh_vuc_lon", linhVucLon);
 
       if (thang !== "ALL") {
         query = query.eq("thang", Number(thang));
-      }
-
-      if (search.trim() !== "") {
-        query = query.ilike("ten", `%${search}%`);
       }
 
       const { data, error } = await query
@@ -55,13 +51,13 @@ export default function TienDoPage() {
         .order("han_hoan_thanh");
 
       if (error) {
-        console.error("Supabase error:", error.message);
+        console.error(error.message);
         setData([]);
       } else {
         setData((data as NhiemVu[]) || []);
       }
     } catch (err) {
-      console.error("System error:", err);
+      console.error(err);
       setData([]);
     }
 
@@ -114,8 +110,7 @@ export default function TienDoPage() {
 
             <Link
               href="/"
-              className="text-white hover:text-yellow-300 transition flex items-center"
-              title="Trang chủ"
+              className="text-white hover:text-yellow-300 flex items-center"
             >
               <Home size={20} />
             </Link>
@@ -144,23 +139,18 @@ export default function TienDoPage() {
             <select
               value={linhVucLon}
               onChange={(e) => setLinhVucLon(e.target.value)}
-              className="border px-3 py-2 rounded w-full md:w-56"
+              className="border px-3 py-2 rounded w-full md:w-80"
             >
-              <option value="ALL">Tất cả lĩnh vực</option>
-              <option value="Công tác tổ chức">Công tác tổ chức</option>
-              <option value="Tuyên giáo">Tuyên giáo</option>
-              <option value="Thanh niên">Thanh niên</option>
-              <option value="Kiểm tra">Kiểm tra</option>
-              <option value="Văn phòng">Văn phòng</option>
+              <option>
+                I. Văn phòng - Tuyên giáo - Xây dựng Đoàn
+              </option>
+              <option>
+                II. Phong trào - Hội LHTN
+              </option>
+              <option>
+                III. Trường học - Hội Sinh viên
+              </option>
             </select>
-
-            <input
-              type="text"
-              placeholder="Tìm văn bản / công việc..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="border px-3 py-2 rounded w-full md:w-64"
-            />
 
             <select
               value={thang}
@@ -216,7 +206,7 @@ export default function TienDoPage() {
 
                       <tr className="bg-gray-100 font-semibold">
                         <td colSpan={9} className="border p-2">
-                          * {lvCon}
+                          {lvCon}
                         </td>
                       </tr>
 

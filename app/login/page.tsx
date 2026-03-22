@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Home } from "lucide-react";
@@ -36,7 +36,10 @@ export default function LoginPage() {
       return;
     }
 
-    // Đăng nhập thành công → chuyển trang
+    // ✅ FIX
+    localStorage.setItem("role", "admin");
+    localStorage.setItem("name", email);
+
     router.push("/admin");
     router.refresh();
   }
@@ -57,25 +60,12 @@ export default function LoginPage() {
 
         <nav className="bg-blue-800">
           <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-            <Link
-              href="/"
-              className="text-white hover:text-yellow-300 transition flex items-center"
-              title="Trang chủ"
-            >
+            <Link href="/" className="text-white hover:text-yellow-300 flex items-center">
               <Home size={20} />
             </Link>
-
-            <Link href="/tien-do" className="hover:underline">
-              Theo dõi tiến độ công việc
-            </Link>
-
-            <Link href="/thong-ke" className="hover:underline">
-              Thống kê chi tiết công việc cá nhân
-            </Link>
-            
-            <Link href="/login" className="hover:underline">
-              Đăng nhập
-            </Link>
+            <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
+            <Link href="/thong-ke">Thống kê chi tiết công việc cá nhân</Link>
+            <Link href="/login">Đăng nhập</Link>
           </div>
         </nav>
       </header>
@@ -88,50 +78,41 @@ export default function LoginPage() {
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="Nhập email..."
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="border px-3 py-2 rounded w-full"
-              />
-            </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Mật khẩu
-              </label>
-              <input
-                type="password"
-                placeholder="Nhập mật khẩu..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="border px-3 py-2 rounded w-full"
-              />
-            </div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="border px-3 py-2 rounded w-full"
+            />
+
+            <input
+              type="password"
+              placeholder="Mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border px-3 py-2 rounded w-full"
+            />
 
             {errorMsg && (
-              <div className="text-red-600 text-sm font-semibold text-center">
+              <div className="text-red-600 text-sm text-center">
                 {errorMsg}
               </div>
             )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded transition"
+              className="w-full bg-blue-700 text-white py-2 rounded"
             >
-              {loading ? "Đang xử lý..." : "Đăng nhập"}
+              Đăng nhập
             </button>
+
           </form>
         </div>
       </main>
 
-      <footer className="bg-blue-900 text-white text-center text-sm py-3">
+      <footer className="bg-blue-900 text-white text-center py-3 text-sm">
         © 2026 Tỉnh đoàn Lâm Đồng
       </footer>
     </div>

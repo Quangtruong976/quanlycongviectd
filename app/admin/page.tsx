@@ -34,7 +34,6 @@ export default function AdminPage(){
 
   const [tasks,setTasks] = useState<Task[]>([]);
   const [adminName,setAdminName] = useState("");
-  const [mode,setMode] = useState("nhap"); // nhap | capnhat
   const [thang,setThang] = useState(new Date().getMonth()+1);
 
   useEffect(()=>{
@@ -74,7 +73,7 @@ export default function AdminPage(){
   function update(index:number, field:keyof Task, value:string){
 
     const newData = [...tasks];
-  
+
     (newData[index] as any)[field] = value;
 
     if(field==="linh_vuc_lon"){
@@ -126,11 +125,11 @@ export default function AdminPage(){
 
 <img src="/logo-doan.png" className="h-20 mb-2"/>
 
-<h1 className="text-xl font-bold text-center">
+<h1 className="text-xl md:text-2xl font-bold text-center">
 HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
 </h1>
 
-<p className="text-blue-200">
+<p className="text-blue-200 font-semibold">
 TỈNH ĐOÀN LÂM ĐỒNG
 </p>
 
@@ -140,13 +139,23 @@ TỈNH ĐOÀN LÂM ĐỒNG
 
 <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 
-<Link href="/"><Home size={20}/></Link>
-<Link href="/tien-do">Tiến độ</Link>
+<Link href="/" className="flex items-center">
+<Home size={20}/>
+</Link>
+
+<Link href="/tien-do">Theo dõi tiến độ</Link>
 <Link href="/thong-ke">Thống kê</Link>
 
-<span className="text-yellow-300">Xin chào, {adminName}</span>
+<span className="text-yellow-300">
+Xin chào, {adminName}
+</span>
 
-<button onClick={()=>{localStorage.clear();router.replace("/login")}}>
+<button
+onClick={()=>{
+localStorage.clear();
+router.replace("/login");
+}}
+>
 Đăng xuất
 </button>
 
@@ -160,8 +169,7 @@ TỈNH ĐOÀN LÂM ĐỒNG
 
 <div className="bg-white rounded-xl p-4">
 
-{/* điều khiển */}
-<div className="flex flex-wrap gap-4 mb-4">
+<div className="flex justify-between mb-4">
 
 <select
 value={thang}
@@ -173,16 +181,8 @@ className="border px-3 py-1 rounded"
 ))}
 </select>
 
-<button onClick={()=>setMode("nhap")} className="bg-blue-600 text-white px-3 py-1 rounded">
-Nhập nhiệm vụ
-</button>
-
-<button onClick={()=>setMode("capnhat")} className="bg-gray-600 text-white px-3 py-1 rounded">
-Cập nhật hoàn thành
-</button>
-
-<button onClick={saveAll} className="bg-green-600 text-white px-3 py-1 rounded ml-auto">
-Lưu
+<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1 rounded">
+Lưu dữ liệu
 </button>
 
 </div>
@@ -192,16 +192,22 @@ Lưu
 <table className="min-w-full border text-sm">
 
 <thead className="bg-blue-100 text-center">
+
 <tr>
+
 <th className="border p-2">STT</th>
-<th className="border p-2">Lĩnh vực</th>
+<th className="border p-2">Lĩnh vực lớn</th>
+<th className="border p-2">Lĩnh vực con</th>
 <th className="border p-2">Công việc</th>
 <th className="border p-2">Ngày giao</th>
 <th className="border p-2">Hạn</th>
 <th className="border p-2">Ngày HT</th>
 <th className="border p-2">Tiến độ</th>
+<th className="border p-2">Tham mưu</th>
 <th className="border p-2">Phụ trách</th>
+
 </tr>
+
 </thead>
 
 <tbody>
@@ -216,8 +222,7 @@ Lưu
 <select
 value={t.linh_vuc_lon||""}
 onChange={(e)=>update(i,"linh_vuc_lon",e.target.value)}
-className="w-full"
-disabled={mode==="capnhat"}
+className="w-full bg-transparent outline-none"
 >
 <option value="">Chọn</option>
 {Object.keys(LINH_VUC).map(lv=><option key={lv}>{lv}</option>)}
@@ -225,11 +230,23 @@ disabled={mode==="capnhat"}
 </td>
 
 <td className="border p-1">
+<select
+value={t.linh_vuc_con||""}
+onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}
+className="w-full bg-transparent outline-none"
+>
+<option value="">Chọn</option>
+{LINH_VUC[t.linh_vuc_lon as keyof typeof LINH_VUC]?.map(c=>(
+<option key={c}>{c}</option>
+))}
+</select>
+</td>
+
+<td className="border p-1">
 <input
 value={t.ten||""}
 onChange={(e)=>update(i,"ten",e.target.value)}
-className="w-full px-1"
-disabled={mode==="capnhat"}
+className="w-full px-1 outline-none bg-transparent"
 />
 </td>
 
@@ -237,8 +254,7 @@ disabled={mode==="capnhat"}
 <input type="date"
 value={t.ngay_giao||""}
 onChange={(e)=>update(i,"ngay_giao",e.target.value)}
-className="w-full"
-disabled={mode==="capnhat"}
+className="w-full outline-none bg-transparent"
 />
 </td>
 
@@ -246,8 +262,7 @@ disabled={mode==="capnhat"}
 <input type="date"
 value={t.han_hoan_thanh||""}
 onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
-className="w-full"
-disabled={mode==="capnhat"}
+className="w-full outline-none bg-transparent"
 />
 </td>
 
@@ -255,7 +270,7 @@ disabled={mode==="capnhat"}
 <input type="date"
 value={t.ngay_hoan_thanh||""}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
-className="w-full"
+className="w-full outline-none bg-transparent"
 />
 </td>
 
@@ -265,9 +280,20 @@ className="w-full"
 
 <td className="border p-1">
 <select
+value={t.can_bo_tham_muu||""}
+onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}
+className="w-full bg-transparent outline-none"
+>
+<option value="">Chọn</option>
+{CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
+</select>
+</td>
+
+<td className="border p-1">
+<select
 value={t.can_bo_phu_trach||""}
 onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}
-className="w-full"
+className="w-full bg-transparent outline-none"
 >
 <option value="">Chọn</option>
 {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}

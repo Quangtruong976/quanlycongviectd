@@ -8,10 +8,16 @@ import { supabase } from "@/lib/supabase";
 
 type Task = {
   id?: string;
+  linh_vuc_lon?: string;
+  linh_vuc_con?: string;
   ten: string;
-  han: string;
+  ngay_giao?: string;
+  han_hoan_thanh?: string;
+  ngay_hoan_thanh?: string;
+  san_pham?: string;
   tien_do: string;
-  phu_trach: string;
+  can_bo_tham_muu?: string;
+  can_bo_phu_trach?: string;
 };
 
 export default function AdminPage() {
@@ -20,14 +26,6 @@ export default function AdminPage() {
 
   const [tasks,setTasks] = useState<Task[]>([]);
   const [adminName,setAdminName] = useState("");
-  const [tab,setTab] = useState("tasks");
-
-  const [stats,setStats] = useState({
-    total:0,
-    dungHan:0,
-    quaHan:0,
-    chua:0
-  });
 
   useEffect(()=>{
     const role = localStorage.getItem("role");
@@ -47,35 +45,12 @@ export default function AdminPage() {
 
     const {data,error} = await supabase
       .from("nhiem_vu")
-      .select("*");
+      .select("*")
+      .order("created_at",{ascending:true});
 
     if(!error && data){
-      setTasks(data as any);
-      calcStats(data);
+      setTasks(data as Task[]);
     }
-
-  }
-
-  function calcStats(list:any[]){
-
-    let dung=0;
-    let qua=0;
-    let chua=0;
-
-    list.forEach(t=>{
-
-      if(t.ghi_chu==="dung_han") dung++;
-      else if(t.ghi_chu==="qua_han") qua++;
-      else chua++;
-
-    });
-
-    setStats({
-      total:list.length,
-      dungHan:dung,
-      quaHan:qua,
-      chua:chua
-    });
 
   }
 
@@ -85,9 +60,7 @@ export default function AdminPage() {
       ...tasks,
       {
         ten:"",
-        han:"",
-        tien_do:"Chưa hoàn thành",
-        phu_trach:""
+        tien_do:"Chưa hoàn thành"
       }
     ]);
 
@@ -105,10 +78,17 @@ export default function AdminPage() {
 
     const payload = tasks.map(t => ({
 
+      linh_vuc_lon: t.linh_vuc_lon || "",
+      linh_vuc_con: t.linh_vuc_con || "",
       ten: t.ten,
-      han_hoan_thanh: t.han,
+      ngay_giao: t.ngay_giao || "",
+      han_hoan_thanh: t.han_hoan_thanh || "",
+      ngay_hoan_thanh: t.ngay_hoan_thanh || "",
+      san_pham: t.san_pham || "",
       tien_do: t.tien_do,
-      can_bo: t.phu_trach,
+      can_bo_tham_muu: t.can_bo_tham_muu || "",
+      can_bo_phu_trach: t.can_bo_phu_trach || "",
+      can_bo: t.can_bo_phu_trach || "",
       thang: new Date().getMonth() + 1,
 
       ghi_chu:
@@ -163,14 +143,6 @@ TỈNH ĐOÀN LÂM ĐỒNG
 <Home size={20}/>
 </Link>
 
-<button onClick={()=>setTab("tasks")}>
-Nhập nhiệm vụ
-</button>
-
-<button onClick={()=>setTab("stats")}>
-Báo cáo
-</button>
-
 <span className="text-yellow-300">
 Xin chào, {adminName}
 </span>
@@ -194,10 +166,6 @@ router.replace("/login");
 
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-{tab==="tasks" && (
-
-<>
-
 <div className="flex justify-between mb-6">
 
 <h2 className="font-semibold text-blue-700 text-lg">
@@ -213,15 +181,25 @@ Lưu dữ liệu
 
 </div>
 
+<div className="overflow-x-auto">
+
 <table className="min-w-full border text-sm">
 
 <thead>
 <tr className="bg-blue-100 text-center font-semibold">
+
 <th className="border p-2">STT</th>
+<th className="border p-2">Lĩnh vực lớn</th>
+<th className="border p-2">Lĩnh vực con</th>
 <th className="border p-2">Công việc</th>
+<th className="border p-2">Ngày giao</th>
 <th className="border p-2">Hạn</th>
+<th className="border p-2">Ngày HT</th>
+<th className="border p-2">Sản phẩm</th>
 <th className="border p-2">Tiến độ</th>
+<th className="border p-2">Tham mưu</th>
 <th className="border p-2">Phụ trách</th>
+
 </tr>
 </thead>
 
@@ -235,13 +213,38 @@ Lưu dữ liệu
 </td>
 
 <td contentEditable className="border p-2"
+onBlur={(e)=>update(index,"linh_vuc_lon",e.currentTarget.innerText)}>
+{item.linh_vuc_lon || ""}
+</td>
+
+<td contentEditable className="border p-2"
+onBlur={(e)=>update(index,"linh_vuc_con",e.currentTarget.innerText)}>
+{item.linh_vuc_con || ""}
+</td>
+
+<td contentEditable className="border p-2"
 onBlur={(e)=>update(index,"ten",e.currentTarget.innerText)}>
 {item.ten}
 </td>
 
 <td contentEditable className="border p-2 text-center"
-onBlur={(e)=>update(index,"han",e.currentTarget.innerText)}>
-{item.han}
+onBlur={(e)=>update(index,"ngay_giao",e.currentTarget.innerText)}>
+{item.ngay_giao || ""}
+</td>
+
+<td contentEditable className="border p-2 text-center"
+onBlur={(e)=>update(index,"han_hoan_thanh",e.currentTarget.innerText)}>
+{item.han_hoan_thanh || ""}
+</td>
+
+<td contentEditable className="border p-2 text-center"
+onBlur={(e)=>update(index,"ngay_hoan_thanh",e.currentTarget.innerText)}>
+{item.ngay_hoan_thanh || ""}
+</td>
+
+<td contentEditable className="border p-2"
+onBlur={(e)=>update(index,"san_pham",e.currentTarget.innerText)}>
+{item.san_pham || ""}
 </td>
 
 <td className="border p-2">
@@ -257,8 +260,13 @@ className="w-full border"
 </td>
 
 <td contentEditable className="border p-2"
-onBlur={(e)=>update(index,"phu_trach",e.currentTarget.innerText)}>
-{item.phu_trach}
+onBlur={(e)=>update(index,"can_bo_tham_muu",e.currentTarget.innerText)}>
+{item.can_bo_tham_muu || ""}
+</td>
+
+<td contentEditable className="border p-2"
+onBlur={(e)=>update(index,"can_bo_phu_trach",e.currentTarget.innerText)}>
+{item.can_bo_phu_trach || ""}
 </td>
 
 </tr>
@@ -268,44 +276,14 @@ onBlur={(e)=>update(index,"phu_trach",e.currentTarget.innerText)}>
 
 </table>
 
+</div>
+
 <button
 onClick={addRow}
 className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
 >
 + Thêm nhiệm vụ
 </button>
-
-</>
-
-)}
-
-{tab==="stats" && (
-
-<div className="grid grid-cols-2 gap-4">
-
-<div className="bg-blue-100 p-4 text-center">
-<p>Tổng</p>
-<p>{stats.total}</p>
-</div>
-
-<div className="bg-green-100 p-4 text-center">
-<p>Đúng hạn</p>
-<p>{stats.dungHan}</p>
-</div>
-
-<div className="bg-yellow-100 p-4 text-center">
-<p>Quá hạn</p>
-<p>{stats.quaHan}</p>
-</div>
-
-<div className="bg-red-100 p-4 text-center">
-<p>Chưa HT</p>
-<p>{stats.chua}</p>
-</div>
-
-</div>
-
-)}
 
 </div>
 

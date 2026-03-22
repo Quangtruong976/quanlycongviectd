@@ -73,7 +73,6 @@ export default function AdminPage(){
   function update(index:number, field:keyof Task, value:string){
 
     const newData = [...tasks];
-
     (newData[index] as any)[field] = value;
 
     if(field==="linh_vuc_lon"){
@@ -91,24 +90,42 @@ export default function AdminPage(){
 
   async function saveAll(){
 
-    const payload = tasks.map(t => ({
+    const payload = tasks.map(t => {
 
-      ...t,
-      thang,
-      tien_do: tinhTienDo(t),
+      const tien_do = tinhTienDo(t);
 
-      can_bo: t.can_bo_phu_trach || "",
+      return {
+        linh_vuc_lon: t.linh_vuc_lon || "",
+        linh_vuc_con: t.linh_vuc_con || "",
+        ten: t.ten || "",
+        ngay_giao: t.ngay_giao || null,
+        han_hoan_thanh: t.han_hoan_thanh || null,
+        ngay_hoan_thanh: t.ngay_hoan_thanh || null,
 
-      ghi_chu:
-        tinhTienDo(t)==="Hoàn thành đúng hạn"
-          ? "dung_han"
-          : tinhTienDo(t)==="Hoàn thành quá hạn"
-          ? "qua_han"
-          : "chua_ht"
+        tien_do: tien_do,
 
-    }));
+        can_bo_tham_muu: t.can_bo_tham_muu || "",
+        can_bo_phu_trach: t.can_bo_phu_trach || "",
 
+        // 🔥 BẮT BUỘC cho thống kê
+        can_bo: t.can_bo_phu_trach || "",
+
+        thang: thang,
+
+        // 🔥 BẮT BUỘC cho trang chủ + thống kê
+        ghi_chu:
+          tien_do === "Hoàn thành đúng hạn"
+            ? "dung_han"
+            : tien_do === "Hoàn thành quá hạn"
+            ? "qua_han"
+            : "chua_ht"
+      };
+    });
+
+    // Xóa dữ liệu tháng cũ
     await supabase.from("nhiem_vu").delete().eq("thang",thang);
+
+    // Thêm lại dữ liệu mới
     await supabase.from("nhiem_vu").insert(payload);
 
     alert("Đã lưu dữ liệu tháng " + thang);
@@ -122,79 +139,61 @@ export default function AdminPage(){
 <header className="bg-blue-900 text-white">
 
 <div className="flex flex-col items-center py-4">
-
 <img src="/logo-doan.png" className="h-20 mb-2"/>
-
-<h1 className="text-xl md:text-2xl font-bold text-center">
+<h1 className="text-xl font-bold text-center">
 HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
 </h1>
-
 <p className="text-blue-200 font-semibold">
 TỈNH ĐOÀN LÂM ĐỒNG
 </p>
-
 </div>
 
 <nav className="bg-blue-800">
+<div className="flex justify-center gap-6 py-2">
 
-<div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-
-<Link href="/" className="flex items-center">
-<Home size={20}/>
-</Link>
-
-<Link href="/tien-do">Theo dõi tiến độ</Link>
+<Link href="/"><Home size={20}/></Link>
+<Link href="/tien-do">Tiến độ</Link>
 <Link href="/thong-ke">Thống kê</Link>
 
-<span className="text-yellow-300">
-Xin chào, {adminName}
-</span>
-
-<button
-onClick={()=>{
+<button onClick={()=>{
 localStorage.clear();
 router.replace("/login");
-}}
->
+}}>
 Đăng xuất
 </button>
 
 </div>
-
 </nav>
 
 </header>
 
 <main className="flex-1 p-4">
 
-<div className="bg-white rounded-xl p-4">
+<div className="bg-white p-4 rounded">
 
 <div className="flex justify-between mb-4">
 
 <select
 value={thang}
 onChange={(e)=>setThang(Number(e.target.value))}
-className="border px-3 py-1 rounded"
+className="border px-3 py-1"
 >
 {Array.from({length:12}).map((_,i)=>(
 <option key={i} value={i+1}>Tháng {i+1}</option>
 ))}
 </select>
 
-<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1 rounded">
+<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
 Lưu dữ liệu
 </button>
 
 </div>
 
-<div className="overflow-x-auto">
+<table className="w-full border text-sm">
 
-<table className="min-w-full border text-sm">
-
-<thead className="bg-blue-100 text-center">
+<thead className="bg-blue-100">
 
 <tr>
-
 <th className="border p-2">STT</th>
 <th className="border p-2">Lĩnh vực lớn</th>
 <th className="border p-2">Lĩnh vực con</th>
@@ -205,7 +204,6 @@ Lưu dữ liệu
 <th className="border p-2">Tiến độ</th>
 <th className="border p-2">Tham mưu</th>
 <th className="border p-2">Phụ trách</th>
-
 </tr>
 
 </thead>
@@ -214,87 +212,62 @@ Lưu dữ liệu
 
 {tasks.map((t,i)=>(
 
-<tr key={i} className="text-center">
+<tr key={i}>
 
 <td className="border p-2">{i+1}</td>
 
 <td className="border p-1">
-<select
-value={t.linh_vuc_lon||""}
-onChange={(e)=>update(i,"linh_vuc_lon",e.target.value)}
-className="w-full bg-transparent outline-none"
->
+<select value={t.linh_vuc_lon||""}
+onChange={(e)=>update(i,"linh_vuc_lon",e.target.value)}>
 <option value="">Chọn</option>
 {Object.keys(LINH_VUC).map(lv=><option key={lv}>{lv}</option>)}
 </select>
 </td>
 
 <td className="border p-1">
-<select
-value={t.linh_vuc_con||""}
-onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}
-className="w-full bg-transparent outline-none"
->
+<select value={t.linh_vuc_con||""}
+onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
 <option value="">Chọn</option>
-{LINH_VUC[t.linh_vuc_lon as keyof typeof LINH_VUC]?.map(c=>(
-<option key={c}>{c}</option>
-))}
+{LINH_VUC[t.linh_vuc_lon as keyof typeof LINH_VUC]?.map(c=><option key={c}>{c}</option>)}
 </select>
 </td>
 
 <td className="border p-1">
-<input
-value={t.ten||""}
-onChange={(e)=>update(i,"ten",e.target.value)}
-className="w-full px-1 outline-none bg-transparent"
-/>
+<input value={t.ten||""}
+onChange={(e)=>update(i,"ten",e.target.value)}/>
 </td>
 
 <td className="border p-1">
 <input type="date"
 value={t.ngay_giao||""}
-onChange={(e)=>update(i,"ngay_giao",e.target.value)}
-className="w-full outline-none bg-transparent"
-/>
+onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
 </td>
 
 <td className="border p-1">
 <input type="date"
 value={t.han_hoan_thanh||""}
-onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
-className="w-full outline-none bg-transparent"
-/>
+onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
 </td>
 
 <td className="border p-1">
 <input type="date"
 value={t.ngay_hoan_thanh||""}
-onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
-className="w-full outline-none bg-transparent"
-/>
+onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
 </td>
 
-<td className="border p-1 font-semibold">
-{t.tien_do || "Chưa hoàn thành"}
-</td>
+<td className="border p-1">{t.tien_do||"Chưa hoàn thành"}</td>
 
 <td className="border p-1">
-<select
-value={t.can_bo_tham_muu||""}
-onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}
-className="w-full bg-transparent outline-none"
->
+<select value={t.can_bo_tham_muu||""}
+onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}>
 <option value="">Chọn</option>
 {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
 </select>
 </td>
 
 <td className="border p-1">
-<select
-value={t.can_bo_phu_trach||""}
-onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}
-className="w-full bg-transparent outline-none"
->
+<select value={t.can_bo_phu_trach||""}
+onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
 <option value="">Chọn</option>
 {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
 </select>
@@ -308,19 +281,13 @@ className="w-full bg-transparent outline-none"
 
 </table>
 
-</div>
-
-<button onClick={addRow} className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
+<button onClick={addRow} className="mt-4 bg-blue-600 text-white px-4 py-2">
 + Thêm nhiệm vụ
 </button>
 
 </div>
 
 </main>
-
-<footer className="bg-blue-900 text-white text-center py-3">
-© 2026 Tỉnh đoàn Lâm Đồng
-</footer>
 
 </div>
 );

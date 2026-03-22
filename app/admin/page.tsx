@@ -74,7 +74,8 @@ export default function AdminPage(){
   function update(index:number, field:keyof Task, value:string){
 
     const newData = [...tasks];
-    newData[index][field] = value;
+  
+    (newData[index] as any)[field] = value;
 
     if(field==="linh_vuc_lon"){
       newData[index].linh_vuc_con = "";

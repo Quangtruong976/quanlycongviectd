@@ -187,8 +187,8 @@ TỈNH ĐOÀN LÂM ĐỒNG
 <div className="flex justify-center gap-6 py-2">
 
 <Link href="/"><Home size={20}/></Link>
-<Link href="/tien-do">Tiến độ</Link>
-<Link href="/thong-ke">Thống kê</Link>
+<Link href="/tien-do">Theo dõi tiến độ công việc</Link>
+<Link href="/thong-ke">Thống kê chi tiết công việc cá nhân</Link>
 
 <button onClick={()=>{
 localStorage.clear();
@@ -202,9 +202,9 @@ router.replace("/login");
 
 </header>
 
-<main className="flex-1 p-4">
+<main className="flex-1 flex justify-center p-4">
 
-<div className="bg-white p-4 rounded">
+  <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4 md:p-6">
 
 <div className="flex justify-between mb-4">
 

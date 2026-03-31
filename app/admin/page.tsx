@@ -204,7 +204,7 @@ Lưu dữ liệu
 </div>
 
 <div className="overflow-x-auto">
-<table className="min-w-full border text-sm table-fixed">
+<table className="min-w-full border text-sm ">
 
 <thead className="bg-blue-100">
 <tr>

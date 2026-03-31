@@ -18,7 +18,8 @@ type Task = {
   can_bo_tham_muu?: string;
   can_bo_phu_trach?: string;
   thang?: number;
-  selected?: boolean; // 🔥 checkbox
+  san_pham?: string;
+  selected?: boolean;
 };
 
 const LINH_VUC = {
@@ -54,7 +55,9 @@ export default function AdminPage(){
     const {data} = await supabase
       .from("nhiem_vu")
       .select("*")
-      .eq("thang",thang);
+      .eq("thang",thang)
+      .order("linh_vuc_con")
+      .order("han_hoan_thanh");
 
     if(data) setTasks(data as Task[]);
   }
@@ -91,16 +94,12 @@ export default function AdminPage(){
     setTasks([...tasks,{ten:"",thang}]);
   }
 
-  // 🔥 XÓA 1 DÒNG
   function deleteRow(index:number){
-    const newData = tasks.filter((_,i)=>i!==index);
-    setTasks(newData);
+    setTasks(tasks.filter((_,i)=>i!==index));
   }
 
-  // 🔥 XÓA NHIỀU DÒNG
   function deleteSelected(){
-    const newData = tasks.filter(t => !t.selected);
-    setTasks(newData);
+    setTasks(tasks.filter(t => !t.selected));
   }
 
   async function saveAll(){
@@ -126,7 +125,7 @@ export default function AdminPage(){
         can_bo_phu_trach: t.can_bo_phu_trach || "",
         can_bo: t.can_bo_phu_trach || "",
 
-        thang: thang,
+        thang,
 
         ghi_chu:
           tien_do === "Hoàn thành đúng hạn"
@@ -135,7 +134,7 @@ export default function AdminPage(){
             ? "qua_han"
             : "chua_ht",
 
-        san_pham: ""
+        san_pham: t.san_pham || ""
       };
     });
 
@@ -167,8 +166,8 @@ Chào mừng: {adminName}
 <nav className="bg-blue-800">
 <div className="flex justify-center gap-6 py-2">
 <Link href="/"><Home size={20}/></Link>
-<Link href="/tien-do"className="hover:underline">Theo dõi tiến độ công việc</Link>
-<Link href="/thong-ke"className="hover:underline"> Thống kê chi tiết công việc cá nhân</Link>
+<Link href="/tien-do">Theo dõi tiến độ công việc</Link>
+<Link href="/thong-ke">Thống kê chi tiết công việc cá nhân</Link>
 
 <button onClick={()=>{
 localStorage.clear();
@@ -176,7 +175,6 @@ router.replace("/login");
 }}>
 Đăng xuất
 </button>
-
 </div>
 </nav>
 </header>
@@ -185,7 +183,6 @@ router.replace("/login");
 
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
-{/* control */}
 <div className="flex justify-between mb-4">
 <select value={thang}
 onChange={(e)=>setThang(Number(e.target.value))}
@@ -213,9 +210,10 @@ Lưu dữ liệu
 <tr>
 <th className="border p-2 w-[40px]"></th>
 <th className="border p-2 w-[40px]">STT</th>
-<th className="border p-2 w-[100px]">Lĩnh vực lớn</th>
-<th className="border p-2 w-[80px]">Lĩnh vực con</th>
-<th className="border p-2 w-[350px]">Công việc</th>
+<th className="border p-2 w-[120px]">Lĩnh vực lớn</th>
+<th className="border p-2 w-[100px]">Lĩnh vực con</th>
+<th className="border p-2 w-[400px]">Công việc</th>
+<th className="border p-2 w-[160px]">Sản phẩm</th>
 <th className="border p-2 w-[130px]">Ngày giao</th>
 <th className="border p-2 w-[130px]">Hạn</th>
 <th className="border p-2 w-[130px]">Ngày HT</th>
@@ -264,19 +262,26 @@ onChange={(e)=>update(i,"ten",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full"
+<input className="w-full"
+placeholder="VD: Kế hoạch số 01"
+value={t.san_pham||""}
+onChange={(e)=>update(i,"san_pham",e.target.value)}/>
+</td>
+
+<td className="border p-1">
+<input type="date" className="w-full text-gray-400 focus:text-black"
 value={t.ngay_giao||""}
 onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full"
+<input type="date" className="w-full text-gray-400 focus:text-black"
 value={t.han_hoan_thanh||""}
 onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full"
+<input type="date" className="w-full text-gray-400 focus:text-black"
 value={t.ngay_hoan_thanh||""}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
 </td>

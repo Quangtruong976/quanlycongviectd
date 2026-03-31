@@ -74,21 +74,20 @@ export default function TienDoPage() {
   }, [data]);
 
   const getTienDoColor = (tien_do: string | null) => {
-
     switch (tien_do) {
-      case "Hoàn thành":
+  
+      case "Hoàn thành đúng hạn":
         return "bg-green-100 text-green-700";
-
-      case "Đang thực hiện":
-        return "bg-yellow-100 text-yellow-800";
-
-      case "Quá hạn":
+  
+      case "Hoàn thành quá hạn":
         return "bg-red-100 text-red-700";
-
+  
+      case "Chưa hoàn thành":
+        return "bg-gray-100 text-gray-700";
+  
       default:
         return "bg-gray-100 text-gray-700";
     }
-
   };
 
   let stt = 1;

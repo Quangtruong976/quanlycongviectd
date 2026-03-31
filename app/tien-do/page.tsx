@@ -19,6 +19,17 @@ type NhiemVu = {
   can_bo_phu_trach: string;
   thang: number;
 };
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return "";
+
+  const d = new Date(dateStr);
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+
+  return `${day}-${month}-${year}`;
+}
 
 export default function TienDoPage() {
 
@@ -264,15 +275,15 @@ export default function TienDoPage() {
                           </td>
 
                           <td className="border p-2 text-center">
-                            {task.ngay_giao}
+                          {formatDate(task.ngay_giao)}
                           </td>
 
                           <td className="border p-2 text-center">
-                            {task.han_hoan_thanh}
+                          {formatDate(task.han_hoan_thanh)}
                           </td>
 
                           <td className="border p-2 text-center">
-                            {task.ngay_hoan_thanh || ""}
+                          {formatDate(task.ngay_hoan_thanh)}
                           </td>
 
                           <td className="border p-2">

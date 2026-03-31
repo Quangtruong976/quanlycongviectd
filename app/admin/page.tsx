@@ -209,11 +209,11 @@ Lưu dữ liệu
 <thead className="bg-blue-100">
 <tr>
 <th className="border p-2 w-[40px]"></th>
-<th className="border p-2 w-[40px]">STT</th>
-<th className="border p-2 w-[120px]">Lĩnh vực lớn</th>
-<th className="border p-2 w-[100px]">Lĩnh vực con</th>
-<th className="border p-2 w-[400px]">Công việc</th>
-<th className="border p-2 w-[160px]">Sản phẩm</th>
+<th className="border p-2 w-[20px]">TT</th>
+<th className="border p-2 w-[100px]">Lĩnh vực lớn</th>
+<th className="border p-2 w-[80px]">Lĩnh vực con</th>
+<th className="border p-2 w-[440px]">Công việc</th>
+<th className="border p-2 w-[200px]">Sản phẩm</th>
 <th className="border p-2 w-[130px]">Ngày giao</th>
 <th className="border p-2 w-[130px]">Hạn</th>
 <th className="border p-2 w-[130px]">Ngày HT</th>

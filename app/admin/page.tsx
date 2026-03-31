@@ -167,8 +167,8 @@ Chào mừng: {adminName}
 <nav className="bg-blue-800">
 <div className="flex justify-center gap-6 py-2">
 <Link href="/"><Home size={20}/></Link>
-<Link href="/tien-do">Theo dõi tiến độ công việc</Link>
-<Link href="/thong-ke">Thống kê</Link>
+<Link href="/tien-do"className="hover:underline">Theo dõi tiến độ công việc</Link>
+<Link href="/thong-ke"className="hover:underline"> Thống kê chi tiết công việc cá nhân</Link>
 
 <button onClick={()=>{
 localStorage.clear();

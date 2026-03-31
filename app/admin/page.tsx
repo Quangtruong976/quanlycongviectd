@@ -49,16 +49,25 @@ export default function AdminPage(){
     loadTasks();
   },[thang]);
 
+  // 🔥 load dữ liệu + sort
   async function loadTasks(){
 
-    const {data} = await supabase
+    const {data,error} = await supabase
       .from("nhiem_vu")
       .select("*")
-      .eq("thang",thang);
+      .eq("thang",thang)
+      .order("linh_vuc_con")
+      .order("han_hoan_thanh");
+
+    if(error){
+      console.error(error);
+      return;
+    }
 
     if(data) setTasks(data as Task[]);
   }
 
+  // 🔥 tính tiến độ chuẩn
   function tinhTienDo(task:Task){
 
     if(!task.ngay_hoan_thanh) return "Chưa hoàn thành";
@@ -88,9 +97,18 @@ export default function AdminPage(){
     setTasks([...tasks,{ten:"",thang}]);
   }
 
+  // 🔥 SAVE CHUẨN - KHÔNG TRÙNG - KHÔNG LỖI
   async function saveAll(){
 
-    const payload = tasks.map(t => {
+    // lọc dòng rỗng
+    const validTasks = tasks.filter(t => t.ten && t.ten.trim() !== "");
+
+    if(validTasks.length === 0){
+      alert("Chưa có nhiệm vụ để lưu");
+      return;
+    }
+
+    const payload = validTasks.map(t => {
 
       const tien_do = tinhTienDo(t);
 
@@ -98,35 +116,52 @@ export default function AdminPage(){
         linh_vuc_lon: t.linh_vuc_lon || "",
         linh_vuc_con: t.linh_vuc_con || "",
         ten: t.ten || "",
+
         ngay_giao: t.ngay_giao || null,
         han_hoan_thanh: t.han_hoan_thanh || null,
         ngay_hoan_thanh: t.ngay_hoan_thanh || null,
 
-        tien_do: tien_do,
+        tien_do,
 
         can_bo_tham_muu: t.can_bo_tham_muu || "",
         can_bo_phu_trach: t.can_bo_phu_trach || "",
-
-        // 🔥 BẮT BUỘC cho thống kê
         can_bo: t.can_bo_phu_trach || "",
 
         thang: thang,
 
-        // 🔥 BẮT BUỘC cho trang chủ + thống kê
         ghi_chu:
           tien_do === "Hoàn thành đúng hạn"
             ? "dung_han"
             : tien_do === "Hoàn thành quá hạn"
             ? "qua_han"
-            : "chua_ht"
+            : "chua_ht",
+
+        san_pham: ""
       };
     });
 
-    // Xóa dữ liệu tháng cũ
-    await supabase.from("nhiem_vu").delete().eq("thang",thang);
+    // 🔥 xóa dữ liệu tháng cũ
+    const { error: deleteError } = await supabase
+      .from("nhiem_vu")
+      .delete()
+      .eq("thang", thang);
 
-    // Thêm lại dữ liệu mới
-    await supabase.from("nhiem_vu").insert(payload);
+    if(deleteError){
+      console.error(deleteError);
+      alert("Lỗi xóa dữ liệu!");
+      return;
+    }
+
+    // 🔥 insert lại
+    const { error: insertError } = await supabase
+      .from("nhiem_vu")
+      .insert(payload);
+
+    if(insertError){
+      console.error(insertError);
+      alert("Lỗi lưu dữ liệu!");
+      return;
+    }
 
     alert("Đã lưu dữ liệu tháng " + thang);
     loadTasks();

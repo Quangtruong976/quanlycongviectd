@@ -224,7 +224,7 @@ Lưu dữ liệu
 
 </div>
 
-<table className="w-full border text-sm">
+<table className="w-full min-w-[1200px] table-fixed border border-gray-300 text-sm">
 
 <thead className="bg-blue-100">
 
@@ -267,9 +267,12 @@ onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
 </select>
 </td>
 
-<td className="border p-1">
-<input value={t.ten||""}
-onChange={(e)=>update(i,"ten",e.target.value)}/>
+<td className="border p-1 max-w-[250px]">
+  <input
+    className="w-full break-words"
+    value={t.ten||""}
+    onChange={(e)=>update(i,"ten",e.target.value)}
+  />
 </td>
 
 <td className="border p-1">

@@ -338,21 +338,33 @@ onChange={(e)=>update(i,"san_pham",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full"
-value={t.ngay_giao||""}
-onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
+<input 
+type="date"
+className={`w-full ${t.ngay_giao ? "text-black" : "text-gray-400"}`}
+value={t.ngay_giao || ""}
+onChange={(e)=>update(i,"ngay_giao",e.target.value)}
+placeholder="dd/mm/yyyy"
+/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full"
-value={t.han_hoan_thanh||""}
-onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
+<input 
+type="date"
+className={`w-full ${t.han_hoan_thanh ? "text-black" : "text-gray-400"}`}
+value={t.han_hoan_thanh || ""}
+onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
+placeholder="dd/mm/yyyy"
+/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full"
-value={t.ngay_hoan_thanh||""}
-onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
+<input 
+type="date"
+className={`w-full ${t.ngay_hoan_thanh ? "text-black" : "text-gray-400"}`}
+value={t.ngay_hoan_thanh || ""}
+onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
+placeholder="dd/mm/yyyy"
+/>
 </td>
 
 <td className="border p-1 text-center">

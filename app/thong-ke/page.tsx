@@ -102,7 +102,7 @@ export default function ThongKePage() {
       let xepLoai = "";
 
       if (diem >= 90 && cb.chuaHT === 0) {
-        xepLoai = "HTSXVN";
+        xepLoai = "HTSXNV";
       } else if (diem >= 75) {
         xepLoai = "HTTNV";
       } else if (diem >= 50) {
@@ -153,7 +153,7 @@ export default function ThongKePage() {
 
     switch (xepLoai) {
 
-      case "HTXSVN":
+      case "HTXSNV":
         return "bg-green-100 text-green-700";
 
       case "HTTNV":

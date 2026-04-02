@@ -28,7 +28,30 @@ const LINH_VUC = {
   "III. Trường học - Hội Sinh viên": ["Trường học","Hội Sinh viên"]
 };
 
-const CAN_BO = ["Nguyễn Văn A","Trần Văn B","Lê Thị C"];
+const CAN_BO = [
+  "Trương Minh Quang",
+  "Trần Diệp Mỹ Dung",
+  "H' Hồng",
+  "Đoàn Minh Tâm",
+  "Trần Việt Anh",
+  "Nguyễn Hồ Xuân Quang",
+  "Nguyễn Trọng Tùng",
+  "Đào Hùng",
+  "Châu Yến Phi",
+  "Nguyễn Đình Hưng Thịnh",
+  "Nguyễn Trọng Văn",
+  "Nguyễn Lý Xuân Uyên",
+  "Nguyễn Nam Sơn",
+  "Nguyễn Linh Phương",
+  "Phan Xuân Tấn",
+  "Hồ Như Toán",
+  "Võ Văn Đồng",
+  "Đỗ Ngọc Hà",
+  "Nguyễn Thị Thanh Hòa",
+  "Bùi Thị Phượng",
+  "Trịnh Thị Vỹ Cầm"
+  
+];
 
 export default function AdminPage(){
 

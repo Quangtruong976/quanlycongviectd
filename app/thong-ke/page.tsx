@@ -102,13 +102,13 @@ export default function ThongKePage() {
       let xepLoai = "";
 
       if (diem >= 90 && cb.chuaHT === 0) {
-        xepLoai = "Hoàn thành xuất sắc";
+        xepLoai = "Hoàn thành xuất sắc nhiệm vụ";
       } else if (diem >= 75) {
-        xepLoai = "Hoàn thành tốt";
+        xepLoai = "Hoàn thành tốt nhiệm vụ";
       } else if (diem >= 50) {
         xepLoai = "Hoàn thành nhiệm vụ";
       } else {
-        xepLoai = "Không hoàn thành";
+        xepLoai = "Không hoàn thành nhiệm vụ";
       }
 
       return {

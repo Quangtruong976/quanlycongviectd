@@ -6,13 +6,13 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 
 type RawItem = {
-  can_bo: string | null;
+  can_bo_tham_muu: string | null;
   ghi_chu: string | null;
   thang: number | null;
 };
 
 type ThongKe = {
-  can_bo: string;
+  can_bo_tham_muu: string;
   tong: number;
   dungHan: number;
   quaHan: number;
@@ -40,13 +40,10 @@ export default function ThongKePage() {
 
     setLoading(true);
 
-    let query = supabase
+    const { data: raw } = await supabase
       .from("nhiem_vu")
-      .select("can_bo, ghi_chu, thang");
-
-    query = query.eq("thang", Number(thang));
-
-    const { data: raw } = await query;
+      .select("can_bo_tham_muu, ghi_chu, thang")
+      .eq("thang", Number(thang));
 
     if (!raw) {
       setData([]);
@@ -58,13 +55,13 @@ export default function ThongKePage() {
 
     (raw as RawItem[]).forEach((item) => {
 
-      if (!item.can_bo) return;
+      if (!item.can_bo_tham_muu) return;
 
-      const ten = item.can_bo.trim();
+      const ten = item.can_bo_tham_muu.trim();
 
       if (!map[ten]) {
         map[ten] = {
-          can_bo: ten,
+          can_bo_tham_muu: ten,
           tong: 0,
           dungHan: 0,
           quaHan: 0,
@@ -130,7 +127,7 @@ export default function ThongKePage() {
   };
 
   const allCanBo = useMemo(() => {
-    const unique = new Set(data.map((d) => d.can_bo));
+    const unique = new Set(data.map((d) => d.can_bo_tham_muu));
     return Array.from(unique).sort();
   }, [data]);
 
@@ -148,7 +145,7 @@ export default function ThongKePage() {
 
     if (!selectedCanBo) return data;
 
-    return data.filter((cb) => cb.can_bo === selectedCanBo);
+    return data.filter((cb) => cb.can_bo_tham_muu === selectedCanBo);
 
   }, [selectedCanBo, data]);
 
@@ -157,7 +154,7 @@ export default function ThongKePage() {
     switch (xepLoai) {
 
       case "Hoàn thành xuất sắc":
-        return "bg-green-600 text-pink-700";
+        return "bg-pink-100 text-pink-700";
 
       case "Hoàn thành tốt":
         return "bg-green-100 text-green-700";
@@ -223,11 +220,7 @@ export default function ThongKePage() {
 
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-6">
 
-          {/* Bộ lọc */}
-
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-
-            {/* tìm cán bộ */}
 
             <div className="relative w-full md:w-72">
 
@@ -267,9 +260,6 @@ export default function ThongKePage() {
 
             </div>
 
-
-            {/* chọn tháng */}
-
             <select
               value={thang}
               onChange={(e) => setThang(e.target.value)}
@@ -287,7 +277,6 @@ export default function ThongKePage() {
             </select>
 
           </div>
-
 
           {loading ? (
 
@@ -322,14 +311,14 @@ export default function ThongKePage() {
 
                   {filteredData.map((cb, index) => (
 
-                    <tr key={cb.can_bo} className="hover:bg-gray-50">
+                    <tr key={cb.can_bo_tham_muu} className="hover:bg-gray-50">
 
                       <td className="border px-3 py-2 text-center">
                         {index + 1}
                       </td>
 
                       <td className="border px-3 py-2">
-                        {cb.can_bo}
+                        {cb.can_bo_tham_muu}
                       </td>
 
                       <td className="border px-3 py-2 text-center">

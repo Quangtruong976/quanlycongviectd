@@ -20,6 +20,7 @@ type Task = {
   can_bo_phu_trach?: string;
   thang?: number;
   selected?: boolean;
+  isEditing?: boolean; // 🔥 khóa/mở sửa
 };
 
 const LINH_VUC = {
@@ -29,28 +30,12 @@ const LINH_VUC = {
 };
 
 const CAN_BO = [
-  "Trương Minh Quang",
-  "Trần Diệp Mỹ Dung",
-  "H' Hồng",
-  "Đoàn Minh Tâm",
-  "Trần Việt Anh",
-  "Nguyễn Hồ Xuân Quang",
-  "Nguyễn Trọng Tùng",
-  "Đào Hùng",
-  "Châu Yến Phi",
-  "Nguyễn Đình Hưng Thịnh",
-  "Nguyễn Trọng Văn",
-  "Nguyễn Lý Xuân Uyên",
-  "Nguyễn Nam Sơn",
-  "Nguyễn Linh Phương",
-  "Phan Xuân Tấn",
-  "Hồ Như Toán",
-  "Võ Văn Đồng",
-  "Đỗ Ngọc Hà",
-  "Nguyễn Thị Thanh Hòa",
-  "Bùi Thị Phượng",
-  "Trịnh Thị Vỹ Cầm"
-  
+  "Trương Minh Quang","Trần Diệp Mỹ Dung","H' Hồng","Đoàn Minh Tâm",
+  "Trần Việt Anh","Nguyễn Hồ Xuân Quang","Nguyễn Trọng Tùng","Đào Hùng",
+  "Châu Yến Phi","Nguyễn Đình Hưng Thịnh","Nguyễn Trọng Văn",
+  "Nguyễn Lý Xuân Uyên","Nguyễn Nam Sơn","Nguyễn Linh Phương",
+  "Phan Xuân Tấn","Hồ Như Toán","Võ Văn Đồng","Đỗ Ngọc Hà",
+  "Nguyễn Thị Thanh Hòa","Bùi Thị Phượng","Trịnh Thị Vỹ Cầm"
 ];
 
 export default function AdminPage(){
@@ -82,24 +67,29 @@ export default function AdminPage(){
       .order("linh_vuc_con")
       .order("han_hoan_thanh");
 
-    if(data) setTasks(data as Task[]);
+    if(data){
+      const mapped = (data as Task[]).map(t => ({
+        ...t,
+        isEditing:false // 🔥 khóa sau khi load
+      }));
+      setTasks(mapped);
+    }
   }
 
-  // 🔥 TÍNH TIẾN ĐỘ CHUẨN
   function tinhTienDo(task:Task){
-
     if(!task.ngay_hoan_thanh) return "Chưa hoàn thành";
 
     const ht = new Date(task.ngay_hoan_thanh);
     const han = new Date(task.han_hoan_thanh || "");
 
-    const diff = ht.getTime() - han.getTime();
-
-    if(diff <= 0) return "Hoàn thành đúng hạn";
-    return "Hoàn thành quá hạn";
+    return ht.getTime() - han.getTime() <= 0
+      ? "Hoàn thành đúng hạn"
+      : "Hoàn thành quá hạn";
   }
 
   function update(index:number, field:keyof Task, value:any){
+
+    if(!tasks[index].isEditing) return; // 🔥 khóa sửa
 
     const newData = [...tasks];
     (newData[index] as any)[field] = value;
@@ -113,8 +103,18 @@ export default function AdminPage(){
     setTasks(newData);
   }
 
+  function toggleEdit(index:number){
+    const newData = [...tasks];
+    newData[index].isEditing = !newData[index].isEditing;
+    setTasks(newData);
+  }
+
   function addRow(){
-    setTasks([...tasks,{ten:"",thang}]);
+    setTasks([...tasks,{
+      ten:"",
+      thang,
+      isEditing:true
+    }]);
   }
 
   function deleteRow(index:number){
@@ -125,7 +125,7 @@ export default function AdminPage(){
     setTasks(tasks.filter(t => !t.selected));
   }
 
-  // 🔥 IMPORT CSV (EXCEL)
+  // 🔥 IMPORT CSV CHUẨN
   function handleImport(e:any){
     const file = e.target.files[0];
     if(!file) return;
@@ -134,22 +134,24 @@ export default function AdminPage(){
 
     reader.onload = (event:any)=>{
       const text = event.target.result;
+
       const rows = text.split("\n").slice(1);
 
-      const newTasks = rows.map((row:string)=>{
+      const newTasks:Task[] = rows.map((row:string)=>{
         const cols = row.split(",");
 
         return {
-          linh_vuc_lon: cols[0] || "",
-          linh_vuc_con: cols[1] || "",
-          ten: cols[2] || "",
-          san_pham: cols[3] || "",
-          ngay_giao: cols[4] || "",
-          han_hoan_thanh: cols[5] || "",
-          ngay_hoan_thanh: cols[6] || "",
-          can_bo_tham_muu: cols[7] || "",
-          can_bo_phu_trach: cols[8] || "",
-          thang: thang
+          linh_vuc_lon: cols[0]?.trim(),
+          linh_vuc_con: cols[1]?.trim(),
+          ten: cols[2]?.trim(),
+          san_pham: cols[3]?.trim(),
+          ngay_giao: cols[4]?.trim(),
+          han_hoan_thanh: cols[5]?.trim(),
+          ngay_hoan_thanh: cols[6]?.trim(),
+          can_bo_tham_muu: cols[7]?.trim(),
+          can_bo_phu_trach: cols[8]?.trim(),
+          thang,
+          isEditing:true
         };
       });
 
@@ -183,7 +185,7 @@ export default function AdminPage(){
         can_bo_phu_trach: t.can_bo_phu_trach || "",
         can_bo: t.can_bo_phu_trach || "",
 
-        thang: thang,
+        thang,
 
         ghi_chu:
           tien_do === "Hoàn thành đúng hạn"
@@ -239,7 +241,6 @@ router.replace("/login");
 
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
-{/* control */}
 <div className="flex justify-between mb-4">
 
 <select value={thang}
@@ -253,13 +254,8 @@ className="border px-3 py-1">
 <div className="flex gap-2">
 
 <label className="bg-blue-600 text-white px-4 py-1 cursor-pointer rounded">
-  Import Excel
-  <input
-    type="file"
-    accept=".xlsx,.xls"
-    onChange={handleImport}
-    className="hidden"
-  />
+  Import CSV
+  <input type="file" accept=".csv" onChange={handleImport} className="hidden"/>
 </label>
 
 <button onClick={deleteSelected} className="bg-red-600 text-white px-3 py-1">
@@ -281,16 +277,17 @@ className="border px-3 py-1">
 <tr>
 <th className="border p-2"></th>
 <th className="border p-2">STT</th>
-<th className="border p-2 w-[220px]">Lĩnh vực lớn</th>
-<th className="border p-2 w-[180px]">Lĩnh vực con</th>
-<th className="border p-2 w-[400px]">Công việc</th>
-<th className="border p-2 w-[250px]">Sản phẩm</th>
-<th className="border p-2 w-[160px]">Ngày giao</th>
-<th className="border p-2 w-[160px]">Hạn</th>
-<th className="border p-2 w-[160px]">Ngày HT</th>
-<th className="border p-2 w-[200px]">Tiến độ</th>
-<th className="border p-2 w-[200px]">Tham mưu</th>
-<th className="border p-2 w-[200px]">Phụ trách</th>
+<th className="border p-2">Lĩnh vực lớn</th>
+<th className="border p-2">Lĩnh vực con</th>
+<th className="border p-2">Công việc</th>
+<th className="border p-2">Sản phẩm</th>
+<th className="border p-2">Ngày giao</th>
+<th className="border p-2">Hạn</th>
+<th className="border p-2">Ngày HT</th>
+<th className="border p-2">Tiến độ</th>
+<th className="border p-2">Tham mưu</th>
+<th className="border p-2">Phụ trách</th>
+<th className="border p-2">Sửa</th>
 <th className="border p-2">Xóa</th>
 </tr>
 </thead>
@@ -302,8 +299,7 @@ className="border px-3 py-1">
 <tr key={i}>
 
 <td className="border text-center">
-<input
-type="checkbox"
+<input type="checkbox"
 checked={t.selected || false}
 onChange={(e)=>update(i,"selected",e.target.checked)}
 />
@@ -312,7 +308,7 @@ onChange={(e)=>update(i,"selected",e.target.checked)}
 <td className="border p-2">{i+1}</td>
 
 <td className="border p-1">
-<select value={t.linh_vuc_lon||""}
+<select disabled={!t.isEditing} value={t.linh_vuc_lon||""}
 onChange={(e)=>update(i,"linh_vuc_lon",e.target.value)}>
 <option value="">Chọn</option>
 {Object.keys(LINH_VUC).map(lv=><option key={lv}>{lv}</option>)}
@@ -320,7 +316,7 @@ onChange={(e)=>update(i,"linh_vuc_lon",e.target.value)}>
 </td>
 
 <td className="border p-1">
-<select value={t.linh_vuc_con||""}
+<select disabled={!t.isEditing} value={t.linh_vuc_con||""}
 onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
 <option value="">Chọn</option>
 {LINH_VUC[t.linh_vuc_lon as keyof typeof LINH_VUC]?.map(c=><option key={c}>{c}</option>)}
@@ -328,51 +324,43 @@ onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
 </td>
 
 <td className="border p-1">
-<input className="w-full" value={t.ten||""}
+<input className="w-full" disabled={!t.isEditing}
+value={t.ten||""}
 onChange={(e)=>update(i,"ten",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input className="w-full" value={t.san_pham||""}
+<input className="w-full" disabled={!t.isEditing}
+value={t.san_pham||""}
 onChange={(e)=>update(i,"san_pham",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input 
-type="date"
-className={`w-full ${t.ngay_giao ? "text-black" : "text-gray-400"}`}
-value={t.ngay_giao || ""}
-onChange={(e)=>update(i,"ngay_giao",e.target.value)}
-placeholder="dd/mm/yyyy"
-/>
+<input type="date" disabled={!t.isEditing}
+className={`w-full ${t.ngay_giao ? "text-black" : "text-gray-300"}`}
+value={t.ngay_giao||""}
+onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input 
-type="date"
-className={`w-full ${t.han_hoan_thanh ? "text-black" : "text-gray-400"}`}
-value={t.han_hoan_thanh || ""}
-onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
-placeholder="dd/mm/yyyy"
-/>
+<input type="date" disabled={!t.isEditing}
+className={`w-full ${t.han_hoan_thanh ? "text-black" : "text-gray-300"}`}
+value={t.han_hoan_thanh||""}
+onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input 
-type="date"
-className={`w-full ${t.ngay_hoan_thanh ? "text-black" : "text-gray-400"}`}
-value={t.ngay_hoan_thanh || ""}
-onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
-placeholder="dd/mm/yyyy"
-/>
+<input type="date" disabled={!t.isEditing}
+className={`w-full ${t.ngay_hoan_thanh ? "text-black" : "text-gray-300"}`}
+value={t.ngay_hoan_thanh||""}
+onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
 </td>
 
-<td className="border p-1 text-center">
-{t.tien_do || "Chưa hoàn thành"}
-</td>
+<td className="border text-center">{t.tien_do || "Chưa hoàn thành"}</td>
 
 <td className="border p-1">
-<select value={t.can_bo_tham_muu||""}
+<select disabled={!t.isEditing}
+value={t.can_bo_tham_muu||""}
 onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}>
 <option value="">Chọn</option>
 {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
@@ -380,11 +368,19 @@ onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}>
 </td>
 
 <td className="border p-1">
-<select value={t.can_bo_phu_trach||""}
+<select disabled={!t.isEditing}
+value={t.can_bo_phu_trach||""}
 onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
 <option value="">Chọn</option>
 {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
 </select>
+</td>
+
+<td className="border text-center">
+<button onClick={()=>toggleEdit(i)}
+className="bg-yellow-500 text-white px-2 py-1 text-xs">
+{t.isEditing ? "Khóa" : "Sửa"}
+</button>
 </td>
 
 <td className="border text-center">

@@ -162,7 +162,9 @@ export default function ThongKePage() {
       case "HTNV":
         return "bg-yellow-100 text-yellow-800";
 
-   
+        default:
+          return "bg-red-100 text-red-700";
+  
 
     }
 

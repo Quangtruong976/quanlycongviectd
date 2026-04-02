@@ -157,7 +157,7 @@ export default function ThongKePage() {
     switch (xepLoai) {
 
       case "Hoàn thành xuất sắc":
-        return "bg-blue-100 text-pink-700";
+        return "bg-green-600 text-pink-700";
 
       case "Hoàn thành tốt":
         return "bg-green-100 text-green-700";

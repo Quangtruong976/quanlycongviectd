@@ -11,6 +11,7 @@ type Task = {
   linh_vuc_lon?: string;
   linh_vuc_con?: string;
   ten: string;
+  san_pham?: string;
   ngay_giao?: string;
   han_hoan_thanh?: string;
   ngay_hoan_thanh?: string;
@@ -18,7 +19,6 @@ type Task = {
   can_bo_tham_muu?: string;
   can_bo_phu_trach?: string;
   thang?: number;
-  san_pham?: string;
   selected?: boolean;
 };
 
@@ -102,6 +102,40 @@ export default function AdminPage(){
     setTasks(tasks.filter(t => !t.selected));
   }
 
+  // 🔥 IMPORT CSV (EXCEL)
+  function handleImport(e:any){
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (event:any)=>{
+      const text = event.target.result;
+      const rows = text.split("\n").slice(1);
+
+      const newTasks = rows.map((row:string)=>{
+        const cols = row.split(",");
+
+        return {
+          linh_vuc_lon: cols[0] || "",
+          linh_vuc_con: cols[1] || "",
+          ten: cols[2] || "",
+          san_pham: cols[3] || "",
+          ngay_giao: cols[4] || "",
+          han_hoan_thanh: cols[5] || "",
+          ngay_hoan_thanh: cols[6] || "",
+          can_bo_tham_muu: cols[7] || "",
+          can_bo_phu_trach: cols[8] || "",
+          thang: thang
+        };
+      });
+
+      setTasks(newTasks);
+    };
+
+    reader.readAsText(file);
+  }
+
   async function saveAll(){
 
     const validTasks = tasks.filter(t => t.ten && t.ten.trim() !== "");
@@ -114,6 +148,7 @@ export default function AdminPage(){
         linh_vuc_lon: t.linh_vuc_lon || "",
         linh_vuc_con: t.linh_vuc_con || "",
         ten: t.ten || "",
+        san_pham: t.san_pham || "",
 
         ngay_giao: t.ngay_giao || null,
         han_hoan_thanh: t.han_hoan_thanh || null,
@@ -125,16 +160,14 @@ export default function AdminPage(){
         can_bo_phu_trach: t.can_bo_phu_trach || "",
         can_bo: t.can_bo_phu_trach || "",
 
-        thang,
+        thang: thang,
 
         ghi_chu:
           tien_do === "Hoàn thành đúng hạn"
             ? "dung_han"
             : tien_do === "Hoàn thành quá hạn"
             ? "qua_han"
-            : "chua_ht",
-
-        san_pham: t.san_pham || ""
+            : "chua_ht"
       };
     });
 
@@ -167,7 +200,7 @@ Chào mừng: {adminName}
 <div className="flex justify-center gap-6 py-2">
 <Link href="/"><Home size={20}/></Link>
 <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
-<Link href="/thong-ke">Thống kê chi tiết công việc cá nhân</Link>
+<Link href="/thong-ke">Thống kê</Link>
 
 <button onClick={()=>{
 localStorage.clear();
@@ -183,7 +216,9 @@ router.replace("/login");
 
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
+{/* control */}
 <div className="flex justify-between mb-4">
+
 <select value={thang}
 onChange={(e)=>setThang(Number(e.target.value))}
 className="border px-3 py-1">
@@ -193,38 +228,42 @@ className="border px-3 py-1">
 </select>
 
 <div className="flex gap-2">
+<input type="file" accept=".csv" onChange={handleImport} />
+
 <button onClick={deleteSelected} className="bg-red-600 text-white px-3 py-1">
-Xóa đã chọn
+Xóa chọn
 </button>
 
 <button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
-Lưu dữ liệu
+Lưu
 </button>
 </div>
 </div>
 
 <div className="overflow-x-auto">
-<table className="min-w-full border text-sm table-fixed">
+
+<table className="min-w-[1600px] border text-sm">
 
 <thead className="bg-blue-100">
 <tr>
-<th className="border p-2 w-[40px]"></th>
-<th className="border p-2 w-[40px]">STT</th>
-<th className="border p-2 w-[120px]">Lĩnh vực lớn</th>
-<th className="border p-2 w-[100px]">Lĩnh vực con</th>
+<th className="border p-2"></th>
+<th className="border p-2">STT</th>
+<th className="border p-2 w-[220px]">Lĩnh vực lớn</th>
+<th className="border p-2 w-[180px]">Lĩnh vực con</th>
 <th className="border p-2 w-[400px]">Công việc</th>
-<th className="border p-2 w-[160px]">Sản phẩm</th>
-<th className="border p-2 w-[130px]">Ngày giao</th>
-<th className="border p-2 w-[130px]">Hạn</th>
-<th className="border p-2 w-[130px]">Ngày HT</th>
-<th className="border p-2 w-[150px]">Tiến độ</th>
-<th className="border p-2 w-[150px]">Tham mưu</th>
-<th className="border p-2 w-[150px]">Phụ trách</th>
-<th className="border p-2 w-[80px]">Xóa</th>
+<th className="border p-2 w-[250px]">Sản phẩm</th>
+<th className="border p-2 w-[160px]">Ngày giao</th>
+<th className="border p-2 w-[160px]">Hạn</th>
+<th className="border p-2 w-[160px]">Ngày HT</th>
+<th className="border p-2 w-[200px]">Tiến độ</th>
+<th className="border p-2 w-[200px]">Tham mưu</th>
+<th className="border p-2 w-[200px]">Phụ trách</th>
+<th className="border p-2">Xóa</th>
 </tr>
 </thead>
 
 <tbody>
+
 {tasks.map((t,i)=>(
 
 <tr key={i}>
@@ -256,32 +295,29 @@ onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
 </td>
 
 <td className="border p-1">
-<input className="w-full"
-value={t.ten||""}
+<input className="w-full" value={t.ten||""}
 onChange={(e)=>update(i,"ten",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input className="w-full"
-placeholder="VD: Kế hoạch số 01"
-value={t.san_pham||""}
+<input className="w-full" value={t.san_pham||""}
 onChange={(e)=>update(i,"san_pham",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full text-gray-400 focus:text-black"
+<input type="date" className="w-full"
 value={t.ngay_giao||""}
 onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full text-gray-400 focus:text-black"
+<input type="date" className="w-full"
 value={t.han_hoan_thanh||""}
 onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input type="date" className="w-full text-gray-400 focus:text-black"
+<input type="date" className="w-full"
 value={t.ngay_hoan_thanh||""}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
 </td>
@@ -307,8 +343,7 @@ onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
 </td>
 
 <td className="border text-center">
-<button
-onClick={()=>deleteRow(i)}
+<button onClick={()=>deleteRow(i)}
 className="bg-red-500 text-white px-2 py-1 text-xs">
 Xóa
 </button>
@@ -317,9 +352,10 @@ Xóa
 </tr>
 
 ))}
-</tbody>
 
+</tbody>
 </table>
+
 </div>
 
 <button onClick={addRow} className="mt-4 bg-blue-600 text-white px-4 py-2">

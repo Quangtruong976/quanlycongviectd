@@ -153,13 +153,13 @@ export default function ThongKePage() {
 
     switch (xepLoai) {
 
-      case "Hoàn thành xuất sắc nhiệm vụ":
+      case "HTXSVN":
         return "bg-green-100 text-green-700";
 
-      case "Hoàn thành tốt nhiệm vụ":
+      case "HTTNV":
         return "bg-green-100 text-green-700";
 
-      case "Hoàn thành nhiệm vụ":
+      case "HTNV":
         return "bg-yellow-100 text-yellow-800";
 
       default:

@@ -94,10 +94,10 @@ export default function TienDoPage() {
         return "bg-red-100 text-red-700";
   
       case "Chưa hoàn thành":
-        return "bg-gray-100 text-gray-700";
+        return "bg-yelow-100 text-gray-700";
   
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-yelow-100 text-gray-700";
     }
   };
 

@@ -225,7 +225,7 @@ Chào mừng: {adminName}
 <div className="flex justify-center gap-6 py-2">
 <Link href="/"><Home size={20}/></Link>
 <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
-<Link href="/thong-ke">Thống kê</Link>
+<Link href="/thong-ke"> Thống kê chi tiết công việc cá nhân</Link>
 
 <button onClick={()=>{
 localStorage.clear();

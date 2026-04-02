@@ -255,7 +255,7 @@ className="border px-3 py-1">
 
 <label className="bg-blue-600 text-white px-4 py-1 cursor-pointer rounded">
   Import CSV
-  <input type="file" accept=".csv" onChange={handleImport} className="hidden"/>
+  <input type="file" accept=".csv, .xlsx, .xls" onChange={handleImport} className="hidden"/>
 </label>
 
 <button onClick={deleteSelected} className="bg-red-600 text-white px-3 py-1">

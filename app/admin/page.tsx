@@ -233,7 +233,7 @@ className="border px-3 py-1">
   Import Excel
   <input
     type="file"
-    accept=".csv"
+    accept=".xlsx,.xls"
     onChange={handleImport}
     className="hidden"
   />

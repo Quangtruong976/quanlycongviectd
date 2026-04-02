@@ -228,15 +228,25 @@ className="border px-3 py-1">
 </select>
 
 <div className="flex gap-2">
-<input type="file" accept=".csv" onChange={handleImport} />
+
+<label className="bg-blue-600 text-white px-4 py-1 cursor-pointer rounded">
+  Import Excel
+  <input
+    type="file"
+    accept=".csv"
+    onChange={handleImport}
+    className="hidden"
+  />
+</label>
 
 <button onClick={deleteSelected} className="bg-red-600 text-white px-3 py-1">
-Xóa chọn
+  Xóa chọn
 </button>
 
 <button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
-Lưu
+  Lưu
 </button>
+
 </div>
 </div>
 

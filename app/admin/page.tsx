@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import * as XLSX from "xlsx"; // 🔥 thêm
 
 type Task = {
   id?: string;
@@ -20,7 +21,7 @@ type Task = {
   can_bo_phu_trach?: string;
   thang?: number;
   selected?: boolean;
-  isEditing?: boolean; // 🔥 khóa/mở sửa
+  isEditing?: boolean;
 };
 
 const LINH_VUC = {
@@ -70,7 +71,7 @@ export default function AdminPage(){
     if(data){
       const mapped = (data as Task[]).map(t => ({
         ...t,
-        isEditing:false // 🔥 khóa sau khi load
+        isEditing:false
       }));
       setTasks(mapped);
     }
@@ -89,7 +90,7 @@ export default function AdminPage(){
 
   function update(index:number, field:keyof Task, value:any){
 
-    if(!tasks[index].isEditing) return; // 🔥 khóa sửa
+    if(!tasks[index].isEditing) return;
 
     const newData = [...tasks];
     (newData[index] as any)[field] = value;
@@ -125,40 +126,61 @@ export default function AdminPage(){
     setTasks(tasks.filter(t => !t.selected));
   }
 
-  // 🔥 IMPORT CSV CHUẨN
+  // 🔥 chuẩn hóa ngày từ Excel
+  function formatDate(value: any) {
+    if (!value) return "";
+
+    if (typeof value === "number") {
+      const date = XLSX.SSF.parse_date_code(value);
+      return `${date.y}-${String(date.m).padStart(2,"0")}-${String(date.d).padStart(2,"0")}`;
+    }
+
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split("T")[0];
+    }
+
+    return "";
+  }
+
+  // 🔥 IMPORT EXCEL CHUẨN
   function handleImport(e:any){
     const file = e.target.files[0];
     if(!file) return;
 
     const reader = new FileReader();
 
-    reader.onload = (event:any)=>{
-      const text = event.target.result;
+    reader.onload = (evt:any)=>{
+      const data = new Uint8Array(evt.target.result);
 
-      const rows = text.split("\n").slice(1);
+      const workbook = XLSX.read(data, { type: "array" });
 
-      const newTasks:Task[] = rows.map((row:string)=>{
-        const cols = row.split(",");
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-        return {
-          linh_vuc_lon: cols[0]?.trim(),
-          linh_vuc_con: cols[1]?.trim(),
-          ten: cols[2]?.trim(),
-          san_pham: cols[3]?.trim(),
-          ngay_giao: cols[4]?.trim(),
-          han_hoan_thanh: cols[5]?.trim(),
-          ngay_hoan_thanh: cols[6]?.trim(),
-          can_bo_tham_muu: cols[7]?.trim(),
-          can_bo_phu_trach: cols[8]?.trim(),
-          thang,
-          isEditing:true
-        };
-      });
+      const json:any[] = XLSX.utils.sheet_to_json(sheet,{ defval:"" });
+
+      const newTasks:Task[] = json.map((row:any)=>({
+
+        linh_vuc_lon: row["Lĩnh vực lớn"]?.toString().trim(),
+        linh_vuc_con: row["Lĩnh vực con"]?.toString().trim(),
+        ten: row["Công việc"]?.toString().trim(),
+        san_pham: row["Sản phẩm"]?.toString().trim(),
+
+        ngay_giao: formatDate(row["Ngày giao"]),
+        han_hoan_thanh: formatDate(row["Hạn hoàn thành"]),
+        ngay_hoan_thanh: formatDate(row["Ngày hoàn thành"]),
+
+        can_bo_tham_muu: row["Cán bộ tham mưu"]?.toString().trim(),
+        can_bo_phu_trach: row["Cán bộ phụ trách"]?.toString().trim(),
+
+        thang,
+        isEditing:true
+      }));
 
       setTasks(newTasks);
     };
 
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   }
 
   async function saveAll(){
@@ -204,8 +226,7 @@ export default function AdminPage(){
   }
 
   return(
-
-<div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
 <header className="bg-blue-900 text-white">
 <div className="flex flex-col items-center py-4">
@@ -254,8 +275,8 @@ className="border px-3 py-1">
 <div className="flex gap-2">
 
 <label className="bg-blue-600 text-white px-4 py-1 cursor-pointer rounded">
-  Import CSV
-  <input type="file" accept=".csv, .xlsx, .xls" onChange={handleImport} className="hidden"/>
+  Import Excel
+  <input type="file" accept=".xlsx, .xls" onChange={handleImport} className="hidden"/>
 </label>
 
 <button onClick={deleteSelected} className="bg-red-600 text-white px-3 py-1">
@@ -268,144 +289,3 @@ className="border px-3 py-1">
 
 </div>
 </div>
-
-<div className="overflow-x-auto">
-
-<table className="min-w-[1600px] border text-sm">
-
-<thead className="bg-blue-100">
-<tr>
-<th className="border p-2"></th>
-<th className="border p-2">STT</th>
-<th className="border p-2">Lĩnh vực lớn</th>
-<th className="border p-2">Lĩnh vực con</th>
-<th className="border p-2">Công việc</th>
-<th className="border p-2">Sản phẩm</th>
-<th className="border p-2">Ngày giao</th>
-<th className="border p-2">Hạn</th>
-<th className="border p-2">Ngày HT</th>
-<th className="border p-2">Tiến độ</th>
-<th className="border p-2">Tham mưu</th>
-<th className="border p-2">Phụ trách</th>
-<th className="border p-2">Sửa</th>
-<th className="border p-2">Xóa</th>
-</tr>
-</thead>
-
-<tbody>
-
-{tasks.map((t,i)=>(
-
-<tr key={i}>
-
-<td className="border text-center">
-<input type="checkbox"
-checked={t.selected || false}
-onChange={(e)=>update(i,"selected",e.target.checked)}
-/>
-</td>
-
-<td className="border p-2">{i+1}</td>
-
-<td className="border p-1">
-<select disabled={!t.isEditing} value={t.linh_vuc_lon||""}
-onChange={(e)=>update(i,"linh_vuc_lon",e.target.value)}>
-<option value="">Chọn</option>
-{Object.keys(LINH_VUC).map(lv=><option key={lv}>{lv}</option>)}
-</select>
-</td>
-
-<td className="border p-1">
-<select disabled={!t.isEditing} value={t.linh_vuc_con||""}
-onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
-<option value="">Chọn</option>
-{LINH_VUC[t.linh_vuc_lon as keyof typeof LINH_VUC]?.map(c=><option key={c}>{c}</option>)}
-</select>
-</td>
-
-<td className="border p-1">
-<input className="w-full" disabled={!t.isEditing}
-value={t.ten||""}
-onChange={(e)=>update(i,"ten",e.target.value)}/>
-</td>
-
-<td className="border p-1">
-<input className="w-full" disabled={!t.isEditing}
-value={t.san_pham||""}
-onChange={(e)=>update(i,"san_pham",e.target.value)}/>
-</td>
-
-<td className="border p-1">
-<input type="date" disabled={!t.isEditing}
-className={`w-full ${t.ngay_giao ? "text-black" : "text-gray-300"}`}
-value={t.ngay_giao||""}
-onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
-</td>
-
-<td className="border p-1">
-<input type="date" disabled={!t.isEditing}
-className={`w-full ${t.han_hoan_thanh ? "text-black" : "text-gray-300"}`}
-value={t.han_hoan_thanh||""}
-onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
-</td>
-
-<td className="border p-1">
-<input type="date" disabled={!t.isEditing}
-className={`w-full ${t.ngay_hoan_thanh ? "text-black" : "text-gray-300"}`}
-value={t.ngay_hoan_thanh||""}
-onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
-</td>
-
-<td className="border text-center">{t.tien_do || "Chưa hoàn thành"}</td>
-
-<td className="border p-1">
-<select disabled={!t.isEditing}
-value={t.can_bo_tham_muu||""}
-onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}>
-<option value="">Chọn</option>
-{CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
-</select>
-</td>
-
-<td className="border p-1">
-<select disabled={!t.isEditing}
-value={t.can_bo_phu_trach||""}
-onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
-<option value="">Chọn</option>
-{CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
-</select>
-</td>
-
-<td className="border text-center">
-<button onClick={()=>toggleEdit(i)}
-className="bg-yellow-500 text-white px-2 py-1 text-xs">
-{t.isEditing ? "Khóa" : "Sửa"}
-</button>
-</td>
-
-<td className="border text-center">
-<button onClick={()=>deleteRow(i)}
-className="bg-red-500 text-white px-2 py-1 text-xs">
-Xóa
-</button>
-</td>
-
-</tr>
-
-))}
-
-</tbody>
-</table>
-
-</div>
-
-<button onClick={addRow} className="mt-4 bg-blue-600 text-white px-4 py-2">
-+ Thêm nhiệm vụ
-</button>
-
-</div>
-
-</main>
-</div>
-);
-}

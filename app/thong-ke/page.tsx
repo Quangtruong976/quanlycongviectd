@@ -151,23 +151,16 @@ export default function ThongKePage() {
 
   const getColor = (xepLoai: string) => {
 
-    switch (xepLoai) {
-
-      case "HTXSNV":
-        return "bg-green-100 text-green-700";
-
-      case "HTTNV":
-        return "bg-yellow-100 text-orange-700";
-
-      case "HTNV":
-        return "bg-red-100 text-red-800";
-
-        default:
-          return "bg-gray-100 text-gray-700";
+    const value = xepLoai?.trim().toUpperCase();
   
-
-    }
-
+    const colorMap: Record<string, string> = {
+      HTSXNV: "bg-green-100 text-green-700",
+      HTTNV: "bg-yellow-100 text-orange-700",
+      HTNV: "bg-red-100 text-red-800",
+    };
+  
+    return colorMap[value] || "bg-gray-100 text-gray-700";
+  
   };
 
   return (

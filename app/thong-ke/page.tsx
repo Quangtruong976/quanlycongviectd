@@ -154,7 +154,7 @@ export default function ThongKePage() {
     switch (xepLoai) {
 
       case "HTXSNV":
-        return "bg-greem-100 text-green-700";
+        return "bg-green-100 text-green-700";
 
       case "HTTNV":
         return "bg-yellow-100 text-orange-700";

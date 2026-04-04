@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-
+import * as XLSX from "xlsx";
 
 type Task = {
   id?: string;
@@ -21,7 +21,7 @@ type Task = {
   can_bo_phu_trach?: string;
   thang?: number;
   selected?: boolean;
-  isEditing?: boolean; // 🔥 khóa/mở sửa
+  isEditing?: boolean;
 };
 
 const LINH_VUC = {
@@ -71,7 +71,7 @@ export default function AdminPage(){
     if(data){
       const mapped = (data as Task[]).map(t => ({
         ...t,
-        isEditing:false // 🔥 khóa sau khi load
+        isEditing:false
       }));
       setTasks(mapped);
     }
@@ -83,14 +83,15 @@ export default function AdminPage(){
     const ht = new Date(task.ngay_hoan_thanh);
     const han = new Date(task.han_hoan_thanh || "");
 
+    if(isNaN(ht.getTime()) || isNaN(han.getTime())) return "Chưa hoàn thành";
+
     return ht.getTime() - han.getTime() <= 0
       ? "Hoàn thành đúng hạn"
       : "Hoàn thành quá hạn";
   }
 
   function update(index:number, field:keyof Task, value:any){
-
-    if(!tasks[index].isEditing) return; // 🔥 khóa sửa
+    if(!tasks[index].isEditing) return;
 
     const newData = [...tasks];
     (newData[index] as any)[field] = value;
@@ -126,40 +127,61 @@ export default function AdminPage(){
     setTasks(tasks.filter(t => !t.selected));
   }
 
-  // 🔥 IMPORT CSV CHUẨN
+  // 🔥 format ngày
+  function formatDate(value:any){
+    if(!value) return "";
+
+    if(typeof value === "number"){
+      const d = XLSX.SSF.parse_date_code(value);
+      return `${d.y}-${String(d.m).padStart(2,"0")}-${String(d.d).padStart(2,"0")}`;
+    }
+
+    if(typeof value === "string" && value.includes("/")){
+      const [d,m,y] = value.split("/");
+      return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+    }
+
+    return value;
+  }
+
+  // 🔥 IMPORT EXCEL (GIỮ NGUYÊN UI, chỉ nâng cấp logic)
   function handleImport(e:any){
     const file = e.target.files[0];
     if(!file) return;
 
     const reader = new FileReader();
 
-    reader.onload = (event:any)=>{
-      const text = event.target.result;
+    reader.onload = (evt:any)=>{
+      try{
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
 
-      const rows = text.split("\n").slice(1);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json:any[] = XLSX.utils.sheet_to_json(sheet);
 
-      const newTasks:Task[] = rows.map((row:string)=>{
-        const cols = row.split(",");
-
-        return {
-          linh_vuc_lon: cols[0]?.trim(),
-          linh_vuc_con: cols[1]?.trim(),
-          ten: cols[2]?.trim(),
-          san_pham: cols[3]?.trim(),
-          ngay_giao: cols[4]?.trim(),
-          han_hoan_thanh: cols[5]?.trim(),
-          ngay_hoan_thanh: cols[6]?.trim(),
-          can_bo_tham_muu: cols[7]?.trim(),
-          can_bo_phu_trach: cols[8]?.trim(),
+        const newTasks:Task[] = json.map(row => ({
+          linh_vuc_lon: row["Lĩnh vực lớn"] || "",
+          linh_vuc_con: row["Lĩnh vực con"] || "",
+          ten: row["Công việc"] || "",
+          san_pham: row["Sản phẩm"] || "",
+          ngay_giao: formatDate(row["Ngày giao"]),
+          han_hoan_thanh: formatDate(row["Hạn"]),
+          ngay_hoan_thanh: formatDate(row["Ngày HT"]),
+          can_bo_tham_muu: row["Tham mưu"] || "",
+          can_bo_phu_trach: row["Phụ trách"] || "",
           thang,
           isEditing:true
-        };
-      });
+        }));
 
-      setTasks(newTasks);
+        setTasks(newTasks);
+
+      }catch(err){
+        console.error(err);
+        alert("File Excel không hợp lệ!");
+      }
     };
 
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   }
 
   async function saveAll(){
@@ -198,7 +220,14 @@ export default function AdminPage(){
     });
 
     await supabase.from("nhiem_vu").delete().eq("thang", thang);
-    await supabase.from("nhiem_vu").insert(payload);
+
+    const { error } = await supabase.from("nhiem_vu").insert(payload);
+
+    if(error){
+      console.error(error);
+      alert("Lỗi lưu dữ liệu: " + error.message);
+      return;
+    }
 
     alert("Đã lưu dữ liệu tháng " + thang);
     loadTasks();

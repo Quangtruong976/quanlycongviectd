@@ -277,8 +277,8 @@ if(toDelete && toDelete.length > 0){
     });
   
     // 🔥 nếu không có gì mới thì dừng
-    if(newPayload.length === 0){
-      alert("Không có dữ liệu mới để lưu");
+    if(newPayload.length === 0 && (!toDelete || toDelete.length === 0)){
+      alert("Không có thay đổi để lưu");
       return;
     }
   

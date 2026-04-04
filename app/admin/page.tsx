@@ -91,7 +91,7 @@ export default function AdminPage(){
   }
 
   function update(index:number, field:keyof Task, value:any){
-    if(!tasks[index].isEditing) return;
+    if(!tasks[index].isEditing && field !== "selected") return;
 
     const newData = [...tasks];
     (newData[index] as any)[field] = value;
@@ -260,11 +260,9 @@ if(toDelete && toDelete.length > 0){
     await supabase
       .from("nhiem_vu")
       .delete()
-      .match({
-        ten: d.ten,
-        han_hoan_thanh: d.han_hoan_thanh,
-        thang: d.thang
-      });
+      .eq("ten", d.ten)
+      .eq("thang", d.thang)
+      .eq("han_hoan_thanh", d.han_hoan_thanh || null);
   }
 }
     // 🔥 BỔ SUNG: lọc dữ liệu mới (tránh trùng)

@@ -25,22 +25,47 @@ export default function LoginPage() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Lấy user từ bảng profiles
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", email)
+      .single();
 
-    if (error) {
-      setErrorMsg("Email hoặc mật khẩu không đúng.");
+    if (profileError || !profile) {
+      setErrorMsg("Email không tồn tại.");
       setLoading(false);
       return;
     }
 
-    // ✅ FIX
-    localStorage.setItem("role", "admin");
-    localStorage.setItem("name", email);
+    if (profile.password !== password) {
+      setErrorMsg("Mật khẩu không đúng.");
+      setLoading(false);
+      return;
+    }
 
-    router.push("/admin");
+    // Lưu role và fields vào localStorage
+    localStorage.setItem("role", profile.role);
+    localStorage.setItem("name", profile.name);
+    localStorage.setItem("fields", JSON.stringify(profile.fields || []));
+
+    // Điều hướng theo role
+    switch(profile.role) {
+      case "admin":
+        router.push("/admin");
+        break;
+      case "phongtrao":
+        router.push("/user-phongtrao");
+        break;
+      case "vanphong":
+        router.push("/user-vanphong");
+        break;
+      case "truonghoc":
+        router.push("/user-truonghoc");
+        break;
+      default:
+        router.push("/");
+    }
     router.refresh();
   }
 
@@ -103,9 +128,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-blue-700 text-white py-2 rounded"
             >
-              Đăng nhập
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
           </form>

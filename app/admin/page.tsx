@@ -219,6 +219,7 @@ can_bo_phu_trach: normalizeName(row["Cán bộ phụ trách"]),
       const tien_do = tinhTienDo(t);
   
       return {
+        id: t.id, // 🔥 QUAN TRỌNG để update
         linh_vuc_lon: t.linh_vuc_lon || "",
         linh_vuc_con: t.linh_vuc_con || "",
         ten: t.ten || "",
@@ -240,58 +241,63 @@ can_bo_phu_trach: normalizeName(row["Cán bộ phụ trách"]),
       };
     });
   
-    // 🔥 BỔ SUNG: lấy dữ liệu đã có trong DB
+    // 🔥 Lấy toàn bộ dữ liệu DB
     const { data: existing } = await supabase
       .from("nhiem_vu")
-      .select("ten, han_hoan_thanh, thang")
+      .select("*")
       .eq("thang", thang);
   
-      // 🔥 xác định dữ liệu đã bị xóa trên UI
-const toDelete = existing?.filter(e => {
-  return !payload.some(p =>
-    p.ten === e.ten &&
-    p.han_hoan_thanh === e.han_hoan_thanh &&
-    p.thang === e.thang
-  );
-});
-// 🔥 xóa trên DB
-if(toDelete && toDelete.length > 0){
-  for(const d of toDelete){
-    await supabase
-      .from("nhiem_vu")
-      .delete()
-      .eq("ten", d.ten)
-      .eq("thang", d.thang)
-      .eq("han_hoan_thanh", d.han_hoan_thanh || null);
-  }
-}
-    // 🔥 BỔ SUNG: lọc dữ liệu mới (tránh trùng)
-    const newPayload = payload.filter(p => {
-      return !existing?.some(e =>
-        e.ten === p.ten &&
-        e.han_hoan_thanh === p.han_hoan_thanh &&
-        e.thang === p.thang
-      );
-    });
+    // ======================
+    // 🔥 1. DELETE (xóa)
+    // ======================
+    const toDelete = existing?.filter(e =>
+      !payload.some(p => p.id === e.id)
+    );
   
-    // 🔥 nếu không có gì mới thì dừng
-    if(newPayload.length === 0 && (!toDelete || toDelete.length === 0)){
-      alert("Không có thay đổi để lưu");
-      return;
+    if(toDelete && toDelete.length > 0){
+      for(const d of toDelete){
+        await supabase
+          .from("nhiem_vu")
+          .delete()
+          .eq("id", d.id);
+      }
     }
   
-    // 🔥 chỉ insert cái mới
-    const { error } = await supabase
-      .from("nhiem_vu")
-      .insert(newPayload);
-  
-    if(error){
-      console.error(error);
-      alert("Lỗi lưu dữ liệu: " + error.message);
-      return;
+    // ======================
+    // 🔥 2. UPDATE (sửa)
+    // ======================
+    for(const p of payload){
+      if(p.id){
+        await supabase
+          .from("nhiem_vu")
+          .update(p)
+          .eq("id", p.id);
+      }
     }
   
-    alert("Đã lưu " + newPayload.length + " nhiệm vụ mới");
+    // ======================
+    // 🔥 3. INSERT (thêm mới)
+    // ======================
+    const newPayload = payload.filter(p => !p.id);
+  
+    if(newPayload.length > 0){
+      await supabase
+        .from("nhiem_vu")
+        .insert(newPayload);
+    }
+  
+    // ======================
+    // 🔥 THÔNG BÁO
+    // ======================
+    if(
+      (!toDelete || toDelete.length === 0) &&
+      newPayload.length === 0
+    ){
+      alert("Đã cập nhật dữ liệu");
+    }else{
+      alert("Đã lưu thay đổi");
+    }
+  
     loadTasks();
   }
 

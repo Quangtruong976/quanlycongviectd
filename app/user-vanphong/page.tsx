@@ -16,8 +16,19 @@ type Task = {
   han_hoan_thanh?: string;
   ngay_hoan_thanh?: string;
   tien_do?: string;
+  can_bo_tham_muu?: string;
+  can_bo_phu_trach?: string;
   thang?: number;
 };
+
+const CAN_BO = [
+  "Trương Minh Quang","Trần Diệp Mỹ Dung","H' Hồng","Đoàn Minh Tâm",
+  "Trần Việt Anh","Nguyễn Hồ Xuân Quang","Nguyễn Trọng Tùng","Đào Hùng",
+  "Châu Yến Phi","Nguyễn Đình Hưng Thịnh","Nguyễn Trọng Văn",
+  "Nguyễn Lý Xuân Uyên","Nguyễn Nam Sơn","Nguyễn Linh Phương",
+  "Phan Xuân Tấn","Hồ Như Toán","Võ Văn Đồng","Đỗ Ngọc Hà",
+  "Nguyễn Thị Thanh Hòa","Bùi Thị Phượng","Trịnh Thị Vỹ Cầm"
+];
 
 export default function UserVanPhong(){
 
@@ -40,7 +51,7 @@ export default function UserVanPhong(){
     loadTasks();
   },[thang]);
 
-  // ✅ CHỈ LẤY LĨNH VỰC VĂN PHÒNG
+  // ✅ load theo lĩnh vực văn phòng
   async function loadTasks(){
     const {data} = await supabase
       .from("nhiem_vu")
@@ -65,9 +76,10 @@ export default function UserVanPhong(){
       : "Hoàn thành quá hạn";
   }
 
-  // ❗ CHỈ CHO SỬA 2 TRƯỜNG
   function update(index:number, field:keyof Task, value:any){
-    if(field !== "san_pham" && field !== "ngay_hoan_thanh") return;
+    const isNew = !tasks[index].id;
+
+    if(!isNew && field !== "san_pham" && field !== "ngay_hoan_thanh") return;
 
     const newData = [...tasks];
     (newData[index] as any)[field] = value;
@@ -77,35 +89,59 @@ export default function UserVanPhong(){
     setTasks(newData);
   }
 
-  // ❗ CHỈ UPDATE 2 TRƯỜNG
-  async function saveAll(){
-    for(const t of tasks){
-      await supabase
-        .from("nhiem_vu")
-        .update({
-          san_pham: t.san_pham,
-          ngay_hoan_thanh: t.ngay_hoan_thanh,
-          tien_do: tinhTienDo(t)
-        })
-        .eq("id", t.id);
-    }
-
-    alert("Đã cập nhật");
-    loadTasks();
+  function addTask(){
+    setTasks([
+      ...tasks,
+      {
+        ten:"",
+        linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
+        linh_vuc_con:"",
+        san_pham:"",
+        can_bo_tham_muu:"",
+        can_bo_phu_trach:"",
+        thang
+      }
+    ]);
   }
 
-  // ✅ CHỈ THÊM NHIỆM VỤ TRONG LĨNH VỰC
-  async function addTask(){
-    const ten = prompt("Nhập tên công việc");
-    if(!ten) return;
+  async function saveAll(){
 
-    await supabase.from("nhiem_vu").insert({
-      ten,
-      linh_vuc_lon: "I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
-      linh_vuc_con: "Văn phòng",
-      thang
-    });
+    for(const t of tasks){
 
+      if(!t.ten) continue;
+
+      if(t.id){
+        // update cũ
+        await supabase
+          .from("nhiem_vu")
+          .update({
+            san_pham: t.san_pham,
+            ngay_hoan_thanh: t.ngay_hoan_thanh,
+            tien_do: tinhTienDo(t)
+          })
+          .eq("id", t.id);
+      } else {
+        // thêm mới
+        if(!t.can_bo_tham_muu || !t.can_bo_phu_trach){
+          alert("Phải chọn cán bộ tham mưu và phụ trách");
+          return;
+        }
+
+        await supabase
+          .from("nhiem_vu")
+          .insert({
+            ten: t.ten,
+            linh_vuc_lon: t.linh_vuc_lon,
+            linh_vuc_con: t.linh_vuc_con,
+            can_bo_tham_muu: t.can_bo_tham_muu,
+            can_bo_phu_trach: t.can_bo_phu_trach,
+            can_bo: t.can_bo_phu_trach,
+            thang
+          });
+      }
+    }
+
+    alert("Đã lưu");
     loadTasks();
   }
 
@@ -156,55 +192,71 @@ className="border px-3 py-1">
 ))}
 </select>
 
-<div className="flex gap-2">
 <button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
 Lưu
 </button>
-</div>
 
 </div>
 
 <div className="overflow-x-auto">
 
-<table className="min-w-[1600px] border text-sm">
+<table className="min-w-[1400px] border text-sm">
 
 <thead className="bg-blue-100">
 <tr>
 <th className="border p-2">STT</th>
-<th className="border p-2">Lĩnh vực lớn</th>
 <th className="border p-2">Lĩnh vực con</th>
 <th className="border p-2">Công việc</th>
 <th className="border p-2">Sản phẩm</th>
-<th className="border p-2">Ngày giao</th>
-<th className="border p-2">Hạn</th>
 <th className="border p-2">Ngày HT</th>
 <th className="border p-2">Tiến độ</th>
+<th className="border p-2">Tham mưu</th>
+<th className="border p-2">Phụ trách</th>
 </tr>
 </thead>
 
 <tbody>
 
-{tasks.map((t,i)=>(
+{tasks.map((t,i)=>{
 
+const isNew = !t.id;
+
+return (
 <tr key={i}>
 
 <td className="border p-2">{i+1}</td>
 
-<td className="border p-1">{t.linh_vuc_lon}</td>
-<td className="border p-1">{t.linh_vuc_con}</td>
-<td className="border p-1">{t.ten}</td>
+<td className="border p-1">
+{isNew ? (
+<select value={t.linh_vuc_con||""}
+onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
+<option value="">Chọn</option>
+<option>Văn phòng</option>
+<option>Tuyên giáo</option>
+<option>Xây dựng Đoàn</option>
+</select>
+) : t.linh_vuc_con}
+</td>
+
+<td className="border p-1">
+{isNew ? (
+<input className="w-full"
+value={t.ten||""}
+onChange={(e)=>update(i,"ten",e.target.value)}
+placeholder="Nhập công việc..."/>
+) : t.ten}
+</td>
 
 <td className="border p-1">
 <input className="w-full"
+placeholder="Nhập sản phẩm..."
 value={t.san_pham||""}
 onChange={(e)=>update(i,"san_pham",e.target.value)}/>
 </td>
 
-<td className="border p-1">{t.ngay_giao}</td>
-<td className="border p-1">{t.han_hoan_thanh}</td>
-
 <td className="border p-1">
 <input type="date"
+className={`w-full ${t.ngay_hoan_thanh ? "text-black" : "text-gray-400"}`}
 value={t.ngay_hoan_thanh||""}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
 </td>
@@ -213,9 +265,29 @@ onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
 {t.tien_do || tinhTienDo(t)}
 </td>
 
-</tr>
+<td className="border p-1">
+{isNew ? (
+<select value={t.can_bo_tham_muu||""}
+onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}>
+<option value="">Chọn</option>
+{CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
+</select>
+) : t.can_bo_tham_muu}
+</td>
 
-))}
+<td className="border p-1">
+{isNew ? (
+<select value={t.can_bo_phu_trach||""}
+onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
+<option value="">Chọn</option>
+{CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
+</select>
+) : t.can_bo_phu_trach}
+</td>
+
+</tr>
+);
+})}
 
 </tbody>
 </table>

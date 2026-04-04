@@ -113,6 +113,7 @@ export default function AdminPage(){
 
   function addRow(){
     setTasks([...tasks,{
+      id: undefined,
       ten:"",
       thang,
       isEditing:true

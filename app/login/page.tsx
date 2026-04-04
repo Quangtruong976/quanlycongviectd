@@ -25,7 +25,19 @@ export default function LoginPage() {
       return;
     }
 
-    // Lấy user từ bảng profiles
+    // Đăng nhập bằng cách cũ đã test thành công
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error || !data.user) {
+      setErrorMsg("Email hoặc mật khẩu không đúng.");
+      setLoading(false);
+      return;
+    }
+
+    // Lấy role + fields phụ trách từ bảng profiles
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
@@ -33,13 +45,7 @@ export default function LoginPage() {
       .single();
 
     if (profileError || !profile) {
-      setErrorMsg("Email không tồn tại.");
-      setLoading(false);
-      return;
-    }
-
-    if (profile.password !== password) {
-      setErrorMsg("Mật khẩu không đúng.");
+      setErrorMsg("Không lấy được thông tin user.");
       setLoading(false);
       return;
     }
@@ -66,6 +72,7 @@ export default function LoginPage() {
       default:
         router.push("/");
     }
+
     router.refresh();
   }
 

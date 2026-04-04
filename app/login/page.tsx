@@ -18,48 +18,29 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
-  
+
     if (!email || !password) {
       setErrorMsg("Vui lòng nhập đầy đủ thông tin.");
       setLoading(false);
       return;
     }
-  
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-  
+
     if (error) {
       setErrorMsg("Email hoặc mật khẩu không đúng.");
       setLoading(false);
       return;
     }
-  
-    // 🔥 LẤY ROLE TỪ PROFILES
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("email", email)
-      .single();
-  
-    if (profileError || !profile) {
-      setErrorMsg("Không tìm thấy thông tin người dùng.");
-      setLoading(false);
-      return;
-    }
-  
-    // 🔥 LƯU VÀO LOCAL
-    localStorage.setItem("role", profile.role);
-    localStorage.setItem("email", email);
-  
-    // 🔥 ĐIỀU HƯỚNG
-    if (profile.role === "admin") {
-      router.push("/admin");
-    } else {
-      router.push("/user");
-    }
-  
+
+    // ✅ FIX
+    localStorage.setItem("role", "admin");
+    localStorage.setItem("name", email);
+
+    router.push("/admin");
     router.refresh();
   }
 

@@ -246,6 +246,27 @@ can_bo_phu_trach: normalizeName(row["Cán bộ phụ trách"]),
       .select("ten, han_hoan_thanh, thang")
       .eq("thang", thang);
   
+      // 🔥 xác định dữ liệu đã bị xóa trên UI
+const toDelete = existing?.filter(e => {
+  return !payload.some(p =>
+    p.ten === e.ten &&
+    p.han_hoan_thanh === e.han_hoan_thanh &&
+    p.thang === e.thang
+  );
+});
+// 🔥 xóa trên DB
+if(toDelete && toDelete.length > 0){
+  for(const d of toDelete){
+    await supabase
+      .from("nhiem_vu")
+      .delete()
+      .match({
+        ten: d.ten,
+        han_hoan_thanh: d.han_hoan_thanh,
+        thang: d.thang
+      });
+  }
+}
     // 🔥 BỔ SUNG: lọc dữ liệu mới (tránh trùng)
     const newPayload = payload.filter(p => {
       return !existing?.some(e =>

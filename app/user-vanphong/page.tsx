@@ -21,9 +21,7 @@ type Task = {
   thang?: number;
 };
 
-const LINH_VUC = {
-  "I. Văn phòng - Tuyên giáo - Xây dựng Đoàn": ["Văn phòng","Tuyên giáo","Xây dựng Đoàn"]
-};
+const LINH_VUC_CON = ["Văn phòng","Tuyên giáo","Xây dựng Đoàn"];
 
 const CAN_BO = [
   "Trương Minh Quang","Trần Diệp Mỹ Dung","H' Hồng","Đoàn Minh Tâm",
@@ -34,7 +32,7 @@ const CAN_BO = [
   "Nguyễn Thị Thanh Hòa","Bùi Thị Phượng","Trịnh Thị Vỹ Cầm"
 ];
 
-export default function UserVanPhong(){
+export default function Page(){
 
   const router = useRouter();
 
@@ -60,34 +58,24 @@ export default function UserVanPhong(){
       .from("nhiem_vu")
       .select("*")
       .eq("thang",thang)
-      .in("linh_vuc_con", ["Văn phòng","Tuyên giáo","Xây dựng Đoàn"])
+      .in("linh_vuc_con", LINH_VUC_CON)
       .order("han_hoan_thanh");
 
     setTasks(data || []);
   }
 
-  function tinhTienDo(task:Task){
-    if(!task.ngay_hoan_thanh) return "Chưa hoàn thành";
+  function tinhTienDo(t:Task){
+    if(!t.ngay_hoan_thanh) return "Chưa hoàn thành";
 
-    const ht = new Date(task.ngay_hoan_thanh);
-    const han = new Date(task.han_hoan_thanh || "");
+    const ht = new Date(t.ngay_hoan_thanh);
+    const han = new Date(t.han_hoan_thanh || "");
 
-    if(isNaN(ht.getTime()) || isNaN(han.getTime())) return "Chưa hoàn thành";
-
-    return ht.getTime() - han.getTime() <= 0
-      ? "Hoàn thành đúng hạn"
-      : "Hoàn thành quá hạn";
+    return ht <= han ? "Đúng hạn" : "Quá hạn";
   }
 
-  function update(index:number, field:keyof Task, value:any){
-    const isNew = !tasks[index].id;
-
-    if(!isNew && field !== "san_pham" && field !== "ngay_hoan_thanh") return;
-
+  function update(i:number, field:keyof Task, value:any){
     const newData = [...tasks];
-    (newData[index] as any)[field] = value;
-    newData[index].tien_do = tinhTienDo(newData[index]);
-
+    (newData[i] as any)[field] = value;
     setTasks(newData);
   }
 
@@ -98,20 +86,14 @@ export default function UserVanPhong(){
         ten:"",
         linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
         linh_vuc_con:"",
-        san_pham:"",
-        ngay_giao:"",
-        han_hoan_thanh:"",
-        ngay_hoan_thanh:"",
-        can_bo_tham_muu:"",
-        can_bo_phu_trach:"",
         thang
       }
     ]);
   }
 
-  function deleteRow(index:number){
-    if(tasks[index].id) return; // ❌ không xóa task admin
-    setTasks(tasks.filter((_,i)=>i!==index));
+  function deleteRow(i:number){
+    if(tasks[i].id) return;
+    setTasks(tasks.filter((_,idx)=>idx!==i));
   }
 
   async function saveAll(){
@@ -121,34 +103,20 @@ export default function UserVanPhong(){
       if(!t.ten) continue;
 
       if(t.id){
-        await supabase
-          .from("nhiem_vu")
-          .update({
-            san_pham: t.san_pham,
-            ngay_hoan_thanh: t.ngay_hoan_thanh,
-            tien_do: tinhTienDo(t)
-          })
-          .eq("id", t.id);
+        await supabase.from("nhiem_vu")
+        .update({
+          san_pham:t.san_pham,
+          ngay_hoan_thanh:t.ngay_hoan_thanh,
+          tien_do:tinhTienDo(t)
+        })
+        .eq("id",t.id);
+
       } else {
 
-        if(!t.can_bo_tham_muu || !t.can_bo_phu_trach){
-          alert("Phải chọn cán bộ");
-          return;
-        }
-
-        await supabase
-          .from("nhiem_vu")
-          .insert({
-            ten: t.ten + " (*)",
-            linh_vuc_lon: t.linh_vuc_lon,
-            linh_vuc_con: t.linh_vuc_con,
-            ngay_giao: t.ngay_giao || null,
-            han_hoan_thanh: t.han_hoan_thanh || null,
-            can_bo_tham_muu: t.can_bo_tham_muu,
-            can_bo_phu_trach: t.can_bo_phu_trach,
-            can_bo: t.can_bo_phu_trach,
-            thang
-          });
+        await supabase.from("nhiem_vu").insert({
+          ...t,
+          ten: t.ten + " (*)"
+        });
       }
     }
 
@@ -162,150 +130,123 @@ export default function UserVanPhong(){
 <header className="bg-blue-900 text-white">
 <div className="flex flex-col items-center py-4">
 <img src="/logo-doan.png" className="h-20 mb-2"/>
-<h1 className="text-xl font-bold text-center">
-HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
-</h1>
-<p className="text-blue-200 font-semibold">
-TỈNH ĐOÀN LÂM ĐỒNG
-</p>
-<p className="text-yellow-300 text-sm mt-1">
-User: {name}
-</p>
+<h1 className="text-xl font-bold">HỆ THỐNG QUẢN LÝ</h1>
+<p className="text-yellow-300">User: {name}</p>
 </div>
 
-<nav className="bg-blue-800">
-<div className="flex justify-center gap-6 py-2">
+<nav className="bg-blue-800 flex justify-center gap-6 py-2">
 <Link href="/"><Home size={20}/></Link>
-<button onClick={()=>{localStorage.clear();router.replace("/login");}}>
+<button onClick={()=>{localStorage.clear();router.replace("/login")}}>
 Đăng xuất
 </button>
-</div>
 </nav>
 </header>
 
-<main className="flex-1 flex justify-center p-4">
+<main className="flex-1 p-4">
 
-<div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
+<div className="bg-white rounded-2xl p-4">
 
 <div className="flex justify-between mb-4">
-<select value={thang}
-onChange={(e)=>setThang(Number(e.target.value))}
-className="border px-3 py-1">
+<select value={thang} onChange={(e)=>setThang(Number(e.target.value))}>
 {Array.from({length:12}).map((_,i)=>(
 <option key={i} value={i+1}>Tháng {i+1}</option>
 ))}
 </select>
 
-<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
+<button onClick={saveAll} className="bg-green-600 text-white px-3 py-1">
 Lưu
 </button>
 </div>
 
-<div className="overflow-x-auto">
-<table className="min-w-[1600px] border text-sm">
-
+<table className="w-full border text-sm">
 <thead className="bg-blue-100">
 <tr>
-<th className="border p-2">STT</th>
-<th className="border p-2">Lĩnh vực con</th>
-<th className="border p-2">Công việc</th>
-<th className="border p-2">Sản phẩm</th>
-<th className="border p-2">Ngày giao</th>
-<th className="border p-2">Hạn</th>
-<th className="border p-2">Ngày HT</th>
-<th className="border p-2">Tiến độ</th>
-<th className="border p-2">Tham mưu</th>
-<th className="border p-2">Phụ trách</th>
-<th className="border p-2">Xóa</th>
+<th>STT</th>
+<th>Lĩnh vực</th>
+<th>Công việc</th>
+<th>Sản phẩm</th>
+<th>Ngày giao</th>
+<th>Hạn</th>
+<th>Ngày HT</th>
+<th>Tiến độ</th>
+<th>Sửa</th>
+<th>Xóa</th>
 </tr>
 </thead>
 
 <tbody>
 
 {tasks.map((t,i)=>{
-const isNew = !t.id;
+
+const isUser = !t.id;
 
 return(
-<tr key={i}>
+<tr key={i} className={isUser ? "text-blue-600 font-semibold" : "text-gray-400"}>
 
-<td className="border p-2">{i+1}</td>
+<td>{i+1}</td>
 
-<td className="border p-1">
-{isNew ? (
+<td>
+{isUser ? (
 <select value={t.linh_vuc_con||""}
 onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
 <option value="">Chọn</option>
-{LINH_VUC["I. Văn phòng - Tuyên giáo - Xây dựng Đoàn"].map(c=>
-<option key={c}>{c}</option>
-)}
+{LINH_VUC_CON.map(lv=><option key={lv}>{lv}</option>)}
 </select>
 ) : t.linh_vuc_con}
 </td>
 
-<td className="border p-1">
-{isNew ? (
-<input className="w-full" placeholder="Nhập công việc..."
-value={t.ten||""}
+<td>
+{isUser ? (
+<input placeholder="Nhập công việc..." value={t.ten||""}
 onChange={(e)=>update(i,"ten",e.target.value)}/>
 ) : t.ten}
 </td>
 
-<td className="border p-1">
-<input className="w-full placeholder-red-400"
+<td>
+<input
 placeholder="Nhập sản phẩm..."
+className="placeholder-red-400"
 value={t.san_pham||""}
-onChange={(e)=>update(i,"san_pham",e.target.value)}/>
+onChange={(e)=>update(i,"san_pham",e.target.value)}
+/>
 </td>
 
-<td className="border p-1">
-{isNew ? (
-<input type="date"
-value={t.ngay_giao||""}
-onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
-) : t.ngay_giao}
+<td className={!t.ngay_giao ? "text-gray-300" : ""}>
+{t.ngay_giao || "Chưa nhập"}
 </td>
 
-<td className="border p-1">
-{isNew ? (
-<input type="date"
-value={t.han_hoan_thanh||""}
-onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
-) : t.han_hoan_thanh}
+<td className={!t.han_hoan_thanh ? "text-gray-300" : ""}>
+{t.han_hoan_thanh || "Chưa nhập"}
 </td>
 
-<td className="border p-1">
+<td>
+{t.ngay_hoan_thanh ? (
 <input type="date"
-className={`${t.ngay_hoan_thanh ? "text-black" : "text-red-400"}`}
-value={t.ngay_hoan_thanh||""}
+value={t.ngay_hoan_thanh}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
+) : (
+<input
+type="text"
+placeholder="Nhập ngày hoàn thành"
+className="placeholder-red-400"
+onFocus={(e)=>e.target.type="date"}
+onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
+/>
+)}
 </td>
 
-<td className="border text-center">
-{t.tien_do || tinhTienDo(t)}
+<td>{t.tien_do || tinhTienDo(t)}</td>
+
+<td>
+{isUser && (
+<button className="bg-yellow-500 text-white px-2 py-1 text-xs">
+Sửa
+</button>
+)}
 </td>
 
-<td className="border p-1">
-{isNew ? (
-<select value={t.can_bo_tham_muu||""}
-onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}>
-<option value="">Chọn</option>
-{CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
-</select>
-) : t.can_bo_tham_muu}
-</td>
-
-<td className="border p-1">
-{isNew ? (
-<select value={t.can_bo_phu_trach||""}
-onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
-<option value="">Chọn</option>
-{CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
-</select>
-) : t.can_bo_phu_trach}
-</td>
-
-<td className="border text-center">
-{isNew && (
+<td>
+{isUser && (
 <button onClick={()=>deleteRow(i)}
 className="bg-red-500 text-white px-2 py-1 text-xs">
 Xóa
@@ -319,7 +260,6 @@ Xóa
 
 </tbody>
 </table>
-</div>
 
 <button onClick={addTask} className="mt-4 bg-blue-600 text-white px-4 py-2">
 + Thêm nhiệm vụ

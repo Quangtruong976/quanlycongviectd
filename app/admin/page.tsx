@@ -143,6 +143,18 @@ export default function AdminPage(){
     return value;
   }
 
+  function normalizeName(name:any){
+    if(!name) return "";
+  
+    const clean = String(name).trim().toLowerCase();
+  
+    const found = CAN_BO.find(cb =>
+      cb.toLowerCase() === clean
+    );
+  
+    return found || "";
+  }
+
   // 🔥 IMPORT: cộng dồn + lọc trùng
   function handleImport(e:any){
     const file = e.target.files[0];
@@ -166,8 +178,8 @@ export default function AdminPage(){
           ngay_giao: formatDate(row["Ngày giao"]),
           han_hoan_thanh: formatDate(row["Hạn"]),
           ngay_hoan_thanh: formatDate(row["Ngày HT"]),
-          can_bo_tham_muu: row["Tham mưu"] || "",
-          can_bo_phu_trach: row["Phụ trách"] || "",
+          can_bo_tham_muu: normalizeName(row["Tham mưu"]),
+can_bo_phu_trach: normalizeName(row["Phụ trách"]),
           thang,
           isEditing:true
         }));

@@ -178,8 +178,8 @@ export default function AdminPage(){
           ngay_giao: formatDate(row["Ngày giao"]),
           han_hoan_thanh: formatDate(row["Hạn"]),
           ngay_hoan_thanh: formatDate(row["Ngày HT"]),
-          can_bo_tham_muu: normalizeName(row["Tham mưu"]),
-can_bo_phu_trach: normalizeName(row["Phụ trách"]),
+          can_bo_tham_muu: normalizeName(row["Cán bộ tham mưu"]),
+can_bo_phu_trach: normalizeName(row["Cán bộ phụ trách"]),
           thang,
           isEditing:true
         }));

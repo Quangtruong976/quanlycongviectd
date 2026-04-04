@@ -21,6 +21,10 @@ type Task = {
   thang?: number;
 };
 
+const LINH_VUC = {
+  "I. Văn phòng - Tuyên giáo - Xây dựng Đoàn": ["Văn phòng","Tuyên giáo","Xây dựng Đoàn"]
+};
+
 const CAN_BO = [
   "Trương Minh Quang","Trần Diệp Mỹ Dung","H' Hồng","Đoàn Minh Tâm",
   "Trần Việt Anh","Nguyễn Hồ Xuân Quang","Nguyễn Trọng Tùng","Đào Hùng",
@@ -51,7 +55,6 @@ export default function UserVanPhong(){
     loadTasks();
   },[thang]);
 
-  // ✅ load theo lĩnh vực văn phòng
   async function loadTasks(){
     const {data} = await supabase
       .from("nhiem_vu")
@@ -83,7 +86,6 @@ export default function UserVanPhong(){
 
     const newData = [...tasks];
     (newData[index] as any)[field] = value;
-
     newData[index].tien_do = tinhTienDo(newData[index]);
 
     setTasks(newData);
@@ -97,11 +99,19 @@ export default function UserVanPhong(){
         linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
         linh_vuc_con:"",
         san_pham:"",
+        ngay_giao:"",
+        han_hoan_thanh:"",
+        ngay_hoan_thanh:"",
         can_bo_tham_muu:"",
         can_bo_phu_trach:"",
         thang
       }
     ]);
+  }
+
+  function deleteRow(index:number){
+    if(tasks[index].id) return; // ❌ không xóa task admin
+    setTasks(tasks.filter((_,i)=>i!==index));
   }
 
   async function saveAll(){
@@ -111,7 +121,6 @@ export default function UserVanPhong(){
       if(!t.ten) continue;
 
       if(t.id){
-        // update cũ
         await supabase
           .from("nhiem_vu")
           .update({
@@ -121,18 +130,20 @@ export default function UserVanPhong(){
           })
           .eq("id", t.id);
       } else {
-        // thêm mới
+
         if(!t.can_bo_tham_muu || !t.can_bo_phu_trach){
-          alert("Phải chọn cán bộ tham mưu và phụ trách");
+          alert("Phải chọn cán bộ");
           return;
         }
 
         await supabase
           .from("nhiem_vu")
           .insert({
-            ten: t.ten,
+            ten: t.ten + " (*)",
             linh_vuc_lon: t.linh_vuc_lon,
             linh_vuc_con: t.linh_vuc_con,
+            ngay_giao: t.ngay_giao || null,
+            han_hoan_thanh: t.han_hoan_thanh || null,
             can_bo_tham_muu: t.can_bo_tham_muu,
             can_bo_phu_trach: t.can_bo_phu_trach,
             can_bo: t.can_bo_phu_trach,
@@ -146,7 +157,6 @@ export default function UserVanPhong(){
   }
 
   return(
-
 <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
 <header className="bg-blue-900 text-white">
@@ -166,12 +176,7 @@ User: {name}
 <nav className="bg-blue-800">
 <div className="flex justify-center gap-6 py-2">
 <Link href="/"><Home size={20}/></Link>
-<Link href="/tien-do">Theo dõi tiến độ công việc</Link>
-
-<button onClick={()=>{
-localStorage.clear();
-router.replace("/login");
-}}>
+<button onClick={()=>{localStorage.clear();router.replace("/login");}}>
 Đăng xuất
 </button>
 </div>
@@ -183,7 +188,6 @@ router.replace("/login");
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
 <div className="flex justify-between mb-4">
-
 <select value={thang}
 onChange={(e)=>setThang(Number(e.target.value))}
 className="border px-3 py-1">
@@ -195,12 +199,10 @@ className="border px-3 py-1">
 <button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
 Lưu
 </button>
-
 </div>
 
 <div className="overflow-x-auto">
-
-<table className="min-w-[1400px] border text-sm">
+<table className="min-w-[1600px] border text-sm">
 
 <thead className="bg-blue-100">
 <tr>
@@ -208,20 +210,22 @@ Lưu
 <th className="border p-2">Lĩnh vực con</th>
 <th className="border p-2">Công việc</th>
 <th className="border p-2">Sản phẩm</th>
+<th className="border p-2">Ngày giao</th>
+<th className="border p-2">Hạn</th>
 <th className="border p-2">Ngày HT</th>
 <th className="border p-2">Tiến độ</th>
 <th className="border p-2">Tham mưu</th>
 <th className="border p-2">Phụ trách</th>
+<th className="border p-2">Xóa</th>
 </tr>
 </thead>
 
 <tbody>
 
 {tasks.map((t,i)=>{
-
 const isNew = !t.id;
 
-return (
+return(
 <tr key={i}>
 
 <td className="border p-2">{i+1}</td>
@@ -231,32 +235,47 @@ return (
 <select value={t.linh_vuc_con||""}
 onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
 <option value="">Chọn</option>
-<option>Văn phòng</option>
-<option>Tuyên giáo</option>
-<option>Xây dựng Đoàn</option>
+{LINH_VUC["I. Văn phòng - Tuyên giáo - Xây dựng Đoàn"].map(c=>
+<option key={c}>{c}</option>
+)}
 </select>
 ) : t.linh_vuc_con}
 </td>
 
 <td className="border p-1">
 {isNew ? (
-<input className="w-full"
+<input className="w-full" placeholder="Nhập công việc..."
 value={t.ten||""}
-onChange={(e)=>update(i,"ten",e.target.value)}
-placeholder="Nhập công việc..."/>
+onChange={(e)=>update(i,"ten",e.target.value)}/>
 ) : t.ten}
 </td>
 
 <td className="border p-1">
-<input className="w-full"
+<input className="w-full placeholder-red-400"
 placeholder="Nhập sản phẩm..."
 value={t.san_pham||""}
 onChange={(e)=>update(i,"san_pham",e.target.value)}/>
 </td>
 
 <td className="border p-1">
+{isNew ? (
 <input type="date"
-className={`w-full ${t.ngay_hoan_thanh ? "text-black" : "text-gray-400"}`}
+value={t.ngay_giao||""}
+onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
+) : t.ngay_giao}
+</td>
+
+<td className="border p-1">
+{isNew ? (
+<input type="date"
+value={t.han_hoan_thanh||""}
+onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
+) : t.han_hoan_thanh}
+</td>
+
+<td className="border p-1">
+<input type="date"
+className={`${t.ngay_hoan_thanh ? "text-black" : "text-red-400"}`}
 value={t.ngay_hoan_thanh||""}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
 </td>
@@ -285,13 +304,21 @@ onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
 ) : t.can_bo_phu_trach}
 </td>
 
+<td className="border text-center">
+{isNew && (
+<button onClick={()=>deleteRow(i)}
+className="bg-red-500 text-white px-2 py-1 text-xs">
+Xóa
+</button>
+)}
+</td>
+
 </tr>
 );
 })}
 
 </tbody>
 </table>
-
 </div>
 
 <button onClick={addTask} className="mt-4 bg-blue-600 text-white px-4 py-2">
@@ -299,7 +326,6 @@ onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
 </button>
 
 </div>
-
 </main>
 </div>
 );

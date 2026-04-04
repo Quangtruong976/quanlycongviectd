@@ -20,7 +20,6 @@ type Task = {
   can_bo_tham_muu?: string;
   can_bo_phu_trach?: string;
   thang?: number;
-  selected?: boolean;
   isEditing?: boolean;
 };
 
@@ -69,29 +68,24 @@ export default function UserVanPhong(){
     setTasks((data as Task[]) || []);
   }
 
-  function tinhTienDo(task:Task){
-    if(!task.ngay_hoan_thanh) return "Chưa hoàn thành";
-
-    const ht = new Date(task.ngay_hoan_thanh);
-    const han = new Date(task.han_hoan_thanh || "");
-
+  function tinhTienDo(t:Task){
+    if(!t.ngay_hoan_thanh) return "Chưa hoàn thành";
+    const ht = new Date(t.ngay_hoan_thanh);
+    const han = new Date(t.han_hoan_thanh || "");
     if(isNaN(ht.getTime()) || isNaN(han.getTime())) return "Chưa hoàn thành";
-
     return ht <= han ? "Hoàn thành đúng hạn" : "Hoàn thành quá hạn";
   }
 
-  function update(index:number, field:keyof Task, value:any){
+  function update(i:number, field:keyof Task, value:any){
 
-    const isNew = !tasks[index].id;
+    const isNew = !tasks[i].id;
 
-    // ❌ task admin → chỉ sửa 2 ô
-    if(!isNew && field !== "san_pham" && field !== "ngay_hoan_thanh"){
-      return;
-    }
+    // ❌ task admin chỉ sửa 2 ô
+    if(!isNew && field !== "san_pham" && field !== "ngay_hoan_thanh") return;
 
     const newData = [...tasks];
-    (newData[index] as any)[field] = value;
-    newData[index].tien_do = tinhTienDo(newData[index]);
+    (newData[i] as any)[field] = value;
+    newData[i].tien_do = tinhTienDo(newData[i]);
 
     setTasks(newData);
   }
@@ -99,15 +93,16 @@ export default function UserVanPhong(){
   function addRow(){
     setTasks([...tasks,{
       id: undefined,
+      linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
       ten:"",
       thang,
       isEditing:true
     }]);
   }
 
-  function deleteRow(index:number){
-    if(tasks[index].id) return; // ❌ không xóa admin
-    setTasks(tasks.filter((_,i)=>i!==index));
+  function deleteRow(i:number){
+    if(tasks[i].id) return;
+    setTasks(tasks.filter((_,idx)=>idx!==i));
   }
 
   async function saveAll(){
@@ -117,17 +112,15 @@ export default function UserVanPhong(){
       if(!t.ten) continue;
 
       if(t.id){
-        // chỉ update 2 ô
         await supabase
           .from("nhiem_vu")
           .update({
-            san_pham: t.san_pham,
-            ngay_hoan_thanh: t.ngay_hoan_thanh,
-            tien_do: tinhTienDo(t)
+            san_pham:t.san_pham,
+            ngay_hoan_thanh:t.ngay_hoan_thanh,
+            tien_do:tinhTienDo(t)
           })
-          .eq("id", t.id);
+          .eq("id",t.id);
       } else {
-        // thêm mới → có (*)
         await supabase
           .from("nhiem_vu")
           .insert({
@@ -164,10 +157,7 @@ User: {name}
 <Link href="/"><Home size={20}/></Link>
 <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
 
-<button onClick={()=>{
-localStorage.clear();
-router.replace("/login");
-}}>
+<button onClick={()=>{localStorage.clear();router.replace("/login")}}>
 Đăng xuất
 </button>
 </div>
@@ -253,7 +243,7 @@ onChange={(e)=>update(i,"ten",e.target.value)}/>
 <td className="border p-1">
 <input
 className="w-full placeholder-red-400"
-placeholder="Nhập sản phẩm..."
+placeholder="Nhập tên sản phẩm..."
 value={t.san_pham||""}
 onChange={(e)=>update(i,"san_pham",e.target.value)}
 />

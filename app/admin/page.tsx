@@ -127,7 +127,6 @@ export default function AdminPage(){
     setTasks(tasks.filter(t => !t.selected));
   }
 
-  // 🔥 format ngày
   function formatDate(value:any){
     if(!value) return "";
 
@@ -144,7 +143,7 @@ export default function AdminPage(){
     return value;
   }
 
-  // 🔥 IMPORT EXCEL (GIỮ NGUYÊN UI, chỉ nâng cấp logic)
+  // 🔥 IMPORT: cộng dồn + lọc trùng
   function handleImport(e:any){
     const file = e.target.files[0];
     if(!file) return;
@@ -173,7 +172,22 @@ export default function AdminPage(){
           isEditing:true
         }));
 
-        setTasks(newTasks);
+        setTasks(prev => {
+          const merged = [...prev];
+
+          newTasks.forEach(n => {
+            const exists = merged.find(m =>
+              m.ten === n.ten &&
+              m.han_hoan_thanh === n.han_hoan_thanh
+            );
+
+            if(!exists){
+              merged.push(n);
+            }
+          });
+
+          return merged;
+        });
 
       }catch(err){
         console.error(err);
@@ -197,19 +211,14 @@ export default function AdminPage(){
         linh_vuc_con: t.linh_vuc_con || "",
         ten: t.ten || "",
         san_pham: t.san_pham || "",
-
         ngay_giao: t.ngay_giao || null,
         han_hoan_thanh: t.han_hoan_thanh || null,
         ngay_hoan_thanh: t.ngay_hoan_thanh || null,
-
         tien_do,
-
         can_bo_tham_muu: t.can_bo_tham_muu || "",
         can_bo_phu_trach: t.can_bo_phu_trach || "",
         can_bo: t.can_bo_phu_trach || "",
-
         thang,
-
         ghi_chu:
           tien_do === "Hoàn thành đúng hạn"
             ? "dung_han"
@@ -218,8 +227,6 @@ export default function AdminPage(){
             : "chua_ht"
       };
     });
-
-    await supabase.from("nhiem_vu").delete().eq("thang", thang);
 
     const { error } = await supabase.from("nhiem_vu").insert(payload);
 

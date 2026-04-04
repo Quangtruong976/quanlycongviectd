@@ -220,7 +220,7 @@ can_bo_phu_trach: normalizeName(row["Cán bộ phụ trách"]),
       const tien_do = tinhTienDo(t);
   
       return {
-        id: t.id, // 🔥 QUAN TRỌNG để update
+        ...(t.id ? { id: t.id } : {}), // 🔥 CHỈ có id khi tồn tại
         linh_vuc_lon: t.linh_vuc_lon || "",
         linh_vuc_con: t.linh_vuc_con || "",
         ten: t.ten || "",

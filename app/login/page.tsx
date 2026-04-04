@@ -18,29 +18,61 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
-
+  
     if (!email || !password) {
       setErrorMsg("Vui lòng nhập đầy đủ thông tin.");
       setLoading(false);
       return;
     }
-
+  
+    // ✅ login như cũ
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
+  
     if (error) {
       setErrorMsg("Email hoặc mật khẩu không đúng.");
       setLoading(false);
       return;
     }
-
-    // ✅ FIX
-    localStorage.setItem("role", "admin");
-    localStorage.setItem("name", email);
-
-    router.push("/admin");
+  
+    // ✅ lấy role
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("email", email)
+      .single();
+  
+    if (profileError || !profile) {
+      setErrorMsg("Không lấy được thông tin user.");
+      setLoading(false);
+      return;
+    }
+  
+    // lưu role
+    localStorage.setItem("role", profile.role);
+    localStorage.setItem("email", email);
+  
+    // 🔥 phân quyền
+    if (profile.role === "admin") {
+      router.push("/admin");
+    } else {
+      // user → phân theo lĩnh vực (email)
+      if (email === "linhvucphongtrao@tinhdoan.vn") {
+        router.push("/user-phongtrao");
+      } 
+      else if (email === "linhvucvanphong@tinhdoan.vn") {
+        router.push("/user-vanphong");
+      } 
+      else if (email === "linhvuctruonghoc@tinhdoan.vn") {
+        router.push("/user-truonghoc");
+      } 
+      else {
+        router.push("/");
+      }
+    }
+  
     router.refresh();
   }
 

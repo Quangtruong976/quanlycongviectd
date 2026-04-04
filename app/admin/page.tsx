@@ -213,11 +213,11 @@ can_bo_phu_trach: normalizeName(row["Cán bộ phụ trách"]),
   async function saveAll(){
 
     const validTasks = tasks.filter(t => t.ten && t.ten.trim() !== "");
-
+  
     const payload = validTasks.map(t => {
-
+  
       const tien_do = tinhTienDo(t);
-
+  
       return {
         linh_vuc_lon: t.linh_vuc_lon || "",
         linh_vuc_con: t.linh_vuc_con || "",
@@ -239,16 +239,40 @@ can_bo_phu_trach: normalizeName(row["Cán bộ phụ trách"]),
             : "chua_ht"
       };
     });
-
-    const { error } = await supabase.from("nhiem_vu").insert(payload);
-
+  
+    // 🔥 BỔ SUNG: lấy dữ liệu đã có trong DB
+    const { data: existing } = await supabase
+      .from("nhiem_vu")
+      .select("ten, han_hoan_thanh, thang")
+      .eq("thang", thang);
+  
+    // 🔥 BỔ SUNG: lọc dữ liệu mới (tránh trùng)
+    const newPayload = payload.filter(p => {
+      return !existing?.some(e =>
+        e.ten === p.ten &&
+        e.han_hoan_thanh === p.han_hoan_thanh &&
+        e.thang === p.thang
+      );
+    });
+  
+    // 🔥 nếu không có gì mới thì dừng
+    if(newPayload.length === 0){
+      alert("Không có dữ liệu mới để lưu");
+      return;
+    }
+  
+    // 🔥 chỉ insert cái mới
+    const { error } = await supabase
+      .from("nhiem_vu")
+      .insert(newPayload);
+  
     if(error){
       console.error(error);
       alert("Lỗi lưu dữ liệu: " + error.message);
       return;
     }
-
-    alert("Đã lưu dữ liệu tháng " + thang);
+  
+    alert("Đã lưu " + newPayload.length + " nhiệm vụ mới");
     loadTasks();
   }
 

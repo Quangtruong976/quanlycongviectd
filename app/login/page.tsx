@@ -146,12 +146,12 @@ Thống kê chi tiết công việc cá nhân
               </div>
             )}
 
-            <button
-              type="submit"
-              className="w-full bg-blue-700 text-white py-2 rounded"
-            >
-              Đăng nhập
-            </button>
+<button
+  type="submit"
+  className="w-full bg-blue-700 text-white py-2 rounded cursor-pointer hover:bg-blue-800 hover:text-yellow-300 transition"
+>
+  Đăng nhập
+</button>
 
           </form>
         </div>

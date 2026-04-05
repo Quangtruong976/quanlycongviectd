@@ -92,12 +92,25 @@ export default function LoginPage() {
 
         <nav className="bg-blue-800">
           <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
-            <Link href="/" className="text-white hover:text-yellow-300 flex items-center">
-              <Home size={20} />
-            </Link>
-            <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
-            <Link href="/thong-ke">Thống kê chi tiết công việc cá nhân</Link>
-            <Link href="/login">Đăng nhập</Link>
+          <Link href="/" className="text-white hover:text-yellow-300 cursor-pointer">
+  <Home size={20}/>
+</Link>
+<Link href="/tien-do"
+className="text-white hover:text-yellow-300 cursor-pointer">
+Theo dõi tiến độ công việc
+</Link>
+
+<Link href="/thong-ke"
+className="text-white hover:text-yellow-300 cursor-pointer">
+Thống kê chi tiết công việc cá nhân
+</Link>
+
+<Link
+  href="/login"
+  className="text-white hover:text-yellow-300 cursor-pointer"
+>
+  Đăng nhập
+</Link>
           </div>
         </nav>
       </header>

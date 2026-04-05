@@ -142,11 +142,40 @@ export default function UserVanPhong(){
 
   async function saveAll(){
 
-    for(const t of tasks){
-
-      // 🔥 TASK ADMIN
+    const validTasks = tasks.filter(t => t.ten && t.ten.trim() !== "");
+  
+    // 🔥 Lấy dữ liệu hiện có trong DB
+    const { data: existing } = await supabase
+      .from("nhiem_vu")
+      .select("*")
+      .eq("thang", thang)
+      .eq("linh_vuc_lon","I. Văn phòng - Tuyên giáo - Xây dựng Đoàn");
+  
+    // ======================
+    // 🔥 1. DELETE (chỉ xóa task do user tạo)
+    // ======================
+    const toDelete = existing?.filter(e =>
+      e.created_by_user &&
+      !validTasks.some(t => t.id === e.id)
+    );
+  
+    if(toDelete && toDelete.length > 0){
+      for(const d of toDelete){
+        await supabase
+          .from("nhiem_vu")
+          .delete()
+          .eq("id", d.id);
+      }
+    }
+  
+    // ======================
+    // 🔥 2. UPDATE + INSERT
+    // ======================
+    for(const t of validTasks){
+  
+      // 🔒 TASK ADMIN (chỉ update 2 field)
       if(!t.created_by_user){
-
+  
         await supabase
           .from("nhiem_vu")
           .update({
@@ -155,15 +184,15 @@ export default function UserVanPhong(){
             tien_do: tinhTienDo(t)
           })
           .eq("id", t.id);
-
+  
         continue;
       }
-
+  
       // 🔥 TASK USER
       const payload = {
         linh_vuc_lon: t.linh_vuc_lon || "",
         linh_vuc_con: t.linh_vuc_con || "",
-        ten: t.ten || "",
+        ten: t.ten,
         san_pham: t.san_pham || "",
         ngay_giao: t.ngay_giao || null,
         han_hoan_thanh: t.han_hoan_thanh || null,
@@ -174,19 +203,34 @@ export default function UserVanPhong(){
         thang,
         created_by_user: true
       };
-
+  
+      // UPDATE
       if(t.id){
         await supabase
           .from("nhiem_vu")
           .update(payload)
           .eq("id", t.id);
-      }else{
-        await supabase
+      }
+  
+      // INSERT (🔥 FIX CHÍNH Ở ĐÂY)
+      else{
+        const { data, error } = await supabase
           .from("nhiem_vu")
-          .insert(payload);
+          .insert(payload)
+          .select()
+          .single();
+  
+        if(error){
+          console.error(error);
+          alert("Lỗi lưu dữ liệu");
+          return;
+        }
+  
+        // 🔥 GÁN ID LẠI → KHÔNG MẤT DỮ LIỆU
+        t.id = data.id;
       }
     }
-
+  
     alert("Đã lưu");
     loadTasks();
   }

@@ -393,31 +393,43 @@ onChange={(e)=>update(i,"san_pham",e.target.value)}
 </td>
 
 <td className="border p-1">
-<input type="date"
-disabled={!t.created_by_user || !t.isEditing}
-className="w-full"
-value={t.ngay_giao||""}
+<input
+type={t.ngay_giao ? "date" : "text"}
+placeholder="Nhập ngày giao việc"
+className={`w-full ${!t.ngay_giao ? "text-red-400" : "text-black"}`}
+value={t.ngay_giao || ""}
+onFocus={(e)=> e.target.type="date"}
+onBlur={(e)=>{
+  if(!t.ngay_giao) e.target.type="text";
+}}
 onChange={(e)=>update(i,"ngay_giao",e.target.value)}
 />
 </td>
 
 <td className="border p-1">
-<input type="date"
-disabled={!t.created_by_user || !t.isEditing}
-className="w-full"
-value={t.han_hoan_thanh||""}
+<input
+type={t.han_hoan_thanh ? "date" : "text"}
+placeholder="Nhập hạn hoàn thành"
+className={`w-full ${!t.han_hoan_thanh ? "text-red-400" : "text-black"}`}
+value={t.han_hoan_thanh || ""}
+onFocus={(e)=> e.target.type="date"}
+onBlur={(e)=>{
+  if(!t.han_hoan_thanh) e.target.type="text";
+}}
 onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
 />
 </td>
 
 <td className="border p-1">
 <input
-type="date"
-className={`w-full ${
-  !t.isEditing ? "text-red-400" : "text-black"
-}`}
-placeholder="Chọn ngày hoàn thành"
-value={t.ngay_hoan_thanh||""}
+type={t.ngay_hoan_thanh ? "date" : "text"}
+placeholder="Nhập ngày hoàn thành"
+className={`w-full ${!t.ngay_hoan_thanh ? "text-red-400" : "text-black"}`}
+value={t.ngay_hoan_thanh || ""}
+onFocus={(e)=> e.target.type="date"}
+onBlur={(e)=>{
+  if(!t.ngay_hoan_thanh) e.target.type="text";
+}}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
 />
 </td>

@@ -282,8 +282,18 @@ Chào mừng: Lĩnh vực Trường học - Hội Sinh viên VN tỉnh
 
 <nav className="bg-blue-800">
 <div className="flex justify-center gap-6 py-2">
-<Link href="/"><Home size={20}/></Link>
-<Link href="/tien-do">Theo dõi tiến độ công việc</Link>
+<Link href="/" className="text-white hover:text-yellow-300 cursor-pointer">
+  <Home size={20}/>
+</Link>
+<Link href="/tien-do"
+className="text-white hover:text-yellow-300 cursor-pointer">
+Theo dõi tiến độ công việc
+</Link>
+
+<Link href="/thong-ke"
+className="text-white hover:text-yellow-300 cursor-pointer">
+Thống kê chi tiết công việc cá nhân
+</Link>
 
 <button
 onClick={()=>{

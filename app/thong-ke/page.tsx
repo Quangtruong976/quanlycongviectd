@@ -187,17 +187,18 @@ export default function ThongKePage() {
 
           <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 
-            <Link href="/" className="text-white hover:text-yellow-300 flex items-center">
-              <Home size={20} />
-            </Link>
+          <Link href="/" className="text-white hover:text-yellow-300 cursor-pointer">
+  <Home size={20}/>
+</Link>
+<Link href="/tien-do"
+className="text-white hover:text-yellow-300 cursor-pointer">
+Theo dõi tiến độ công việc
+</Link>
 
-            <Link href="/tien-do" className="hover:underline">
-              Theo dõi tiến độ công việc
-            </Link>
-
-            <Link href="/thong-ke" className="hover:underline">
-              Thống kê chi tiết công việc cá nhân
-            </Link>
+<Link href="/thong-ke"
+className="text-white hover:text-yellow-300 cursor-pointer">
+Thống kê chi tiết công việc cá nhân
+</Link>
 
             <Link href="/login" className="hover:underline">
               Đăng nhập

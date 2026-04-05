@@ -285,10 +285,13 @@ Chào mừng: Lĩnh vực Phong trào - Hội LHTN VN tỉnh
 <Link href="/"><Home size={20}/></Link>
 <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
 
-<button onClick={()=>{
-localStorage.clear();
-router.replace("/login");
-}}>
+<button
+onClick={()=>{
+  localStorage.clear();
+  router.replace("/login");
+}}
+className="cursor-pointer hover:text-yellow-300"
+>
 Đăng xuất
 </button>
 </div>

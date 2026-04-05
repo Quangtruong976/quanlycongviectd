@@ -72,6 +72,7 @@ export default function AdminPage(){
       const mapped = (data as Task[]).map(t => ({
         ...t,
         isEditing:false
+        
       }));
       setTasks(mapped);
     }
@@ -326,10 +327,13 @@ Chào mừng: {adminName}
 <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
 <Link href="/thong-ke"> Thống kê chi tiết công việc cá nhân</Link>
 
-<button onClick={()=>{
-localStorage.clear();
-router.replace("/login");
-}}>
+<button
+onClick={()=>{
+  localStorage.clear();
+  router.replace("/login");
+}}
+className="cursor-pointer hover:text-yellow-300"
+>
 Đăng xuất
 </button>
 </div>

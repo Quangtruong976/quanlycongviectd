@@ -248,7 +248,7 @@ export default function UserPhongTrao(){
     }
   
     alert("Đã lưu");
-    alert("Đã lưu");
+   
 
 // khóa tất cả về trạng thái không chỉnh sửa
 setTasks(prev =>
@@ -259,7 +259,7 @@ setTasks(prev =>
 );
 
 loadTasks();
-    loadTasks();
+   
   }
 
   return(

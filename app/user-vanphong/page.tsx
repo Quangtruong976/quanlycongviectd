@@ -8,27 +8,25 @@ import { supabase } from "@/lib/supabase";
 
 type Task = {
   id?: string;
-  linh_vuc_lon: string;
-  linh_vuc_con: string;
+  linh_vuc_lon?: string;
+  linh_vuc_con?: string;
   ten: string;
-  san_pham: string;
-  ngay_giao: string;
-  han_hoan_thanh: string;
-  ngay_hoan_thanh: string;
-  tien_do: string;
-  can_bo_tham_muu: string;
-  can_bo_phu_trach: string;
-  thang: number;
-  created_by_user: boolean;
-  isEditing: boolean;
+  san_pham?: string;
+  ngay_giao?: string;
+  han_hoan_thanh?: string;
+  ngay_hoan_thanh?: string;
+  tien_do?: string;
+  can_bo_tham_muu?: string;
+  can_bo_phu_trach?: string;
+  thang?: number;
+  selected?: boolean;
+  isEditing?: boolean;
+  created_by_user?: boolean;
 };
 
-const LINH_VUC_ADMIN = "I. Văn phòng - Tuyên giáo - Xây dựng Đoàn";
-const LINH_VUC_CON_PHONG_VAN = [
-  "Văn phòng",
-  "Tuyên giáo",
-  "Xây dựng Đoàn",
-];
+const LINH_VUC = {
+  "I. Văn phòng - Tuyên giáo - Xây dựng Đoàn": ["Văn phòng","Tuyên giáo","Xây dựng Đoàn"],
+};
 
 const CAN_BO = [
   "Trương Minh Quang","Trần Diệp Mỹ Dung","H' Hồng","Đoàn Minh Tâm",
@@ -39,305 +37,251 @@ const CAN_BO = [
   "Nguyễn Thị Thanh Hòa","Bùi Thị Phượng","Trịnh Thị Vỹ Cầm"
 ];
 
-// convert dd/mm/yyyy <→> yyyy-mm-dd
-function toDisplayDate(dbDate?: string) {
-  if (!dbDate) return "";
-  const [d,m,y] = dbDate.split("/");
-  if (!d || !m || !y) return "";
-  return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
-}
-function toSaveDate(inputDate?: string) {
-  if (!inputDate) return "";
-  const [y,m,d] = inputDate.split("-");
-  if (!d || !m || !y) return "";
-  return `${d}/${m}/${y}`;
-}
+export default function UserPage(){
 
-export default function UserVanPhongPage() {
   const router = useRouter();
-
   const [tasks,setTasks] = useState<Task[]>([]);
-  const [userName,setUserName] = useState("");
   const [thang,setThang] = useState(new Date().getMonth()+1);
 
   useEffect(()=>{
     const role = localStorage.getItem("role");
-    const name = localStorage.getItem("name");
-    if (role !== "user") {
+    if(role!=="user"){
       router.replace("/login");
       return;
     }
-    setUserName(name || "");
     loadTasks();
-  }, [thang]);
+  },[thang]);
 
-  async function loadTasks() {
-    // load nhiệm vụ admin
-    const { data: adminTasks } = await supabase
+  async function loadTasks(){
+    const {data} = await supabase
       .from("nhiem_vu")
       .select("*")
-      .eq("thang", thang)
-      .eq("linh_vuc_lon", LINH_VUC_ADMIN)
-      .in("linh_vuc_con", LINH_VUC_CON_PHONG_VAN)
-      .order("han_hoan_thanh", {ascending:true});
+      .eq("thang",thang)
+      .eq("linh_vuc_lon","I. Văn phòng - Tuyên giáo - Xây dựng Đoàn");
 
-    // load nhiệm vụ user thêm
-    const { data: userTasks } = await supabase
-      .from("nhiem_vu")
-      .select("*")
-      .eq("created_by_user", true)
-      .eq("thang", thang)
-      .order("han_hoan_thanh", {ascending:true});
-
-    const merged = [
-      ...(adminTasks || []),
-      ...(userTasks || [])
-    ].map(t => ({
-      ...t,
-      isEditing: t.created_by_user,
-      created_by_user: t.created_by_user,
-      san_pham: t.san_pham || "",
-      ngay_giao: t.ngay_giao || "",
-      han_hoan_thanh: t.han_hoan_thanh || "",
-      ngay_hoan_thanh: t.ngay_hoan_thanh || "",
-      tien_do: "",
-    }));
-
-    setTasks(merged);
+    if(data){
+      const mapped = data.map((t:any)=>({
+        ...t,
+        isEditing:false
+      }));
+      setTasks(mapped);
+    }
   }
 
-  function computeTienDo(t:Task) {
-    if (!t.ngay_hoan_thanh || !t.han_hoan_thanh) return "Chưa hoàn thành";
-    const ht = new Date(toDisplayDate(t.ngay_hoan_thanh));
-    const han = new Date(toDisplayDate(t.han_hoan_thanh));
+  function tinhTienDo(task:Task){
+    if(!task.ngay_hoan_thanh) return "Chưa hoàn thành";
+    const ht = new Date(task.ngay_hoan_thanh);
+    const han = new Date(task.han_hoan_thanh||"");
     return ht <= han ? "Hoàn thành đúng hạn" : "Hoàn thành quá hạn";
   }
 
-  function update(i:number, field:keyof Task, value:string) {
-    const all = [...tasks];
-    const t = all[i];
-    // admin task: only san_pham & ngay_hoan_thanh editable
-    if (!t.created_by_user && !["san_pham","ngay_hoan_thanh"].includes(field)) return;
+  function update(index:number, field:keyof Task, value:any){
+    const newData = [...tasks];
+    const t = newData[index];
 
-    (all[i] as any)[field] = value;
-    all[i].tien_do = computeTienDo(all[i]);
-    setTasks(all);
+    // ❌ CHẶN: task admin không cho sửa linh tinh
+    if(!t.created_by_user){
+      if(field !== "san_pham" && field !== "ngay_hoan_thanh") return;
+    }
+
+    (t as any)[field] = value;
+    t.tien_do = tinhTienDo(t);
+
+    setTasks(newData);
   }
 
-  function addRow() {
-    setTasks([
-      ...tasks,
-      {
-        linh_vuc_lon: LINH_VUC_ADMIN,
-        linh_vuc_con: "",
-        ten: "",
-        san_pham: "",
-        ngay_giao: "",
-        han_hoan_thanh: "",
-        ngay_hoan_thanh: "",
-        can_bo_tham_muu: "",
-        can_bo_phu_trach: "",
-        tien_do: "",
-        thang,
-        created_by_user:true,
-        isEditing:true
-      }
-    ]);
+  function toggleEdit(index:number){
+    const newData = [...tasks];
+    newData[index].isEditing = !newData[index].isEditing;
+    setTasks(newData);
   }
 
-  function toggleEdit(i:number) {
-    const all = [...tasks];
-    all[i].isEditing = !all[i].isEditing;
-    setTasks(all);
+  function addRow(){
+    setTasks([...tasks,{
+      ten:"",
+      linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
+      thang,
+      isEditing:true,
+      created_by_user:true
+    }]);
   }
 
-  function deleteRow(i:number) {
-    const t = tasks[i];
-    if (!t.created_by_user) return;
-    if (t.id) supabase.from("nhiem_vu").delete().eq("id", t.id);
-    setTasks(tasks.filter((_,idx)=>idx!==i));
+  function deleteRow(index:number){
+    const t = tasks[index];
+    if(!t.created_by_user) return;
+
+    if(t.id){
+      supabase.from("nhiem_vu").delete().eq("id",t.id);
+    }
+
+    setTasks(tasks.filter((_,i)=>i!==index));
   }
 
-  async function saveAll() {
-    for(const t of tasks) {
+  async function saveAll(){
+
+    for(const t of tasks){
+
       const payload:any = {
-        linh_vuc_lon: t.linh_vuc_lon,
-        linh_vuc_con: t.linh_vuc_con,
-        ten: t.created_by_user ? (t.ten+" (*)") : t.ten,
-        san_pham: t.san_pham,
-        ngay_giao: toSaveDate(t.ngay_giao),
-        han_hoan_thanh: toSaveDate(t.han_hoan_thanh),
-        ngay_hoan_thanh: toSaveDate(t.ngay_hoan_thanh),
-        can_bo_tham_muu: t.can_bo_tham_muu,
-        can_bo_phu_trach: t.can_bo_phu_trach,
-        tien_do: computeTienDo(t),
-        thang: t.thang,
-        created_by_user: t.created_by_user
+        linh_vuc_lon: t.linh_vuc_lon || "",
+        linh_vuc_con: t.linh_vuc_con || "",
+        ten: t.created_by_user ? t.ten + " (*)" : t.ten,
+        san_pham: t.san_pham || "",
+        ngay_giao: t.ngay_giao || null,
+        han_hoan_thanh: t.han_hoan_thanh || null,
+        ngay_hoan_thanh: t.ngay_hoan_thanh || null,
+        tien_do: tinhTienDo(t),
+        can_bo_tham_muu: t.can_bo_tham_muu || "",
+        can_bo_phu_trach: t.can_bo_phu_trach || "",
+        thang,
+        created_by_user: t.created_by_user || false
       };
 
-      if (t.id) {
-        await supabase.from("nhiem_vu").update(payload).eq("id", t.id);
-      } else {
+      if(t.id){
+        await supabase.from("nhiem_vu").update(payload).eq("id",t.id);
+      }else{
         await supabase.from("nhiem_vu").insert(payload);
       }
     }
-    alert("Đã lưu!");
+
+    alert("Đã lưu");
     loadTasks();
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
-      <header className="bg-blue-900 text-white">
-        <div className="flex flex-col items-center py-4">
-          <img src="/logo-doan.png" className="h-20 mb-2"/>
-          <h1 className="text-xl font-bold text-center">
-            HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
-          </h1>
-          <p className="text-blue-200 font-semibold">TỈNH ĐOÀN LÂM ĐỒNG</p>
-          <p className="text-yellow-300 text-sm mt-1">User: {userName}</p>
-        </div>
-        <nav className="bg-blue-800 flex justify-center gap-6 py-2">
-          <Link href="/"><Home size={20}/></Link>
-          <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
-          <Link href="/thong-ke">Thống kê chi tiết</Link>
-          <button onClick={()=>{localStorage.clear();router.replace("/login")}}>Đăng xuất</button>
-        </nav>
-      </header>
+<div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
-      <main className="flex-1 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-4">
-          <div className="flex justify-between mb-4">
-            <select value={thang} onChange={e=>setThang(Number(e.target.value))} className="border px-3 py-1">
-              {Array.from({length:12}).map((_,i)=><option key={i} value={i+1}>Tháng {i+1}</option>)}
-            </select>
-            <div className="flex gap-2">
-              <button onClick={addRow} className="bg-blue-600 text-white px-4 py-1">+ Thêm nhiệm vụ</button>
-              <button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">Lưu</button>
-            </div>
-          </div>
+<header className="bg-blue-900 text-white">
+<div className="flex flex-col items-center py-4">
+<img src="/logo-doan.png" className="h-20 mb-2"/>
+<h1 className="text-xl font-bold text-center">
+HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
+</h1>
+<p className="text-blue-200 font-semibold">
+TỈNH ĐOÀN LÂM ĐỒNG
+</p>
+</div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-[1400px] border text-sm">
-              <thead className="bg-blue-100">
-                <tr>
-                  <th className="border p-2">STT</th>
-                  <th className="border p-2">Lĩnh vực lớn</th>
-                  <th className="border p-2">Lĩnh vực con</th>
-                  <th className="border p-2">Công việc</th>
-                  <th className="border p-2">Sản phẩm</th>
-                  <th className="border p-2">Ngày giao</th>
-                  <th className="border p-2">Hạn</th>
-                  <th className="border p-2">Ngày HT</th>
-                  <th className="border p-2">Tiến độ</th>
-                  <th className="border p-2">Tham mưu</th>
-                  <th className="border p-2">Phụ trách</th>
-                  <th className="border p-2">Sửa</th>
-                  <th className="border p-2">Xóa</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((t,i)=>
-                  <tr key={i}>
-                    <td className="border p-2">{i+1}</td>
+<nav className="bg-blue-800">
+<div className="flex justify-center gap-6 py-2">
+<Link href="/"><Home size={20}/></Link>
+<Link href="/tien-do">Theo dõi tiến độ</Link>
+<button onClick={()=>{localStorage.clear();router.replace("/login");}}>
+Đăng xuất
+</button>
+</div>
+</nav>
+</header>
 
-                    <td className="border p-1">{t.linh_vuc_lon}</td>
+<main className="flex-1 p-4">
 
-                    <td className="border p-1">{t.linh_vuc_con}</td>
+<div className="bg-white rounded-2xl shadow-2xl p-4">
 
-                    {/* nhiệm vụ */}
-                    <td className="border p-1">
-                      <input
-                        className={`${t.created_by_user ? "text-green-700" : "text-gray-400"} w-full`}
-                        disabled={!t.created_by_user}
-                        value={t.ten}
-                        onChange={e=>update(i,"ten",e.target.value)}
-                      />
-                    </td>
+<div className="flex justify-between mb-4">
+<select value={thang}
+onChange={(e)=>setThang(Number(e.target.value))}
+className="border px-3 py-1">
+{Array.from({length:12}).map((_,i)=>(
+<option key={i} value={i+1}>Tháng {i+1}</option>
+))}
+</select>
 
-                    {/* sản phẩm */}
-                    <td className="border p-1">
-                      <input
-                        className={`${t.created_by_user ? "text-green-700" : "text-red-500"} w-full`}
-                        placeholder={!t.created_by_user ? "Nhập sản phẩm" : ""}
-                        value={t.san_pham}
-                        onChange={e=>update(i,"san_pham",e.target.value)}
-                      />
-                    </td>
+<div className="flex gap-2">
+<button onClick={addRow} className="bg-blue-600 text-white px-4 py-1">
++ Thêm nhiệm vụ
+</button>
+<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
+Lưu
+</button>
+</div>
+</div>
 
-                    {/* ngày giao */}
-                    <td className="border p-1">
-                      <input
-                        type="date"
-                        className="w-full"
-                        disabled={!t.created_by_user}
-                        value={toDisplayDate(t.ngay_giao)}
-                        onChange={e=>update(i,"ngay_giao",e.target.value)}
-                      />
-                    </td>
+<div className="overflow-x-auto">
 
-                    {/* hạn */}
-                    <td className="border p-1">
-                      <input
-                        type="date"
-                        className="w-full"
-                        disabled={!t.created_by_user}
-                        value={toDisplayDate(t.han_hoan_thanh)}
-                        onChange={e=>update(i,"han_hoan_thanh",e.target.value)}
-                      />
-                    </td>
+<table className="min-w-[1500px] border text-sm">
 
-                    {/* ngày hoàn thành */}
-                    <td className="border p-1">
-                      <input
-                        type="date"
-                        className="w-full"
-                        value={toDisplayDate(t.ngay_hoan_thanh)}
-                        onChange={e=>update(i,"ngay_hoan_thanh",e.target.value)}
-                      />
-                    </td>
+<thead className="bg-blue-100">
+<tr>
+<th className="border p-2">STT</th>
+<th className="border p-2">Lĩnh vực lớn</th>
+<th className="border p-2">Lĩnh vực con</th>
+<th className="border p-2">Công việc</th>
+<th className="border p-2">Sản phẩm</th>
+<th className="border p-2">Ngày HT</th>
+<th className="border p-2">Sửa</th>
+<th className="border p-2">Xóa</th>
+</tr>
+</thead>
 
-                    <td className="border text-center">{t.tien_do||"Chưa hoàn thành"}</td>
+<tbody>
 
-                    <td className="border p-1">
-                      <select
-                        className="w-full"
-                        disabled={!t.created_by_user}
-                        value={t.can_bo_tham_muu}
-                        onChange={e=>update(i,"can_bo_tham_muu",e.target.value)}
-                      >
-                        <option value="">Chọn</option>
-                        {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
-                      </select>
-                    </td>
+{tasks.map((t,i)=>(
 
-                    <td className="border p-1">
-                      <select
-                        className="w-full"
-                        disabled={!t.created_by_user}
-                        value={t.can_bo_phu_trach}
-                        onChange={e=>update(i,"can_bo_phu_trach",e.target.value)}
-                      >
-                        <option value="">Chọn</option>
-                        {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
-                      </select>
-                    </td>
+<tr key={i}>
 
-                    <td className="border text-center">
-                      {t.created_by_user && <button onClick={()=>toggleEdit(i)} className="bg-yellow-500 text-white px-2 py-1 text-xs">Sửa</button>}
-                    </td>
+<td className="border p-2">{i+1}</td>
 
-                    <td className="border text-center">
-                      {t.created_by_user && <button onClick={()=>deleteRow(i)} className="bg-red-500 text-white px-2 py-1 text-xs">Xóa</button>}
-                    </td>
+<td className="border p-1">{t.linh_vuc_lon}</td>
 
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+<td className="border p-1">
+<select
+disabled={!t.created_by_user && !t.isEditing}
+value={t.linh_vuc_con||""}
+onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}
+>
+<option value="">Chọn</option>
+{LINH_VUC[t.linh_vuc_lon as keyof typeof LINH_VUC]?.map(c=><option key={c}>{c}</option>)}
+</select>
+</td>
 
-        </div>
-      </main>
-    </div>
-  );
+<td className={`border p-1 ${t.created_by_user?"text-green-600":""}`}>
+<input className="w-full"
+disabled={!t.created_by_user}
+value={t.ten||""}
+onChange={(e)=>update(i,"ten",e.target.value)}
+/>
+</td>
+
+<td className="border p-1">
+<input className="w-full text-red-500"
+value={t.san_pham||""}
+onChange={(e)=>update(i,"san_pham",e.target.value)}
+/>
+</td>
+
+<td className="border p-1">
+<input type="date"
+className="w-full"
+value={t.ngay_hoan_thanh||""}
+onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
+/>
+</td>
+
+<td className="border text-center">
+<button onClick={()=>toggleEdit(i)}
+className="bg-yellow-500 text-white px-2 py-1 text-xs">
+Sửa
+</button>
+</td>
+
+<td className="border text-center">
+<button onClick={()=>deleteRow(i)}
+className="bg-red-500 text-white px-2 py-1 text-xs">
+Xóa
+</button>
+</td>
+
+</tr>
+
+))}
+
+</tbody>
+</table>
+
+</div>
+
+</div>
+
+</main>
+</div>
+);
 }

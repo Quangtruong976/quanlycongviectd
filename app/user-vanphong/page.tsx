@@ -144,39 +144,44 @@ export default function UserVanPhong(){
 
     const validTasks = tasks.filter(t => t.ten && t.ten.trim() !== "");
   
-    // 🔥 Lấy dữ liệu hiện có trong DB
-    const { data: existing } = await supabase
+    const { data: existing, error: err1 } = await supabase
       .from("nhiem_vu")
       .select("*")
       .eq("thang", thang)
       .eq("linh_vuc_lon","I. Văn phòng - Tuyên giáo - Xây dựng Đoàn");
   
-    // ======================
-    // 🔥 1. DELETE (chỉ xóa task do user tạo)
-    // ======================
+    if(err1){
+      console.error("Lỗi load DB:", err1);
+      alert("Không đọc được dữ liệu");
+      return;
+    }
+  
+    // DELETE
     const toDelete = existing?.filter(e =>
       e.created_by_user &&
       !validTasks.some(t => t.id === e.id)
     );
   
-    if(toDelete && toDelete.length > 0){
+    if(toDelete){
       for(const d of toDelete){
-        await supabase
+        const { error } = await supabase
           .from("nhiem_vu")
           .delete()
           .eq("id", d.id);
+  
+        if(error){
+          console.error("Lỗi delete:", error);
+        }
       }
     }
   
-    // ======================
-    // 🔥 2. UPDATE + INSERT
-    // ======================
+    // SAVE
     for(const t of validTasks){
   
-      // 🔒 TASK ADMIN (chỉ update 2 field)
+      // 🔒 TASK ADMIN
       if(!t.created_by_user){
   
-        await supabase
+        const { error } = await supabase
           .from("nhiem_vu")
           .update({
             san_pham: t.san_pham || "",
@@ -184,6 +189,12 @@ export default function UserVanPhong(){
             tien_do: tinhTienDo(t)
           })
           .eq("id", t.id);
+  
+        if(error){
+          console.error("Lỗi update admin:", error);
+          alert(error.message);
+          return;
+        }
   
         continue;
       }
@@ -206,13 +217,19 @@ export default function UserVanPhong(){
   
       // UPDATE
       if(t.id){
-        await supabase
+        const { error } = await supabase
           .from("nhiem_vu")
           .update(payload)
           .eq("id", t.id);
+  
+        if(error){
+          console.error("Lỗi update user:", error);
+          alert(error.message);
+          return;
+        }
       }
   
-      // INSERT (🔥 FIX CHÍNH Ở ĐÂY)
+      // INSERT
       else{
         const { data, error } = await supabase
           .from("nhiem_vu")
@@ -221,12 +238,11 @@ export default function UserVanPhong(){
           .single();
   
         if(error){
-          console.error(error);
-          alert("Lỗi lưu dữ liệu");
+          console.error("Lỗi insert:", error);
+          alert(error.message);
           return;
         }
   
-        // 🔥 GÁN ID LẠI → KHÔNG MẤT DỮ LIỆU
         t.id = data.id;
       }
     }

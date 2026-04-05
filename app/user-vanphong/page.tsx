@@ -57,7 +57,11 @@ export default function UserVanPhong() {
       .or(`linh_vuc_lon.eq.I. Văn phòng - Tuyên giáo - Xây dựng Đoàn,created_by_user.eq.true`)
       .order("han_hoan_thanh",{ascending:true});
 
-    if(error) { alert("Lỗi load dữ liệu"); console.log(error); return; }
+    if(error) { 
+      console.log("Lỗi load dữ liệu:", error);
+      alert("Lỗi load dữ liệu!"); 
+      return; 
+    }
 
     const mapped = (data as Task[]).map(t => ({
       ...t,
@@ -201,7 +205,7 @@ export default function UserVanPhong() {
                       <input className={`w-full ${t.created_by_user ? "text-green-600" : ""}`} disabled={!t.isEditing && !t.created_by_user} value={t.ten} onChange={(e)=>update(i,"ten",e.target.value)}/>
                     </td>
                     <td className="border p-1">
-                      <input className={`w-full ${t.created_by_user ? "text-green-600" : "placeholder-red-500"}`} disabled={!t.isEditing && !t.created_by_user} placeholder={t.created_by_user ? "" : "Nhập tên sản phẩm"} value={t.san_pham||""} onChange={(e)=>update(i,"san_pham",e.target.value)}/>
+                      <input className={`w-full ${t.created_by_user ? "text-green-600" : "placeholder-red-500"}`} disabled={!t.isEditing && !t.created_by_user} placeholder={!t.created_by_user?"Nhập tên sản phẩm":""} value={t.san_pham||""} onChange={(e)=>update(i,"san_pham",e.target.value)}/>
                     </td>
                     <td className="border p-1"><input type="date" className="w-full" disabled={!t.isEditing && !t.created_by_user} value={t.ngay_giao||""} onChange={(e)=>update(i,"ngay_giao",e.target.value)}/></td>
                     <td className="border p-1"><input type="date" className="w-full" disabled={!t.isEditing && !t.created_by_user} value={t.han_hoan_thanh||""} onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/></td>

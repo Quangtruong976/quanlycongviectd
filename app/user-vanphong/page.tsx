@@ -423,9 +423,12 @@ onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
 <input
 type={t.ngay_hoan_thanh ? "date" : "text"}
 placeholder="Nhập ngày hoàn thành"
-className={`w-full ${!t.ngay_hoan_thanh ? "text-red-400" : "text-black"}`}
+disabled={!t.isEditing}  // 🔥 CHỐT Ở ĐÂY
+className={`w-full ${!t.ngay_hoan_thanh ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
 value={t.ngay_hoan_thanh || ""}
-onFocus={(e)=> e.target.type="date"}
+onFocus={(e)=> {
+  if(t.isEditing) e.target.type="date"; // 🔥 CHẶN
+}}
 onBlur={(e)=>{
   if(!t.ngay_hoan_thanh) e.target.type="text";
 }}

@@ -384,7 +384,7 @@ onChange={(e)=>update(i,"ten",e.target.value)}
 <td className="border p-1">
 <input
 className={`w-full ${
-  !t.isEditing ? "text-gray-400" : "text-black"
+  !t.isEditing ? "text-red-400" : "text-black"
 }placeholder:text-red-400`}
 placeholder="Nhập sản phẩm"
 value={t.san_pham||""}

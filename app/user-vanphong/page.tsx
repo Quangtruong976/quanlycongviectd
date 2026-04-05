@@ -71,6 +71,9 @@ export default function UserVanPhong(){
     if(data){
       const mapped = (data as Task[]).map(t => ({
         ...t,
+        ngay_giao: t.ngay_giao || "",
+        han_hoan_thanh: t.han_hoan_thanh || "",
+        ngay_hoan_thanh: t.ngay_hoan_thanh || "",
         isEditing:false
       }));
       setTasks(mapped);
@@ -126,6 +129,10 @@ export default function UserVanPhong(){
       ten:"",
       linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
       linh_vuc_con:"",
+      san_pham:"",
+      ngay_giao:"",           // 🔥 thêm
+      han_hoan_thanh:"",     // 🔥 thêm
+      ngay_hoan_thanh:"",    // 🔥 thêm
       thang,
       isEditing:true,
       created_by_user:true

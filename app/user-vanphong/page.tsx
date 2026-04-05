@@ -248,6 +248,17 @@ export default function UserVanPhong(){
     }
   
     alert("Đã lưu");
+    alert("Đã lưu");
+
+// khóa tất cả về trạng thái không chỉnh sửa
+setTasks(prev =>
+  prev.map(t => ({
+    ...t,
+    isEditing: false
+  }))
+);
+
+loadTasks();
     loadTasks();
   }
 
@@ -371,7 +382,11 @@ onChange={(e)=>update(i,"ten",e.target.value)}
 </td>
 
 <td className="border p-1">
-<input className="w-full"
+<input
+className={`w-full ${
+  !t.isEditing ? "text-gray-400" : "text-black"
+}`}
+placeholder="Nhập sản phẩm"
 value={t.san_pham||""}
 onChange={(e)=>update(i,"san_pham",e.target.value)}
 />
@@ -396,8 +411,12 @@ onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
 </td>
 
 <td className="border p-1">
-<input type="date"
-className="w-full"
+<input
+type="date"
+className={`w-full ${
+  !t.isEditing ? "text-gray-400" : "text-black"
+}`}
+placeholder="Chọn ngày hoàn thành"
 value={t.ngay_hoan_thanh||""}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
 />

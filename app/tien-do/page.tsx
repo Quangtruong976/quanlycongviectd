@@ -141,9 +141,12 @@ className="text-white hover:text-yellow-300 cursor-pointer">
 Thống kê chi tiết công việc cá nhân
 </Link>
 
-            <Link href="/login" className="hover:underline">
-              Đăng nhập
-            </Link>
+<Link
+  href="/login"
+  className="text-white hover:text-yellow-300 cursor-pointer"
+>
+  Đăng nhập
+</Link>
 
           </div>
 

@@ -429,9 +429,13 @@ onChange={(e)=>update(i,"ten",e.target.value)}/>
 </td>
 
 <td className="border p-1">
-<input className="w-full" disabled={!t.isEditing}
-value={t.san_pham||""}
-onChange={(e)=>update(i,"san_pham",e.target.value)}/>
+  <input
+    className={`w-full ${!t.san_pham ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
+    placeholder="Nhập tên sản phẩm"
+    disabled={!t.isEditing}
+    value={t.san_pham || ""}
+    onChange={(e)=>update(i,"san_pham",e.target.value)}
+  />
 </td>
 
 <td className="border p-1">

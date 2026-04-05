@@ -383,11 +383,10 @@ onChange={(e)=>update(i,"ten",e.target.value)}
 
 <td className="border p-1">
 <input
-className={`w-full ${
-  !t.isEditing ? "text-gray-400" : "text-black"
-}placeholder:text-red-400`}
-placeholder="Nhập sản phẩm"
-value={t.san_pham||""}
+className={`w-full ${!t.san_pham ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
+placeholder="Nhập tên sản phẩm"
+disabled={!t.isEditing}
+value={t.san_pham || ""}
 onChange={(e)=>update(i,"san_pham",e.target.value)}
 />
 </td>

@@ -5,12 +5,11 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import * as XLSX from "xlsx";
 
 type Task = {
   id?: string;
-  linh_vuc_lon?: string;
-  linh_vuc_con?: string;
+  linh_vuc_lon: string;
+  linh_vuc_con: string;
   ten: string;
   san_pham?: string;
   ngay_giao?: string;
@@ -19,10 +18,9 @@ type Task = {
   tien_do?: string;
   can_bo_tham_muu?: string;
   can_bo_phu_trach?: string;
-  thang?: number;
-  selected?: boolean;
+  thang: number;
   isEditing?: boolean;
-  created_by_user?: boolean; // ✅ đánh dấu nhiệm vụ do user thêm
+  created_by_user?: boolean;
 };
 
 const LINH_VUC = {
@@ -47,55 +45,41 @@ export default function UserVanPhong() {
   useEffect(()=>{
     const role = localStorage.getItem("role");
     const name = localStorage.getItem("name");
-    if(role!=="user"){
-      router.replace("/login");
-      return;
-    }
+    if(role !== "user") { router.replace("/login"); return; }
     setUserName(name || "User");
     loadTasks();
   },[thang]);
 
   async function loadTasks(){
-    const {data} = await supabase
+    const {data,error} = await supabase
       .from("nhiem_vu")
       .select("*")
-      .eq("thang",thang)
       .or(`linh_vuc_lon.eq.I. Văn phòng - Tuyên giáo - Xây dựng Đoàn,created_by_user.eq.true`)
-      .order("linh_vuc_con")
-      .order("han_hoan_thanh");
+      .order("han_hoan_thanh",{ascending:true});
 
-    if(data){
-      const mapped = (data as Task[]).map(t => ({
-        ...t,
-        isEditing: t.created_by_user ? true : false
-      }));
-      setTasks(mapped);
-    }
+    if(error) { alert("Lỗi load dữ liệu"); console.log(error); return; }
+
+    const mapped = (data as Task[]).map(t => ({
+      ...t,
+      isEditing: t.created_by_user ? true : false
+    }));
+    setTasks(mapped);
+  }
+
+  function update(index:number, field:keyof Task, value:any){
+    const t = tasks[index];
+    if(!t.isEditing && !t.created_by_user) return; 
+    const newData = [...tasks];
+    (newData[index] as any)[field] = value;
+    newData[index].tien_do = tinhTienDo(newData[index]);
+    setTasks(newData);
   }
 
   function tinhTienDo(task:Task){
     if(!task.ngay_hoan_thanh) return "Chưa hoàn thành";
-    const ht = new Date(task.ngay_hoan_thanh);
-    const han = new Date(task.han_hoan_thanh || "");
-    if(isNaN(ht.getTime()) || isNaN(han.getTime())) return "Chưa hoàn thành";
-    return ht.getTime() - han.getTime() <= 0
-      ? "Hoàn thành đúng hạn"
-      : "Hoàn thành quá hạn";
-  }
-
-  function update(index:number, field:keyof Task, value:any){
-    const task = tasks[index];
-    if(!task.isEditing && !task.created_by_user) return; // chỉ edit nếu nhiệm vụ user hoặc đang sửa
-    const newData = [...tasks];
-    (newData[index] as any)[field] = value;
-
-    if(field==="linh_vuc_lon"){
-      newData[index].linh_vuc_con = "";
-    }
-
-    newData[index].tien_do = tinhTienDo(newData[index]);
-
-    setTasks(newData);
+    if(!task.han_hoan_thanh) return "Chưa hoàn thành";
+    return new Date(task.ngay_hoan_thanh) <= new Date(task.han_hoan_thanh)
+      ? "Hoàn thành đúng hạn" : "Hoàn thành quá hạn";
   }
 
   function toggleEdit(index:number){
@@ -106,7 +90,8 @@ export default function UserVanPhong() {
 
   function addRow(){
     setTasks([...tasks,{
-      id: undefined,
+      linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
+      linh_vuc_con:"",
       ten:"",
       thang,
       isEditing:true,
@@ -115,21 +100,19 @@ export default function UserVanPhong() {
   }
 
   function deleteRow(index:number){
-    const task = tasks[index];
-    if(task.created_by_user){
+    const t = tasks[index];
+    if(t.created_by_user){
       setTasks(tasks.filter((_,i)=>i!==index));
-    } else {
-      alert("Không thể xóa nhiệm vụ admin!");
-    }
+    } else alert("Không thể xóa nhiệm vụ admin!");
   }
 
-  function saveAll(){
-    tasks.forEach(async t=>{
+  async function saveAll(){
+    for(const t of tasks){
       const payload = {
-        ...(t.id ? { id: t.id } : {}),
-        linh_vuc_lon: t.linh_vuc_lon || "",
-        linh_vuc_con: t.linh_vuc_con || "",
-        ten: t.created_by_user ? t.ten + " (*)" : t.ten,
+        ...(t.id ? {id:t.id}:{}),
+        linh_vuc_lon: t.linh_vuc_lon,
+        linh_vuc_con: t.linh_vuc_con,
+        ten: t.created_by_user ? (t.ten+" (*)") : t.ten,
         san_pham: t.san_pham || "",
         ngay_giao: t.ngay_giao || null,
         han_hoan_thanh: t.han_hoan_thanh || null,
@@ -137,7 +120,7 @@ export default function UserVanPhong() {
         can_bo_tham_muu: t.can_bo_tham_muu || "",
         can_bo_phu_trach: t.can_bo_phu_trach || "",
         tien_do: tinhTienDo(t),
-        thang,
+        thang: t.thang,
         created_by_user: t.created_by_user || false
       };
       if(t.id){
@@ -145,19 +128,17 @@ export default function UserVanPhong() {
       } else {
         await supabase.from("nhiem_vu").insert(payload);
       }
-    });
+    }
     alert("Đã lưu thay đổi");
     loadTasks();
   }
 
-  return(
+  return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
       <header className="bg-blue-900 text-white">
         <div className="flex flex-col items-center py-4">
           <img src="/logo-doan.png" className="h-20 mb-2"/>
-          <h1 className="text-xl font-bold text-center">
-            HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
-          </h1>
+          <h1 className="text-xl font-bold text-center">HỆ THỐNG QUẢN LÝ CÔNG VIỆC</h1>
           <p className="text-blue-200 font-semibold">TỈNH ĐOÀN LÂM ĐỒNG</p>
           <p className="text-yellow-300 text-sm mt-1">Chào mừng: {userName}</p>
         </div>
@@ -166,34 +147,25 @@ export default function UserVanPhong() {
             <Link href="/"><Home size={20}/></Link>
             <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
             <Link href="/thong-ke">Thống kê chi tiết công việc cá nhân</Link>
-            <button onClick={()=>{
-              localStorage.clear();
-              router.replace("/login");
-            }}>Đăng xuất</button>
+            <button onClick={()=>{localStorage.clear();router.replace("/login");}}>Đăng xuất</button>
           </div>
         </nav>
       </header>
-
       <main className="flex-1 flex justify-center p-4">
         <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
           <div className="flex justify-between mb-4">
-            <select value={thang} onChange={(e)=>setThang(Number(e.target.value))}
-                    className="border px-3 py-1">
-              {Array.from({length:12}).map((_,i)=>(
-                <option key={i} value={i+1}>Tháng {i+1}</option>
-              ))}
+            <select value={thang} onChange={(e)=>setThang(Number(e.target.value))} className="border px-3 py-1">
+              {Array.from({length:12}).map((_,i)=><option key={i} value={i+1}>Tháng {i+1}</option>)}
             </select>
             <div className="flex gap-2">
               <button onClick={addRow} className="bg-blue-600 text-white px-4 py-1">+ Thêm nhiệm vụ</button>
               <button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">Lưu</button>
             </div>
           </div>
-
           <div className="overflow-x-auto">
             <table className="min-w-[1600px] border text-sm">
               <thead className="bg-blue-100">
                 <tr>
-                  <th className="border p-2"></th>
                   <th className="border p-2">STT</th>
                   <th className="border p-2">Lĩnh vực lớn</th>
                   <th className="border p-2">Lĩnh vực con</th>
@@ -201,7 +173,7 @@ export default function UserVanPhong() {
                   <th className="border p-2">Sản phẩm</th>
                   <th className="border p-2">Ngày giao</th>
                   <th className="border p-2">Hạn</th>
-                  <th className="border p-2">Ngày HT</th>
+                  <th className="border p-2">Ngày hoàn thành</th>
                   <th className="border p-2">Tiến độ</th>
                   <th className="border p-2">Tham mưu</th>
                   <th className="border p-2">Phụ trách</th>
@@ -212,76 +184,43 @@ export default function UserVanPhong() {
               <tbody>
                 {tasks.map((t,i)=>(
                   <tr key={i} className={`${t.created_by_user ? "text-green-600" : "opacity-50"}`}>
-                    <td className="border text-center">
-                      <input type="checkbox" checked={t.selected || false}
-                             onChange={(e)=>update(i,"selected",e.target.checked)}/>
-                    </td>
                     <td className="border p-2">{i+1}</td>
                     <td className="border p-1">
-                      <select disabled={!t.isEditing && !t.created_by_user} value={t.linh_vuc_lon||""}
-                              onChange={(e)=>update(i,"linh_vuc_lon",e.target.value)}>
+                      <select disabled={!t.isEditing && !t.created_by_user} value={t.linh_vuc_lon} onChange={(e)=>update(i,"linh_vuc_lon",e.target.value)}>
                         <option value="">Chọn</option>
                         {Object.keys(LINH_VUC).map(lv=><option key={lv}>{lv}</option>)}
                       </select>
                     </td>
                     <td className="border p-1">
-                      <select disabled={!t.isEditing && !t.created_by_user} value={t.linh_vuc_con||""}
-                              onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
+                      <select disabled={!t.isEditing && !t.created_by_user} value={t.linh_vuc_con} onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
                         <option value="">Chọn</option>
                         {LINH_VUC[t.linh_vuc_lon as keyof typeof LINH_VUC]?.map(c=><option key={c}>{c}</option>)}
                       </select>
                     </td>
                     <td className="border p-1">
-                      <input className={`w-full ${t.created_by_user ? "text-green-600" : ""}`} disabled={!t.isEditing && !t.created_by_user}
-                             value={t.ten||""} onChange={(e)=>update(i,"ten",e.target.value)}/>
+                      <input className={`w-full ${t.created_by_user ? "text-green-600" : ""}`} disabled={!t.isEditing && !t.created_by_user} value={t.ten} onChange={(e)=>update(i,"ten",e.target.value)}/>
                     </td>
                     <td className="border p-1">
-                      <input className={`w-full ${t.created_by_user ? "text-green-600" : "placeholder-red-500"}`}
-                             placeholder={t.created_by_user ? "" : "Nhập tên sản phẩm..."} disabled={!t.isEditing && !t.created_by_user}
-                             value={t.san_pham||""} onChange={(e)=>update(i,"san_pham",e.target.value)}/>
+                      <input className={`w-full ${t.created_by_user ? "text-green-600" : "placeholder-red-500"}`} disabled={!t.isEditing && !t.created_by_user} placeholder={t.created_by_user ? "" : "Nhập tên sản phẩm"} value={t.san_pham||""} onChange={(e)=>update(i,"san_pham",e.target.value)}/>
                     </td>
+                    <td className="border p-1"><input type="date" className="w-full" disabled={!t.isEditing && !t.created_by_user} value={t.ngay_giao||""} onChange={(e)=>update(i,"ngay_giao",e.target.value)}/></td>
+                    <td className="border p-1"><input type="date" className="w-full" disabled={!t.isEditing && !t.created_by_user} value={t.han_hoan_thanh||""} onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/></td>
+                    <td className="border p-1"><input type="date" className={`w-full ${!t.ngay_hoan_thanh?"placeholder-red-500":""}`} placeholder={!t.ngay_hoan_thanh?"Nhập ngày hoàn thành":""} disabled={!t.isEditing && !t.created_by_user} value={t.ngay_hoan_thanh||""} onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/></td>
+                    <td className="border text-center">{t.tien_do||"Chưa hoàn thành"}</td>
                     <td className="border p-1">
-                      <input type="date" className={`w-full ${t.created_by_user ? "text-green-600" : ""}`}
-                             disabled={!t.isEditing && !t.created_by_user} value={t.ngay_giao||""}
-                             onChange={(e)=>update(i,"ngay_giao",e.target.value)}/>
-                    </td>
-                    <td className="border p-1">
-                      <input type="date" className={`w-full ${t.created_by_user ? "text-green-600" : ""}`}
-                             disabled={!t.isEditing && !t.created_by_user} value={t.han_hoan_thanh||""}
-                             onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}/>
-                    </td>
-                    <td className="border p-1">
-                      <input type="date" className={`w-full ${t.created_by_user ? "text-green-600" : "placeholder-red-500"}`}
-                             placeholder={t.created_by_user ? "" : "Nhập ngày hoàn thành"} disabled={!t.isEditing && !t.created_by_user}
-                             value={t.ngay_hoan_thanh||""} onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}/>
-                    </td>
-                    <td className="border text-center">{t.tien_do || "Chưa hoàn thành"}</td>
-                    <td className="border p-1">
-                      <select disabled={!t.isEditing && !t.created_by_user} value={t.can_bo_tham_muu||""}
-                              onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}>
+                      <select disabled={!t.isEditing && !t.created_by_user} value={t.can_bo_tham_muu||""} onChange={(e)=>update(i,"can_bo_tham_muu",e.target.value)}>
                         <option value="">Chọn</option>
                         {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
                       </select>
                     </td>
                     <td className="border p-1">
-                      <select disabled={!t.isEditing && !t.created_by_user} value={t.can_bo_phu_trach||""}
-                              onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
+                      <select disabled={!t.isEditing && !t.created_by_user} value={t.can_bo_phu_trach||""} onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
                         <option value="">Chọn</option>
                         {CAN_BO.map(cb=><option key={cb}>{cb}</option>)}
                       </select>
                     </td>
-                    <td className="border text-center">
-                      <button onClick={()=>toggleEdit(i)}
-                              className="bg-yellow-500 text-white px-2 py-1 text-xs">
-                        {t.isEditing ? "Khóa" : "Sửa"}
-                      </button>
-                    </td>
-                    <td className="border text-center">
-                      <button onClick={()=>deleteRow(i)}
-                              className="bg-red-500 text-white px-2 py-1 text-xs">
-                        Xóa
-                      </button>
-                    </td>
+                    <td className="border text-center"><button onClick={()=>toggleEdit(i)} className="bg-yellow-500 text-white px-2 py-1 text-xs">{t.isEditing?"Khóa":"Sửa"}</button></td>
+                    <td className="border text-center"><button onClick={()=>deleteRow(i)} className="bg-red-500 text-white px-2 py-1 text-xs">Xóa</button></td>
                   </tr>
                 ))}
               </tbody>

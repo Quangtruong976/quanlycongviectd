@@ -338,7 +338,7 @@ Lưu
 
 {tasks.map((t,i)=>(
 
-<tr key={i}>
+<tr key={i} className={t.created_by_user ? "text-blue-600" : ""}>
 
 <td className="border text-center">
 <input type="checkbox"

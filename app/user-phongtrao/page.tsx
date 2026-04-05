@@ -94,7 +94,7 @@ export default function UserPhongTrao(){
 
     const newData = [...tasks];
     const t = newData[index];
-
+    if(!t.isEditing && field !== "selected") return;
     // 🔥 TASK ADMIN → chỉ sửa 2 cột
     if(!t.created_by_user){
       if(field !== "san_pham" && field !== "ngay_hoan_thanh" && field !== "selected") return;
@@ -395,9 +395,12 @@ onChange={(e)=>update(i,"san_pham",e.target.value)}
 <input
 type={t.ngay_giao ? "date" : "text"}
 placeholder="Nhập ngày giao việc"
-className={`w-full ${!t.ngay_giao ? "text-red-400" : "text-black"}`}
+disabled={!t.isEditing}
+className={`w-full ${!t.ngay_giao ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
 value={t.ngay_giao || ""}
-onFocus={(e)=> e.target.type="date"}
+onFocus={(e)=>{
+  if(t.isEditing) e.target.type="date";
+}}
 onBlur={(e)=>{
   if(!t.ngay_giao) e.target.type="text";
 }}
@@ -409,9 +412,12 @@ onChange={(e)=>update(i,"ngay_giao",e.target.value)}
 <input
 type={t.han_hoan_thanh ? "date" : "text"}
 placeholder="Nhập hạn hoàn thành"
-className={`w-full ${!t.han_hoan_thanh ? "text-red-400" : "text-black"}`}
+disabled={!t.isEditing}
+className={`w-full ${!t.han_hoan_thanh ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
 value={t.han_hoan_thanh || ""}
-onFocus={(e)=> e.target.type="date"}
+onFocus={(e)=>{
+  if(t.isEditing) e.target.type="date";
+}}
 onBlur={(e)=>{
   if(!t.han_hoan_thanh) e.target.type="text";
 }}

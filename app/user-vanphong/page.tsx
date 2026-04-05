@@ -20,6 +20,7 @@ type Task = {
   can_bo_tham_muu?: string;
   can_bo_phu_trach?: string;
   thang?: number;
+  selected?: boolean;
   isEditing?: boolean;
 };
 
@@ -39,7 +40,6 @@ const CAN_BO = [
 export default function UserVanPhong(){
 
   const router = useRouter();
-
   const [tasks,setTasks] = useState<Task[]>([]);
   const [name,setName] = useState("");
   const [thang,setThang] = useState(new Date().getMonth()+1);
@@ -65,7 +65,12 @@ export default function UserVanPhong(){
       .in("linh_vuc_con", ["Văn phòng","Tuyên giáo","Xây dựng Đoàn"])
       .order("han_hoan_thanh");
 
-    setTasks((data as Task[]) || []);
+    const mapped = (data as Task[]).map(t=>({
+      ...t,
+      isEditing:false
+    }));
+
+    setTasks(mapped);
   }
 
   function tinhTienDo(t:Task){
@@ -77,16 +82,22 @@ export default function UserVanPhong(){
   }
 
   function update(i:number, field:keyof Task, value:any){
-
     const isNew = !tasks[i].id;
 
-    // ❌ task admin chỉ sửa 2 ô
+    // Admin task: chỉ sửa san_pham & ngay_hoan_thanh
     if(!isNew && field !== "san_pham" && field !== "ngay_hoan_thanh") return;
 
     const newData = [...tasks];
     (newData[i] as any)[field] = value;
     newData[i].tien_do = tinhTienDo(newData[i]);
+    setTasks(newData);
+  }
 
+  function toggleEdit(i:number){
+    const isNew = !tasks[i].id;
+    if(!isNew) return;
+    const newData = [...tasks];
+    newData[i].isEditing = !newData[i].isEditing;
     setTasks(newData);
   }
 
@@ -101,41 +112,33 @@ export default function UserVanPhong(){
   }
 
   function deleteRow(i:number){
-    if(tasks[i].id) return;
+    if(tasks[i].id) return; // không xóa task admin
     setTasks(tasks.filter((_,idx)=>idx!==i));
   }
 
   async function saveAll(){
-
     for(const t of tasks){
-
       if(!t.ten) continue;
 
-      if(t.id){
-        await supabase
-          .from("nhiem_vu")
-          .update({
-            san_pham:t.san_pham,
-            ngay_hoan_thanh:t.ngay_hoan_thanh,
-            tien_do:tinhTienDo(t)
-          })
-          .eq("id",t.id);
+      const isNew = !t.id;
+      if(isNew){
+        await supabase.from("nhiem_vu").insert({
+          ...t,
+          ten: t.ten + " (*)"
+        });
       } else {
-        await supabase
-          .from("nhiem_vu")
-          .insert({
-            ...t,
-            ten: t.ten + " (*)"
-          });
+        await supabase.from("nhiem_vu").update({
+          san_pham: t.san_pham,
+          ngay_hoan_thanh: t.ngay_hoan_thanh,
+          tien_do: tinhTienDo(t)
+        }).eq("id", t.id);
       }
     }
-
-    alert("Đã lưu");
+    alert("Đã lưu thay đổi");
     loadTasks();
   }
 
-  return(
-
+  return (
 <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
 <header className="bg-blue-900 text-white">
@@ -157,7 +160,7 @@ User: {name}
 <Link href="/"><Home size={20}/></Link>
 <Link href="/tien-do">Theo dõi tiến độ công việc</Link>
 
-<button onClick={()=>{localStorage.clear();router.replace("/login")}}>
+<button onClick={()=>{localStorage.clear(); router.replace("/login")}}>
 Đăng xuất
 </button>
 </div>
@@ -165,29 +168,22 @@ User: {name}
 </header>
 
 <main className="flex-1 flex justify-center p-4">
-
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
 <div className="flex justify-between mb-4">
-
-<select value={thang}
-onChange={(e)=>setThang(Number(e.target.value))}
+<select value={thang} onChange={e=>setThang(Number(e.target.value))}
 className="border px-3 py-1">
 {Array.from({length:12}).map((_,i)=>(
 <option key={i} value={i+1}>Tháng {i+1}</option>
 ))}
 </select>
-
 <button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
 Lưu
 </button>
-
 </div>
 
 <div className="overflow-x-auto">
-
 <table className="min-w-[1600px] border text-sm">
-
 <thead className="bg-blue-100">
 <tr>
 <th className="border p-2">STT</th>
@@ -202,102 +198,68 @@ Lưu
 <th className="border p-2">Tham mưu</th>
 <th className="border p-2">Phụ trách</th>
 <th className="border p-2">Xóa</th>
+<th className="border p-2">Sửa</th>
 </tr>
 </thead>
-
 <tbody>
-
 {tasks.map((t,i)=>{
-
 const isNew = !t.id;
-
-return(
-
-<tr key={i}
-className={!isNew ? "text-gray-400" : "text-blue-600 font-semibold"}>
-
+return (
+<tr key={i} className={!isNew ? "text-gray-400" : "text-blue-600 font-semibold"}>
 <td className="border p-2">{i+1}</td>
-
 <td className="border p-1">{t.linh_vuc_lon}</td>
-
 <td className="border p-1">
 {isNew ? (
 <select value={t.linh_vuc_con||""}
-onChange={(e)=>update(i,"linh_vuc_con",e.target.value)}>
+onChange={e=>update(i,"linh_vuc_con",e.target.value)}>
 <option value="">Chọn</option>
-{LINH_VUC["I. Văn phòng - Tuyên giáo - Xây dựng Đoàn"].map(c=>
-<option key={c}>{c}</option>
-)}
+{LINH_VUC["I. Văn phòng - Tuyên giáo - Xây dựng Đoàn"].map(c=><option key={c}>{c}</option>)}
 </select>
-) : t.linh_vuc_con}
+): t.linh_vuc_con}
 </td>
-
 <td className="border p-1">
 {isNew ? (
-<input className="w-full"
-value={t.ten||""}
-onChange={(e)=>update(i,"ten",e.target.value)}/>
+<input className="w-full" value={t.ten||""} onChange={e=>update(i,"ten",e.target.value)}/>
 ) : t.ten}
 </td>
-
 <td className="border p-1">
-<input
-className="w-full placeholder-red-400"
-placeholder="Nhập tên sản phẩm..."
-value={t.san_pham||""}
-onChange={(e)=>update(i,"san_pham",e.target.value)}
-/>
+<input className="w-full placeholder-red-400" placeholder="Nhập tên sản phẩm..."
+value={t.san_pham||""} onChange={e=>update(i,"san_pham",e.target.value)}/>
 </td>
-
 <td className={`border p-1 ${!t.ngay_giao ? "text-gray-300" : ""}`}>
 {t.ngay_giao || "Chưa nhập"}
 </td>
-
 <td className={`border p-1 ${!t.han_hoan_thanh ? "text-gray-300" : ""}`}>
 {t.han_hoan_thanh || "Chưa nhập"}
 </td>
-
 <td className="border p-1">
-<input
-type={t.ngay_hoan_thanh ? "date" : "text"}
+<input type={t.ngay_hoan_thanh ? "date" : "text"}
 placeholder="Nhập ngày hoàn thành"
-className={`w-full placeholder-red-400 ${
-t.ngay_hoan_thanh ? "text-black" : "text-red-400"
-}`}
+className="w-full placeholder-red-400"
 value={t.ngay_hoan_thanh||""}
-onFocus={(e)=>{
-if(!t.ngay_hoan_thanh){
-e.target.type="date";
-}
-}}
-onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
+onFocus={e=>{if(!t.ngay_hoan_thanh) e.target.type="date";}}
+onChange={e=>update(i,"ngay_hoan_thanh",e.target.value)}
 />
 </td>
-
-<td className="border text-center">
-{t.tien_do || tinhTienDo(t)}
-</td>
-
+<td className="border text-center">{t.tien_do || tinhTienDo(t)}</td>
 <td className="border p-1">{t.can_bo_tham_muu}</td>
 <td className="border p-1">{t.can_bo_phu_trach}</td>
-
 <td className="border text-center">
 {isNew && (
 <button onClick={()=>deleteRow(i)}
-className="bg-red-500 text-white px-2 py-1 text-xs">
-Xóa
-</button>
+className="bg-red-500 text-white px-2 py-1 text-xs">Xóa</button>
 )}
 </td>
-
+<td className="border text-center">
+{isNew && (
+<button onClick={()=>toggleEdit(i)}
+className="bg-yellow-500 text-white px-2 py-1 text-xs">{t.isEditing?"Khóa":"Sửa"}</button>
+)}
+</td>
 </tr>
-
-);
-})}
-
+)})}
 </tbody>
 </table>
-
 </div>
 
 <button onClick={addRow} className="mt-4 bg-blue-600 text-white px-4 py-2">
@@ -305,8 +267,7 @@ Xóa
 </button>
 
 </div>
-
 </main>
 </div>
-);
+)
 }

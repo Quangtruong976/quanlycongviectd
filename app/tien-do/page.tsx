@@ -18,6 +18,7 @@ type NhiemVu = {
   can_bo_tham_muu: string;
   can_bo_phu_trach: string;
   thang: number;
+  created_by_user?: boolean; // 🔥 thêm dòng này
 };
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "";
@@ -264,7 +265,12 @@ export default function TienDoPage() {
 
                       {tasks.map((task) => (
 
-                        <tr key={task.id} className="hover:bg-blue-50">
+<tr
+key={task.id}
+className={`hover:bg-blue-50 ${
+  task.created_by_user ? "text-blue-600 font-medium" : ""
+}`}
+>
 
                           <td className="border p-2 text-center">
                             {stt++}

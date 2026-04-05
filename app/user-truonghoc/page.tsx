@@ -26,7 +26,7 @@ type Task = {
 };
 
 const LINH_VUC = {
-  "I. Văn phòng - Tuyên giáo - Xây dựng Đoàn": ["Văn phòng","Tuyên giáo","Xây dựng Đoàn"],
+  "III. Trường học - Hội Sinh viên": ["Trường học","Hội Sinh viên"],
 };
 
 const CAN_BO = [
@@ -38,7 +38,7 @@ const CAN_BO = [
   "Nguyễn Thị Thanh Hòa","Bùi Thị Phượng","Trịnh Thị Vỹ Cầm"
 ];
 
-export default function UserVanPhong(){
+export default function UserTruongHoc(){
 
   const router = useRouter();
 
@@ -64,7 +64,7 @@ export default function UserVanPhong(){
       .from("nhiem_vu")
       .select("*")
       .eq("thang",thang)
-      .eq("linh_vuc_lon","I. Văn phòng - Tuyên giáo - Xây dựng Đoàn")
+      .eq("linh_vuc_lon","III. Trường học - Hội Sinh viên")
       .order("linh_vuc_con")
       .order("han_hoan_thanh");
 
@@ -124,7 +124,7 @@ export default function UserVanPhong(){
     setTasks([...tasks,{
       id: undefined,
       ten:"",
-      linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
+      linh_vuc_lon:"III. Trường học - Hội Sinh viên",
       linh_vuc_con:"",
       thang,
       isEditing:true,

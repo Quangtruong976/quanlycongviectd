@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import * as XLSX from "xlsx";
 
 type Task = {
   id?: string;
@@ -40,15 +41,18 @@ const CAN_BO = [
 export default function UserPage(){
 
   const router = useRouter();
+
   const [tasks,setTasks] = useState<Task[]>([]);
   const [thang,setThang] = useState(new Date().getMonth()+1);
 
   useEffect(()=>{
     const role = localStorage.getItem("role");
+
     if(role!=="user"){
       router.replace("/login");
       return;
     }
+
     loadTasks();
   },[thang]);
 
@@ -57,10 +61,11 @@ export default function UserPage(){
       .from("nhiem_vu")
       .select("*")
       .eq("thang",thang)
-      .eq("linh_vuc_lon","I. Văn phòng - Tuyên giáo - Xây dựng Đoàn");
+      .eq("linh_vuc_lon","I. Văn phòng - Tuyên giáo - Xây dựng Đoàn")
+      .order("han_hoan_thanh");
 
     if(data){
-      const mapped = data.map((t:any)=>({
+      const mapped = (data as Task[]).map(t => ({
         ...t,
         isEditing:false
       }));
@@ -70,16 +75,23 @@ export default function UserPage(){
 
   function tinhTienDo(task:Task){
     if(!task.ngay_hoan_thanh) return "Chưa hoàn thành";
+
     const ht = new Date(task.ngay_hoan_thanh);
-    const han = new Date(task.han_hoan_thanh||"");
-    return ht <= han ? "Hoàn thành đúng hạn" : "Hoàn thành quá hạn";
+    const han = new Date(task.han_hoan_thanh || "");
+
+    if(isNaN(ht.getTime()) || isNaN(han.getTime())) return "Chưa hoàn thành";
+
+    return ht.getTime() - han.getTime() <= 0
+      ? "Hoàn thành đúng hạn"
+      : "Hoàn thành quá hạn";
   }
 
   function update(index:number, field:keyof Task, value:any){
+
     const newData = [...tasks];
     const t = newData[index];
 
-    // ❌ CHẶN: task admin không cho sửa linh tinh
+    // 🔥 TASK ADMIN: chỉ cho sửa 2 cột
     if(!t.created_by_user){
       if(field !== "san_pham" && field !== "ngay_hoan_thanh") return;
     }
@@ -98,6 +110,7 @@ export default function UserPage(){
 
   function addRow(){
     setTasks([...tasks,{
+      id: undefined,
       ten:"",
       linh_vuc_lon:"I. Văn phòng - Tuyên giáo - Xây dựng Đoàn",
       thang,
@@ -108,6 +121,7 @@ export default function UserPage(){
 
   function deleteRow(index:number){
     const t = tasks[index];
+
     if(!t.created_by_user) return;
 
     if(t.id){
@@ -121,10 +135,30 @@ export default function UserPage(){
 
     for(const t of tasks){
 
-      const payload:any = {
+      // ======================
+      // 🔥 TASK ADMIN
+      // ======================
+      if(!t.created_by_user){
+
+        await supabase
+          .from("nhiem_vu")
+          .update({
+            san_pham: t.san_pham || "",
+            ngay_hoan_thanh: t.ngay_hoan_thanh || null,
+            tien_do: tinhTienDo(t)
+          })
+          .eq("id", t.id);
+
+        continue;
+      }
+
+      // ======================
+      // 🔥 TASK USER
+      // ======================
+      const payload = {
         linh_vuc_lon: t.linh_vuc_lon || "",
         linh_vuc_con: t.linh_vuc_con || "",
-        ten: t.created_by_user ? t.ten + " (*)" : t.ten,
+        ten: t.ten || "",
         san_pham: t.san_pham || "",
         ngay_giao: t.ngay_giao || null,
         han_hoan_thanh: t.han_hoan_thanh || null,
@@ -133,13 +167,18 @@ export default function UserPage(){
         can_bo_tham_muu: t.can_bo_tham_muu || "",
         can_bo_phu_trach: t.can_bo_phu_trach || "",
         thang,
-        created_by_user: t.created_by_user || false
+        created_by_user: true
       };
 
       if(t.id){
-        await supabase.from("nhiem_vu").update(payload).eq("id",t.id);
+        await supabase
+          .from("nhiem_vu")
+          .update(payload)
+          .eq("id", t.id);
       }else{
-        await supabase.from("nhiem_vu").insert(payload);
+        await supabase
+          .from("nhiem_vu")
+          .insert(payload);
       }
     }
 
@@ -147,7 +186,8 @@ export default function UserPage(){
     loadTasks();
   }
 
-  return (
+  return(
+
 <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col">
 
 <header className="bg-blue-900 text-white">
@@ -164,19 +204,23 @@ TỈNH ĐOÀN LÂM ĐỒNG
 <nav className="bg-blue-800">
 <div className="flex justify-center gap-6 py-2">
 <Link href="/"><Home size={20}/></Link>
-<Link href="/tien-do">Theo dõi tiến độ</Link>
-<button onClick={()=>{localStorage.clear();router.replace("/login");}}>
+<Link href="/tien-do">Theo dõi tiến độ công việc</Link>
+<button onClick={()=>{
+localStorage.clear();
+router.replace("/login");
+}}>
 Đăng xuất
 </button>
 </div>
 </nav>
 </header>
 
-<main className="flex-1 p-4">
+<main className="flex-1 flex justify-center p-4">
 
-<div className="bg-white rounded-2xl shadow-2xl p-4">
+<div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
 <div className="flex justify-between mb-4">
+
 <select value={thang}
 onChange={(e)=>setThang(Number(e.target.value))}
 className="border px-3 py-1">
@@ -186,18 +230,21 @@ className="border px-3 py-1">
 </select>
 
 <div className="flex gap-2">
+
 <button onClick={addRow} className="bg-blue-600 text-white px-4 py-1">
 + Thêm nhiệm vụ
 </button>
+
 <button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
 Lưu
 </button>
+
 </div>
 </div>
 
 <div className="overflow-x-auto">
 
-<table className="min-w-[1500px] border text-sm">
+<table className="min-w-[1600px] border text-sm">
 
 <thead className="bg-blue-100">
 <tr>

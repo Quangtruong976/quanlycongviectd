@@ -385,7 +385,7 @@ onChange={(e)=>update(i,"ten",e.target.value)}
 <input
 className={`w-full ${
   !t.isEditing ? "text-gray-400" : "text-black"
-}placeholder-red-400`}
+}placeholder:text-red-400`}
 placeholder="Nhập sản phẩm"
 value={t.san_pham||""}
 onChange={(e)=>update(i,"san_pham",e.target.value)}

@@ -276,7 +276,7 @@ HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
 TỈNH ĐOÀN LÂM ĐỒNG
 </p>
 <p className="text-yellow-300 text-sm mt-1">
-Chào mừng: {adminName}
+Chào mừng: Lĩnh vực Văn phòng - Tuyên giáo - Xây dựng Đoàn
 </p>
 </div>
 

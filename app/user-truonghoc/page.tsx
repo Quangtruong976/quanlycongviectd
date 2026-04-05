@@ -276,7 +276,7 @@ HỆ THỐNG QUẢN LÝ THEO DÕI CÔNG VIỆC
 TỈNH ĐOÀN LÂM ĐỒNG
 </p>
 <p className="text-yellow-300 text-sm mt-1">
-Chào mừng: {adminName}
+Chào mừng: Lĩnh vực Trường học - Hội Sinh viên VN tỉnh
 </p>
 </div>
 

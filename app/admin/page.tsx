@@ -78,14 +78,20 @@ export default function AdminPage(){
     }
   }
 
-  function tinhTienDo(task:Task){
-    if(!task.ngay_hoan_thanh) return "Chưa hoàn thành";
+  function tinhTienDo(task: Task){
 
+    if(!task.ngay_hoan_thanh || task.ngay_hoan_thanh === "")
+      return "Chưa hoàn thành";
+  
+    if(!task.han_hoan_thanh)
+      return "Chưa hoàn thành";
+  
     const ht = new Date(task.ngay_hoan_thanh);
-    const han = new Date(task.han_hoan_thanh || "");
-
-    if(isNaN(ht.getTime()) || isNaN(han.getTime())) return "Chưa hoàn thành";
-
+    const han = new Date(task.han_hoan_thanh);
+  
+    if(isNaN(ht.getTime()) || isNaN(han.getTime()))
+      return "Chưa hoàn thành";
+  
     return ht.getTime() - han.getTime() <= 0
       ? "Hoàn thành đúng hạn"
       : "Hoàn thành quá hạn";

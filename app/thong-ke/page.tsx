@@ -106,41 +106,39 @@ export default function ThongKePage() {
     
       // Tỷ lệ quá hạn
       const tiLeQuaHan =
-        cb.tong > 0 ? (cb.quaHan / cb.tong) * 100 : 0;
-    
-      let xepLoai = "";
-    
-      // HTSXNV
-      if (
-        cb.chuaHT === 0 &&
-        tiLeQuaHan === 0 &&
-        diem >= 90
-      ) {
-        xepLoai = "HTSXNV";
-      }
-    
-      // HTTNV
-      else if (
-        cb.chuaHT === 0 &&
-        tiLeQuaHan <= 10 &&
-        diem >= 75
-      ) {
-        xepLoai = "HTTNV";
-      }
-    
-      // HTNV
-      else if (
-        cb.chuaHT === 0 &&
-        tiLeQuaHan <= 20 &&
-        diem >= 50
-      ) {
-        xepLoai = "HTNV";
-      }
-    
-      // Không HTNV
-      else {
-        xepLoai = "Không HTNV";
-      }
+  cb.tong > 0 ? (cb.quaHan / cb.tong) * 100 : 0;
+
+let xepLoai = "";
+
+// B1: Xếp theo điểm (trục chính)
+if (diem >= 90) {
+  xepLoai = "HTSXNV";
+} else if (diem >= 75) {
+  xepLoai = "HTTNV";
+} else if (diem >= 50) {
+  xepLoai = "HTNV";
+} else {
+  xepLoai = "Không HTNV";
+}
+
+// B2: Áp ràng buộc (siết kỷ luật)
+
+// Có nhiệm vụ chưa hoàn thành → hạ 1 bậc
+if (cb.chuaHT > 0) {
+  if (xepLoai === "HTSXNV") xepLoai = "HTTNV";
+  else if (xepLoai === "HTTNV") xepLoai = "HTNV";
+  else if (xepLoai === "HTNV") xepLoai = "Không HTNV";
+}
+
+// Quá hạn >10% → không được HTSXNV
+if (tiLeQuaHan > 10 && xepLoai === "HTSXNV") {
+  xepLoai = "HTTNV";
+}
+
+// Quá hạn >20% → không được HTTNV
+if (tiLeQuaHan > 20 && xepLoai === "HTTNV") {
+  xepLoai = "HTNV";
+}
     
       return {
         ...cb,

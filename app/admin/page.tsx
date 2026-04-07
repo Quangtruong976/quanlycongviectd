@@ -492,7 +492,7 @@ onChange={(e)=>update(i,"ngay_giao",e.target.value)}
     onBlur={(e) => {
       if (!t.han_hoan_thanh) e.target.type = "text";
     }}
-    onChange={(e) => update(i, "han_hoan_thanh", e.target.value || null)}
+    onChange={(e) => update(i, "han_hoan_thanh", e.target.value)}
   />
 </td>
 

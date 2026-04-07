@@ -1,3 +1,5 @@
+"use client";
+import { useEffect } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -15,19 +17,31 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Theo dõi công việc Tỉnh đoàn",
   description: "Hệ thống quản lý công việc Tỉnh đoàn",
-  
+  manifest: "/manifest.json",
+
+  themeColor: "#d32f2f",
+
+  icons: {
+    icon: "/logo-doan-192.png",
+    apple: "/logo-doan-192.png",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js");
+    }
+  }, []);
+
   return (
     <html lang="vi">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body>
         {children}
       </body>
     </html>

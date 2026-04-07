@@ -215,7 +215,7 @@ Thống kê chi tiết công việc cá nhân
 
           ) : (
 
-            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
+            <div className="overflow-x-auto">
 
               <table className="min-w-full border border-gray-300 text-sm">
 

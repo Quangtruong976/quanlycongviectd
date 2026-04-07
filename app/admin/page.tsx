@@ -101,7 +101,12 @@ export default function AdminPage(){
     if(!tasks[index].isEditing && field !== "selected") return;
 
     const newData = [...tasks];
+    // 🔥 FIX LỖI NGÀY HOÀN THÀNH
+  if(field === "ngay_hoan_thanh"){
+    (newData[index] as any)[field] = value || null;
+  }else{
     (newData[index] as any)[field] = value;
+  }
 
     if(field==="linh_vuc_lon"){
       newData[index].linh_vuc_con = "";
@@ -347,7 +352,7 @@ onClick={()=>{
   localStorage.clear();
   router.replace("/login");
 }}
-className="cursor-pointer hover:text-yellow-300"
+className="cursor-pointer hover:text-yellow-300 cursor-pointer"
 >
 Đăng xuất
 </button>
@@ -376,11 +381,11 @@ className="border px-3 py-1">
   <input type="file" accept=".csv, .xlsx, .xls" onChange={handleImport} className="hidden"/>
 </label>
 
-<button onClick={deleteSelected} className="bg-red-600 text-white px-3 py-1">
+<button onClick={deleteSelected} className="bg-red-600 text-white px-3 py-1 cursor-pointer">
   Xóa chọn
 </button>
 
-<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
+<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1 cursor-pointer">
   Lưu
 </button>
 
@@ -530,14 +535,14 @@ onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
 
 <td className="border text-center">
 <button onClick={()=>toggleEdit(i)}
-className="bg-yellow-500 text-white px-2 py-1 text-xs">
+className="bg-yellow-500 text-white px-2 py-1 text-xs cursor-pointer">
 {t.isEditing ? "Khóa" : "Sửa"}
 </button>
 </td>
 
 <td className="border text-center">
 <button onClick={()=>deleteRow(i)}
-className="bg-red-500 text-white px-2 py-1 text-xs">
+className="bg-red-500 text-white px-2 py-1 text-xs cursor-pointer">
 Xóa
 </button>
 </td>
@@ -551,7 +556,7 @@ Xóa
 
 </div>
 
-<button onClick={addRow} className="mt-4 bg-blue-600 text-white px-4 py-2">
+<button onClick={addRow} className="mt-4 bg-blue-600 text-white px-4 py-2 cursor-pointer">
 + Thêm nhiệm vụ
 </button>
 

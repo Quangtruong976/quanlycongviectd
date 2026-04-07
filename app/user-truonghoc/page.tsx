@@ -300,7 +300,7 @@ onClick={()=>{
   localStorage.clear();
   router.replace("/login");
 }}
-className="cursor-pointer hover:text-yellow-300"
+className="cursor-pointer hover:text-yellow-300 cursor-pointer"
 >
 Đăng xuất
 </button>
@@ -324,11 +324,11 @@ className="border px-3 py-1">
 
 <div className="flex gap-2">
 
-<button onClick={addRow} className="bg-blue-600 text-white px-4 py-1">
+<button onClick={addRow} className="bg-blue-600 text-white px-4 py-1 cursor-pointer">
 + Thêm nhiệm vụ
 </button>
 
-<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1">
+<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1 cursor-pointer">
 Lưu
 </button>
 
@@ -479,14 +479,14 @@ onChange={(e)=>update(i,"can_bo_phu_trach",e.target.value)}>
 
 <td className="border text-center">
 <button onClick={()=>toggleEdit(i)}
-className="bg-yellow-500 text-white px-2 py-1 text-xs">
+className="bg-yellow-500 text-white px-2 py-1 text-xs cursor-pointer">
 {t.isEditing ? "Khóa" : "Sửa"}
 </button>
 </td>
 
 <td className="border text-center">
 <button onClick={()=>deleteRow(i)}
-className="bg-red-500 text-white px-2 py-1 text-xs">
+className="bg-red-500 text-white px-2 py-1 text-xs cursor-pointer">
 Xóa
 </button>
 </td>

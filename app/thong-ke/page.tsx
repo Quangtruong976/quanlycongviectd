@@ -92,61 +92,33 @@ export default function ThongKePage() {
 
     });
 
-    const result: ThongKe[] = Object.values(map).map((cb) => {
+    // Trong loadData(), khi tính xếp loại
+const result: ThongKe[] = Object.values(map).map((cb) => {
+  // Tính điểm: đúng hạn = 1, quá hạn = 0.5
+  const diem =
+    cb.tong > 0
+      ? Math.round(((cb.dungHan + cb.quaHan * 0.5) / cb.tong) * 100)
+      : 0;
 
-      const hoanThanh = cb.dungHan + cb.quaHan;
-    
-      // Tính điểm (có phạt quá hạn)
-      const diem =
-        cb.tong > 0
-          ? Math.round(
-              ((cb.dungHan + cb.quaHan * 0.7) / cb.tong) * 100
-            )
-          : 0;
-    
-      // Tỷ lệ quá hạn
-      const tiLeQuaHan =
-  cb.tong > 0 ? (cb.quaHan / cb.tong) * 100 : 0;
+  let xepLoai = "";
 
-let xepLoai = "";
+  // Chỉ xét cán bộ đã hoàn thành tất cả nhiệm vụ
+  if (cb.chuaHT === 0) {
+    if (diem >= 90) xepLoai = "HTSXNV";
+    else if (diem >= 75) xepLoai = "HTTNV";
+    else if (diem >= 50) xepLoai = "HTNV";
+    else xepLoai = "Không HTNV";
+  } else {
+    // còn nhiệm vụ chưa hoàn thành → Không HTNV
+    xepLoai = "Không HTNV";
+  }
 
-// B1: Xếp theo điểm (trục chính)
-if (diem >= 90) {
-  xepLoai = "HTSXNV";
-} else if (diem >= 75) {
-  xepLoai = "HTTNV";
-} else if (diem >= 50) {
-  xepLoai = "HTNV";
-} else {
-  xepLoai = "Không HTNV";
-}
-
-// B2: Áp ràng buộc (siết kỷ luật)
-
-// Có nhiệm vụ chưa hoàn thành → hạ 1 bậc
-if (cb.chuaHT > 0) {
-  if (xepLoai === "HTSXNV") xepLoai = "HTTNV";
-  else if (xepLoai === "HTTNV") xepLoai = "HTNV";
-  else if (xepLoai === "HTNV") xepLoai = "Không HTNV";
-}
-
-// Quá hạn >10% → không được HTSXNV
-if (tiLeQuaHan > 10 && xepLoai === "HTSXNV") {
-  xepLoai = "HTTNV";
-}
-
-// Quá hạn >20% → không được HTTNV
-if (tiLeQuaHan > 20 && xepLoai === "HTTNV") {
-  xepLoai = "HTNV";
-}
-    
-      return {
-        ...cb,
-        diem,
-        xepLoai,
-      };
-    
-    });
+  return {
+    ...cb,
+    diem,
+    xepLoai,
+  };
+});
 
     result.sort((a, b) => b.diem - a.diem);
 

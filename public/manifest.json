@@ -1,6 +1,6 @@
 {
   "name": "Ứng dụng quản lý công việc Tỉnh đoàn",
-  "short_name": "QLCV",
+  "short_name": "QLCV Tỉnh đoàn",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -97,18 +97,28 @@ export default function AdminPage(){
       : "Hoàn thành quá hạn";
   }
 
-  function update(index:number, field:keyof Task, value:any){
-    if(!tasks[index].isEditing && field !== "selected") return;
-
+  function update(index: number, field: keyof Task, value: any) {
+    const t = tasks[index];
+  
+    // Chỉ cho phép chỉnh sửa nếu đang bật edit hoặc checkbox
+    if (!t.isEditing && field !== "selected") return;
+  
     const newData = [...tasks];
-    // 🔥 FIX LỖI NGÀY HOÀN THÀNH
-  if(field === "ngay_hoan_thanh"){
-    (newData[index] as any)[field] = value || null;
-  }else{
-    (newData[index] as any)[field] = value;
-  }
-
-    if(field==="linh_vuc_lon"){
+  
+    // Xử lý các trường ngày: nếu xóa thì lưu null
+    if (field === "ngay_hoan_thanh") {
+      newData[index].ngay_hoan_thanh = value ? value : null;
+    } else if (field === "han_hoan_thanh") {
+      newData[index].han_hoan_thanh = value ? value : null;
+    } else if (field === "ngay_giao") {
+      newData[index].ngay_giao = value ? value : null;
+    } else {
+      // Các trường khác bình thường
+      (newData[index] as any)[field] = value;
+    }
+  
+    // Nếu thay đổi lĩnh vực lớn → reset lĩnh vực con
+    if (field === "linh_vuc_lon") {
       newData[index].linh_vuc_con = "";
     }
 
@@ -333,7 +343,7 @@ Chào mừng: {adminName}
 </div>
 
 <nav className="bg-blue-800">
-<div className="flex justify-center gap-6 py-2">
+<div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 <Link href="/" className="text-white hover:text-yellow-300 cursor-pointer">
   <Home size={20}/>
 </Link>

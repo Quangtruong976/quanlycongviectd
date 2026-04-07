@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ứng dụng theo dõi tiến độ công việc",
+  title: "Theo dõi công việc",
   description: "Hệ thống quản lý công việc Tỉnh đoàn",
   
 };

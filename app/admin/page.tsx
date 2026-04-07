@@ -98,35 +98,25 @@ export default function AdminPage(){
   }
 
   function update(index: number, field: keyof Task, value: any) {
-    const t = tasks[index];
-  
-    // Chỉ cho phép chỉnh sửa nếu đang bật edit hoặc checkbox
-    if (!t.isEditing && field !== "selected") return;
-  
     const newData = [...tasks];
   
-    // Xử lý các trường ngày: nếu xóa thì lưu null
-    if (field === "ngay_hoan_thanh") {
-      newData[index].ngay_hoan_thanh = value ? value : null;
-    } else if (field === "han_hoan_thanh") {
-      newData[index].han_hoan_thanh = value ? value : null;
-    } else if (field === "ngay_giao") {
-      newData[index].ngay_giao = value ? value : null;
+    if (!newData[index].isEditing && field !== "selected") return;
+  
+    // Cho phép xóa để null
+    if (field === "ngay_hoan_thanh" || field === "han_hoan_thanh" || field === "ngay_giao") {
+      newData[index][field] = value || null;
     } else {
-      // Các trường khác bình thường
       (newData[index] as any)[field] = value;
     }
   
-    // Nếu thay đổi lĩnh vực lớn → reset lĩnh vực con
+    // Reset lĩnh vực con nếu thay đổi lĩnh vực lớn
     if (field === "linh_vuc_lon") {
       newData[index].linh_vuc_con = "";
     }
-
+  
     newData[index].tien_do = tinhTienDo(newData[index]);
-
     setTasks(newData);
   }
-
   function toggleEdit(index:number){
     const newData = [...tasks];
     newData[index].isEditing = !newData[index].isEditing;
@@ -490,20 +480,20 @@ onChange={(e)=>update(i,"ngay_giao",e.target.value)}
 </td>
 
 <td className="border p-1">
-<input
-type={t.han_hoan_thanh ? "date" : "text"}
-placeholder="Nhập hạn hoàn thành"
-disabled={!t.isEditing}
-className={`w-full ${!t.han_hoan_thanh ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
-value={t.han_hoan_thanh || ""}
-onFocus={(e)=>{
-  if(t.isEditing) e.target.type="date";
-}}
-onBlur={(e)=>{
-  if(!t.han_hoan_thanh) e.target.type="text";
-}}
-onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
-/>
+  <input
+    type={t.han_hoan_thanh ? "date" : "text"}
+    placeholder="Nhập hạn hoàn thành"
+    disabled={!t.isEditing}
+    className={`w-full ${!t.han_hoan_thanh ? "text-red-500 placeholder-red-500" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
+    value={t.han_hoan_thanh || ""}
+    onFocus={(e) => {
+      if (t.isEditing) e.target.type = "date";
+    }}
+    onBlur={(e) => {
+      if (!t.han_hoan_thanh) e.target.type = "text";
+    }}
+    onChange={(e) => update(i, "han_hoan_thanh", e.target.value || null)}
+  />
 </td>
 
 <td className="border p-1">

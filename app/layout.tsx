@@ -1,9 +1,8 @@
 
-import { useEffect } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import RegisterSW from "./register-sw";
+import RegisterSW from "./register-sw"; // 👈 thêm dòng này
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +17,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Theo dõi công việc Tỉnh đoàn",
   description: "Hệ thống quản lý công việc Tỉnh đoàn",
-  manifest: "/manifest.json",
 
+  manifest: "/manifest.json",
   themeColor: "#d32f2f",
 
   icons: {
@@ -33,17 +32,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js");
-    }
-  }, []);
-
   return (
     <html lang="vi">
-      <body>
-      <RegisterSW />
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <RegisterSW /> {/* 👈 thêm dòng này */}
         {children}
       </body>
     </html>

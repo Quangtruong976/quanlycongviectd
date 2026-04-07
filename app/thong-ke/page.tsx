@@ -95,28 +95,59 @@ export default function ThongKePage() {
     const result: ThongKe[] = Object.values(map).map((cb) => {
 
       const hoanThanh = cb.dungHan + cb.quaHan;
-
+    
+      // Tính điểm (có phạt quá hạn)
       const diem =
-        cb.tong > 0 ? Math.round((hoanThanh / cb.tong) * 100) : 0;
-
+        cb.tong > 0
+          ? Math.round(
+              ((cb.dungHan + cb.quaHan * 0.7) / cb.tong) * 100
+            )
+          : 0;
+    
+      // Tỷ lệ quá hạn
+      const tiLeQuaHan =
+        cb.tong > 0 ? (cb.quaHan / cb.tong) * 100 : 0;
+    
       let xepLoai = "";
-
-      if (diem >= 90 && cb.chuaHT === 0) {
+    
+      // HTSXNV
+      if (
+        cb.chuaHT === 0 &&
+        tiLeQuaHan === 0 &&
+        diem >= 90
+      ) {
         xepLoai = "HTSXNV";
-      } else if (diem >= 75) {
+      }
+    
+      // HTTNV
+      else if (
+        cb.chuaHT === 0 &&
+        tiLeQuaHan <= 10 &&
+        diem >= 75
+      ) {
         xepLoai = "HTTNV";
-      } else if (diem >= 50) {
+      }
+    
+      // HTNV
+      else if (
+        cb.chuaHT === 0 &&
+        tiLeQuaHan <= 20 &&
+        diem >= 50
+      ) {
         xepLoai = "HTNV";
-      } else {
+      }
+    
+      // Không HTNV
+      else {
         xepLoai = "Không HTNV";
       }
-
+    
       return {
         ...cb,
         diem,
         xepLoai,
       };
-
+    
     });
 
     result.sort((a, b) => b.diem - a.diem);

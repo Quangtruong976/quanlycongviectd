@@ -281,7 +281,7 @@ Chào mừng: Lĩnh vực Phong trào - Hội LHTN VN tỉnh
 </div>
 
 <nav className="bg-blue-800">
-<div className="flex justify-center gap-6 py-2">
+<div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 <Link href="/" className="text-white hover:text-yellow-300 cursor-pointer">
   <Home size={20}/>
 </Link>

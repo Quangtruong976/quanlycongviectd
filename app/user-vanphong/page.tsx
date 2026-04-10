@@ -527,13 +527,22 @@ onChange={async (e)=>{
     />
   )}
 
-  {!t.han_hoan_thanh && (
-    <input
-      type="date"
-      className="absolute opacity-0 pointer-events-none"
-      onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
-    />
-  )}
+{!t.ngay_hoan_thanh && (
+  <input
+    type="date"
+    className="absolute opacity-0 pointer-events-none"
+    onChange={async (e)=>{
+      const value = e.target.value;
+
+      update(i,"ngay_hoan_thanh",value);
+
+      await updateTaskToDB({
+        ...tasks[i],
+        ngay_hoan_thanh: value
+      });
+    }}
+  />
+)}
 </td>
 
 

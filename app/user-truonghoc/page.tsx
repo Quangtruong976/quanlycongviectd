@@ -363,7 +363,15 @@ Lưu
 
 {tasks.map((t,i)=>(
 
-<tr key={i} className={t.created_by_user ? "text-blue-600" : ""}>
+<tr
+  key={i}
+  onClick={() => setSelectedRow(i)}
+  className={`
+    cursor-pointer
+    ${t.created_by_user ? "text-blue-600" : ""}
+    ${selectedRow === i ? "bg-blue-200" : ""}
+  `}
+>
 
 <td className="border text-center">
 <input type="checkbox"
@@ -372,7 +380,7 @@ onChange={(e)=>update(i,"selected",e.target.checked)}
 />
 </td>
 
-<td className="border p-2">{i+1}</td>
+<td className="border p-2 cursor-pointer" onClick={() => setSelectedRow(i)}>{i+1}</td>
 
 <td className="border p-1">{t.linh_vuc_lon}</td>
 

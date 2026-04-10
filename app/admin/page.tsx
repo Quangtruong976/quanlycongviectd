@@ -510,7 +510,7 @@ onChange={(e)=>update(i,"ngay_giao",e.target.value)}
 
 <td className="border p-1">
   {!t.ngay_hoan_thanh ? (
-    // Ô giả (text)
+    // Ô hiển thị ban đầu
     <input
       type="text"
       value=""
@@ -525,17 +525,23 @@ onChange={(e)=>update(i,"ngay_giao",e.target.value)}
       }}
     />
   ) : (
-    // Ô thật (date)
+    // Ô ngày thật
     <input
       type="date"
       disabled={!t.isEditing}
       className={`w-full text-black ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
       value={t.ngay_hoan_thanh}
       onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Delete" || e.key === "Backspace") {
+          e.preventDefault();
+          update(i, "ngay_hoan_thanh", "");
+        }
+      }}
     />
   )}
 
-  {/* input date ẩn để gọi lịch */}
+  {/* input ẩn để gọi lịch */}
   {!t.ngay_hoan_thanh && (
     <input
       type="date"

@@ -406,7 +406,7 @@ onChange={(e)=>update(i,"san_pham",e.target.value)}
 
 <td className="border p-1">
 <input
-type={t.ngay_giao ? "date" : "text"}
+type="date"
 placeholder="Nhập ngày giao việc"
 disabled={!t.isEditing}
 className={`w-full ${!t.ngay_giao ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
@@ -423,7 +423,7 @@ onChange={(e)=>update(i,"ngay_giao",e.target.value)}
 
 <td className="border p-1">
 <input
-type={t.han_hoan_thanh ? "date" : "text"}
+type="date"
 placeholder="Nhập hạn hoàn thành"
 disabled={!t.isEditing}
 className={`w-full ${!t.han_hoan_thanh ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
@@ -440,7 +440,7 @@ onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
 
 <td className="border p-1">
 <input
-type={t.ngay_hoan_thanh ? "date" : "text"}
+type="date"
 placeholder="Nhập ngày hoàn thành"
 disabled={!t.isEditing}  // 🔥 CHỐT Ở ĐÂY
 className={`w-full ${!t.ngay_hoan_thanh ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}

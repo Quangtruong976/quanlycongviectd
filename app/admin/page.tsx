@@ -507,7 +507,11 @@ onFocus={(e)=>{
   if(t.isEditing) e.target.type="date";
 }}
 onBlur={(e)=>{
-  if(!t.ngay_hoan_thanh) e.target.type="text";
+  if(!e.target.value){
+    setTimeout(()=>{
+      e.target.type="text";
+    },0);
+  }
 }}
 onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
 />

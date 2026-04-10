@@ -383,7 +383,15 @@ Lưu
 
 {tasks.map((t,i)=>(
 
-<tr key={i} className={t.created_by_user ? "text-blue-600"  : ""}>
+<tr
+  key={i}
+  onClick={() => setSelectedRow(i)}
+  className={`
+    cursor-pointer
+    ${t.created_by_user ? "text-blue-600" : ""}
+    ${selectedRow === i ? "bg-blue-200" : ""}
+  `}
+>
   
 
 <td className="border text-center">

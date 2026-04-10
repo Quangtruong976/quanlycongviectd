@@ -474,39 +474,95 @@ onChange={(e)=>update(i,"ten",e.target.value)}/>
   />
 </td>
 
-<td className="border p-1">
-<input
-type={t.ngay_giao ? "date" : "text"}
-placeholder="Nhập ngày giao việc"
-disabled={!t.isEditing}
-className={`w-full ${!t.ngay_giao ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
-value={t.ngay_giao || ""}
-onFocus={(e)=>{
-  if(t.isEditing) e.target.type="date";
-}}
-onBlur={(e)=>{
-  if(!t.ngay_giao) e.target.type="text";
-}}
-onChange={(e)=>update(i,"ngay_giao",e.target.value)}
-/>
+
+
+
+
+<td className="border p-1 relative">
+  {!t.ngay_giao ? (
+    <input
+      type="text"
+      value=""
+      placeholder="Nhập ngày giao việc"
+      disabled={!t.isEditing}
+      readOnly
+      className={`w-full text-red-400 ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+      onClick={(e) => {
+        const input = e.currentTarget.parentElement?.querySelector("input[type='date']");
+        (input as HTMLInputElement)?.showPicker?.();
+        (input as HTMLInputElement)?.focus();
+      }}
+    />
+  ) : (
+    <input
+      type="date"
+      disabled={!t.isEditing}
+      className={`w-full text-black ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
+      value={t.ngay_giao}
+      onChange={(e)=>update(i,"ngay_giao",e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Delete" || e.key === "Backspace") {
+          e.preventDefault();
+          update(i, "ngay_giao", "");
+        }
+      }}
+    />
+  )}
+
+  {!t.ngay_giao && (
+    <input
+      type="date"
+      className="absolute opacity-0 pointer-events-none"
+      onChange={(e)=>update(i,"ngay_giao",e.target.value)}
+    />
+  )}
 </td>
 
-<td className="border p-1">
-  <input
-    type={t.han_hoan_thanh ? "date" : "text"}
-    placeholder="Nhập hạn hoàn thành"
-    disabled={!t.isEditing}
-    className={`w-full ${!t.han_hoan_thanh ? "text-red-500 placeholder-red-500" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
-    value={t.han_hoan_thanh || ""}
-    onFocus={(e) => {
-      if (t.isEditing) e.target.type = "date";
-    }}
-    onBlur={(e) => {
-      if (!t.han_hoan_thanh) e.target.type = "text";
-    }}
-    onChange={(e) => update(i, "han_hoan_thanh", e.target.value)}
-  />
+
+
+
+<td className="border p-1 relative">
+  {!t.han_hoan_thanh ? (
+    <input
+      type="text"
+      value=""
+      placeholder="Nhập hạn hoàn thành"
+      disabled={!t.isEditing}
+      readOnly
+      className={`w-full text-red-400 ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
+      onClick={(e) => {
+        const input = e.currentTarget.parentElement?.querySelector("input[type='date']");
+        (input as HTMLInputElement)?.showPicker?.();
+        (input as HTMLInputElement)?.focus();
+      }}
+    />
+  ) : (
+    <input
+      type="date"
+      disabled={!t.isEditing}
+      className={`w-full text-black ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
+      value={t.han_hoan_thanh}
+      onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Delete" || e.key === "Backspace") {
+          e.preventDefault();
+          update(i, "han_hoan_thanh", "");
+        }
+      }}
+    />
+  )}
+
+  {!t.han_hoan_thanh && (
+    <input
+      type="date"
+      className="absolute opacity-0 pointer-events-none"
+      onChange={(e)=>update(i,"han_hoan_thanh",e.target.value)}
+    />
+  )}
 </td>
+
+
+
 
 <td className="border p-1">
   {!t.ngay_hoan_thanh ? (
@@ -550,6 +606,9 @@ onChange={(e)=>update(i,"ngay_giao",e.target.value)}
     />
   )}
 </td>
+
+
+
 
 <td className="border text-center">{t.tien_do || "Chưa hoàn thành"}</td>
 

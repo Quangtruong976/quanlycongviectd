@@ -509,27 +509,15 @@ onChange={(e)=>update(i,"ngay_giao",e.target.value)}
 </td>
 
 <td className="border p-1">
-<div className="relative">
-  {!t.ngay_hoan_thanh && (
-    <div
-      className="absolute inset-0 flex items-center px-2 text-red-400 cursor-text"
-      onClick={(e) => {
-        const input = e.currentTarget.parentElement?.querySelector("input");
-        (input as HTMLInputElement)?.focus();
-      }}
-    >
-      Nhập ngày hoàn thành
-    </div>
-  )}
+<input
+type="date"
+placeholder="Nhập ngày hoàn thành"
+disabled={!t.isEditing}
+className={`w-full ${!t.ngay_hoan_thanh ? "text-red-400" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
+value={t.ngay_hoan_thanh || ""}
 
-  <input
-    type="date"
-    disabled={!t.isEditing}
-    className={`w-full ${!t.ngay_hoan_thanh ? "text-transparent" : "text-black"} ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
-    value={t.ngay_hoan_thanh || ""}
-    onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
-  />
-</div>
+onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
+/>
 </td>
 
 <td className="border text-center">{t.tien_do || "Chưa hoàn thành"}</td>

@@ -7,7 +7,7 @@ import { Home } from "lucide-react";
 
 type RawItem = {
   can_bo_tham_muu: string | null;
-  ghi_chu: string | null;
+  tien_do: string | null;
   thang: number | null;
 };
 
@@ -50,7 +50,7 @@ export default function ThongKePage() {
 
     const { data: raw } = await supabase
       .from("nhiem_vu")
-      .select("can_bo_tham_muu, ghi_chu, thang")
+      .select("can_bo_tham_muu, tien_do, thang")
       .eq("thang", Number(thang));
 
     if (!raw) {
@@ -83,19 +83,18 @@ export default function ThongKePage() {
 
       cb.tong++;
 
-      switch (item.ghi_chu) {
+      switch (item.tien_do) {
 
-        case "dung_han":
+        case "Hoàn thành đúng hạn":
           cb.dungHan++;
           break;
-
-        case "qua_han":
+      
+        case "Hoàn thành quá hạn":
           cb.quaHan++;
           break;
-
+      
         default:
           cb.chuaHT++;
-
       }
 
     });

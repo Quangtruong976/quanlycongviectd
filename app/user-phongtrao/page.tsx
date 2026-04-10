@@ -43,6 +43,7 @@ export default function UserPhongTrao(){
   const router = useRouter();
 
   const [tasks,setTasks] = useState<Task[]>([]);
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [adminName,setAdminName] = useState("");
   const [thang,setThang] = useState(new Date().getMonth()+1);
 

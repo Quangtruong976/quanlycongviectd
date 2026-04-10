@@ -43,6 +43,7 @@ export default function UserVanPhong(){
   const router = useRouter();
 
   const [tasks,setTasks] = useState<Task[]>([]);
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [adminName,setAdminName] = useState("");
   const [thang,setThang] = useState(new Date().getMonth()+1);
 
@@ -382,16 +383,16 @@ Lưu
 
 {tasks.map((t,i)=>(
 
-<tr key={i} className={t.created_by_user ? "text-blue-600" : ""}>
+<tr key={i} className={t.created_by_user ? "text-blue-600"  : ""}>
+  
 
 <td className="border text-center">
 <input type="checkbox"
 checked={t.selected || false}
-onChange={(e)=>update(i,"selected",e.target.checked)}
-/>
+onChange={(e)=>update(i,"selected",e.target.checked)}/>
 </td>
 
-<td className="border p-2">{i+1}</td>
+<td className="border p-2 cursor-pointer"  onClick={() => setSelectedRow(i)}>{i+1}</td>
 
 <td className="border p-1">{t.linh_vuc_lon}</td>
 

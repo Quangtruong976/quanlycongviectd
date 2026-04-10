@@ -121,21 +121,27 @@ export default function UserVanPhong(){
     setTasks(newData);
   }
 
-  async function updateTaskToDB(task: Task){
-    if(!task.id) return;
+  async function updateTaskToDB(task: Task) {
+    if (!task.id) return;
+  
+    const tien_do = tinhTienDo(task);
   
     const { error } = await supabase
       .from("nhiem_vu")
       .update({
         san_pham: task.san_pham || "",
         ngay_hoan_thanh: task.ngay_hoan_thanh || null,
-        tien_do: tinhTienDo(task)
+        tien_do: tien_do
       })
       .eq("id", task.id);
   
-    if(error){
-      console.error("Lỗi update realtime:", error);
+    if (error) {
+      console.error("Lỗi update:", error);
+      return;
     }
+  
+    // 🔥 BẮT BUỘC THÊM DÒNG NÀY
+    window.dispatchEvent(new Event("nhiem_vu_updated"));
   }
 
 

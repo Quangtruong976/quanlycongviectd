@@ -32,6 +32,16 @@ export default function HomePage() {
     loadData();
   }, [thang]);
 
+  useEffect(() => {
+    const reload = () => loadData();
+  
+    window.addEventListener("nhiem_vu_updated", reload);
+  
+    return () => {
+      window.removeEventListener("nhiem_vu_updated", reload);
+    };
+  }, [thang]);
+
   const loadData = async () => {
 
     setLoading(true);

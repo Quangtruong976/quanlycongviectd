@@ -120,6 +120,22 @@ export default function UserPhongTrao(){
     newData[index].isEditing = !newData[index].isEditing;
     setTasks(newData);
   }
+  async function updateTaskToDB(task: Task){
+    if(!task.id) return;
+  
+    const { error } = await supabase
+      .from("nhiem_vu")
+      .update({
+        san_pham: task.san_pham || "",
+        ngay_hoan_thanh: task.ngay_hoan_thanh || null,
+        tien_do: tinhTienDo(task)
+      })
+      .eq("id", task.id);
+  
+    if(error){
+      console.error("Lỗi update realtime:", error);
+    }
+  }
 
   function addRow(){
     setTasks([...tasks,{
@@ -149,7 +165,7 @@ export default function UserPhongTrao(){
       .from("nhiem_vu")
       .select("*")
       .eq("thang", thang)
-      .eq("linh_vuc_lon","I. Văn phòng - Tuyên giáo - Xây dựng Đoàn");
+      .eq("linh_vuc_lon","II. Phong trào - Hội LHTN")
   
     if(err1){
       console.error("Lỗi load DB:", err1);
@@ -409,7 +425,16 @@ className={`w-full ${!t.san_pham ? "text-red-400" : "text-black"} ${!t.isEditing
 placeholder="Nhập tên sản phẩm"
 disabled={!t.isEditing}
 value={t.san_pham || ""}
-onChange={(e)=>update(i,"san_pham",e.target.value)}
+onChange={async (e)=>{
+  const value = e.target.value;
+
+  update(i,"san_pham",value);
+
+  await updateTaskToDB({
+    ...tasks[i],
+    san_pham: value
+  });
+}}
 />
 </td>
 
@@ -526,7 +551,16 @@ onChange={(e)=>update(i,"san_pham",e.target.value)}
       disabled={!t.isEditing}
       className={`w-full text-black ${!t.isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
       value={t.ngay_hoan_thanh}
-      onChange={(e)=>update(i,"ngay_hoan_thanh",e.target.value)}
+      onChange={async (e)=>{
+        const value = e.target.value;
+      
+        update(i,"ngay_hoan_thanh",value);
+      
+        await updateTaskToDB({
+          ...tasks[i],
+          ngay_hoan_thanh: value
+        });
+      }}
       onKeyDown={(e) => {
         if (e.key === "Delete" || e.key === "Backspace") {
           e.preventDefault();

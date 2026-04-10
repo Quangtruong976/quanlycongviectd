@@ -407,7 +407,7 @@ Lưu
 
 <div className="overflow-x-auto">
 
-<table className="min-w-[1600px] border text-sm">
+<table className="min-w-[1800px] border text-sm">
 
 <thead className="bg-blue-100">
 <tr>

@@ -31,11 +31,24 @@ export default function HomePage() {
   useEffect(() => {
     loadData();
   
-    const interval = setInterval(() => {
-      loadData();
-    }, 2000); // 2 giây reload 1 lần
+    const channel = supabase
+      .channel("nhiem_vu_home")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "nhiem_vu",
+        },
+        () => {
+          loadData(); // chỉ chạy khi có thay đổi thật
+        }
+      )
+      .subscribe();
   
-    return () => clearInterval(interval);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [thang]);
 
 

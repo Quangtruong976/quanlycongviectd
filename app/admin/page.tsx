@@ -366,7 +366,7 @@ className="cursor-pointer hover:text-yellow-300 cursor-pointer"
 
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
-<div className="flex justify-between mb-4">
+<div className="flex justify-start items-center gap-3 mb-4">
 
 <select value={thang}
 onChange={(e)=>setThang(Number(e.target.value))}

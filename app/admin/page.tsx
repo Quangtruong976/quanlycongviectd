@@ -47,6 +47,7 @@ export default function AdminPage(){
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [adminName,setAdminName] = useState("");
   const [thang,setThang] = useState(new Date().getMonth()+1);
+  const [linhVucFilter, setLinhVucFilter] = useState("ALL");
 
   useEffect(()=>{
     const role = localStorage.getItem("role");
@@ -374,6 +375,22 @@ className="border px-3 py-1">
 <option key={i} value={i+1}>Tháng {i+1}</option>
 ))}
 </select>
+<select
+  value={linhVucFilter}
+  onChange={(e) => setLinhVucFilter(e.target.value)}
+  className="border px-3 py-1"
+>
+  <option value="ALL">Tất cả</option>
+  <option value="I. Văn phòng - Tuyên giáo - Xây dựng Đoàn">
+    Văn phòng
+  </option>
+  <option value="II. Phong trào - Hội LHTN">
+    Phong trào
+  </option>
+  <option value="III. Trường học - Hội Sinh viên">
+    Trường học
+  </option>
+</select>
 
 <div className="flex gap-2">
 
@@ -430,7 +447,13 @@ Lưu
 
 <tbody>
 
-{tasks.map((t,i)=>(
+{tasks
+  .filter(t =>
+    linhVucFilter === "ALL"
+      ? true
+      : t.linh_vuc_lon === linhVucFilter
+  )
+  .map((t,i)=>(
 
 <tr key={i}
 className={selectedRow === i ? "bg-blue-200" : ""}

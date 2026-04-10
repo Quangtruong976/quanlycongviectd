@@ -381,12 +381,24 @@ className="border px-3 py-1">
   <input type="file" accept=".csv, .xlsx, .xls" onChange={handleImport} className="hidden"/>
 </label>
 
-<button onClick={deleteSelected} className="bg-red-600 text-white px-3 py-1 cursor-pointer">
-  Xóa chọn
+<button
+type="button"
+onClick={(e)=>{
+  e.preventDefault();
+  deleteSelected();
+}}
+className="bg-red-600 text-white px-3 py-1 cursor-pointer">
+Xóa chọn
 </button>
 
-<button onClick={saveAll} className="bg-green-600 text-white px-4 py-1 cursor-pointer">
-  Lưu
+<button
+type="button"
+onClick={(e)=>{
+  e.preventDefault();
+  saveAll();
+}}
+className="bg-green-600 text-white px-4 py-1 cursor-pointer">
+Lưu
 </button>
 
 </div>
@@ -541,7 +553,12 @@ className="bg-yellow-500 text-white px-2 py-1 text-xs cursor-pointer">
 </td>
 
 <td className="border text-center">
-<button onClick={()=>deleteRow(i)}
+<button
+type="button"
+onClick={(e)=>{
+  e.preventDefault();
+  deleteRow(i);
+}}
 className="bg-red-500 text-white px-2 py-1 text-xs cursor-pointer">
 Xóa
 </button>

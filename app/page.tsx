@@ -30,17 +30,15 @@ export default function HomePage() {
 
   useEffect(() => {
     loadData();
+  
+    const interval = setInterval(() => {
+      loadData();
+    }, 2000); // 2 giây reload 1 lần
+  
+    return () => clearInterval(interval);
   }, [thang]);
 
-  useEffect(() => {
-    const reload = () => loadData();
-  
-    window.addEventListener("nhiem_vu_updated", reload);
-  
-    return () => {
-      window.removeEventListener("nhiem_vu_updated", reload);
-    };
-  }, [thang]);
+
 
   const loadData = async () => {
 
@@ -50,7 +48,7 @@ export default function HomePage() {
 
       let query = supabase
         .from("nhiem_vu")
-        .select("ghi_chu, thang");
+        .select("*");
 
       // 🔥 chỉ lọc khi KHÔNG phải ALL
       if (thang !== "ALL") {
@@ -70,21 +68,29 @@ export default function HomePage() {
       let dungHan = 0;
       let quaHan = 0;
       let chuaHT = 0;
-
+      
       raw.forEach((item) => {
-
-        switch (item.ghi_chu) {
-          case "dung_han":
-            dungHan++;
-            break;
-
-          case "qua_han":
-            quaHan++;
-            break;
-
-          default:
-            chuaHT++;
+      
+        if (!item.ngay_hoan_thanh) {
+          chuaHT++;
+          return;
         }
+      
+        const ht = new Date(item.ngay_hoan_thanh);
+        const han = new Date(item.han_hoan_thanh || "");
+      
+        if (isNaN(ht.getTime()) || isNaN(han.getTime())) {
+          chuaHT++;
+          return;
+        }
+      
+        if (ht.getTime() <= han.getTime()) {
+          dungHan++;
+        } else {
+          quaHan++;
+        }
+      
+      
 
       });
 

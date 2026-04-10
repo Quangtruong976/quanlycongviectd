@@ -44,6 +44,7 @@ export default function AdminPage(){
   const router = useRouter();
 
   const [tasks,setTasks] = useState<Task[]>([]);
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [adminName,setAdminName] = useState("");
   const [thang,setThang] = useState(new Date().getMonth()+1);
 
@@ -431,7 +432,9 @@ Lưu
 
 {tasks.map((t,i)=>(
 
-<tr key={i}>
+<tr key={i}
+className={selectedRow === i ? "bg-blue-200" : ""}
+>
 
 <td className="border text-center">
 <input type="checkbox"
@@ -440,7 +443,9 @@ onChange={(e)=>update(i,"selected",e.target.checked)}
 />
 </td>
 
-<td className="border p-2">{i+1}</td>
+<td className="border p-2 cursor-pointer"
+onClick={() => setSelectedRow(i)}
+>{i+1}</td>
 
 <td className="border p-1">
 <select disabled={!t.isEditing} value={t.linh_vuc_lon||""}

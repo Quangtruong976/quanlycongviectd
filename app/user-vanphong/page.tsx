@@ -336,6 +336,27 @@ Lưu
 
 <div className="overflow-x-auto">
 
+{/* Thanh cuộn trên */}
+<div
+    className="overflow-x-auto"
+    onScroll={(e) => {
+      const bottom = document.getElementById("scroll-bottom");
+      if (bottom) bottom.scrollLeft = (e.target as HTMLDivElement).scrollLeft;
+    }}
+  >
+    <div style={{ width: "2000px", height: "1px" }}></div>
+  </div>
+
+  {/* Bảng thật */}
+  <div
+    id="scroll-bottom"
+    className="overflow-x-auto"
+    onScroll={(e) => {
+      const top = e.currentTarget.parentElement?.querySelectorAll(".overflow-x-auto")[0];
+      if (top) (top as HTMLDivElement).scrollLeft = e.currentTarget.scrollLeft;
+    }}
+  >
+
 <table className="min-w-[1600px] border text-sm">
 
 <thead className="bg-blue-100">
@@ -575,6 +596,7 @@ Xóa
 </tbody>
 </table>
 
+</div>
 </div>
 
 </div>

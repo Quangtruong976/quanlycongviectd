@@ -32,9 +32,9 @@ const LINH_VUC = {
 const CAN_BO = [
   "Trương Minh Quang","Trần Diệp Mỹ Dung","H' Hồng","Đoàn Minh Tâm","Trần Việt Anh",
   "Nguyễn Hồ Xuân Quang", "Châu Yến Phi", "Phan Xuân Tấn", 
-  "Hồ Như Toán","Võ Văn Đồng","Đỗ Ngọc Hà", "Nguyễn Linh Phương", "Trịnh Thị Vỹ Cầm", "Nguyễn Thị Thanh Hòa","Bùi Thị Phượng",
+  "Hồ Như Toán","Võ Văn Đồng","Đỗ Ngọc Hà", "Trịnh Thị Vỹ Cầm", "Nguyễn Thị Thanh Hòa","Bùi Thị Phượng",
   "Nguyễn Trọng Tùng","Nguyễn Đình Hưng Thịnh", "Nguyễn Trọng Văn",
-  "Đào Hùng", "Nguyễn Lý Xuân Uyên","Nguyễn Nam Sơn",
+  "Đào Hùng", "Nguyễn Lý Xuân Uyên","Nguyễn Nam Sơn","Nguyễn Linh Phương",
   
   
 ];

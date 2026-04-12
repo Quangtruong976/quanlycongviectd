@@ -46,6 +46,7 @@ export default function UserVanPhong(){
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [adminName,setAdminName] = useState("");
   const [thang,setThang] = useState(new Date().getMonth()+1);
+  const [filterCanBo, setFilterCanBo] = useState("");
 
   useEffect(()=>{
     const role = localStorage.getItem("role");
@@ -344,7 +345,7 @@ className="cursor-pointer hover:text-yellow-300 cursor-pointer"
 
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
-<div className="flex justify-between mb-4">
+<div className="flex gap-3 mb-4">
 
 <select value={thang}
 onChange={(e)=>setThang(Number(e.target.value))}
@@ -352,6 +353,16 @@ className="border px-3 py-1">
 {Array.from({length:12}).map((_,i)=>(
 <option key={i} value={i+1}>Tháng {i+1}</option>
 ))}
+</select>
+<select
+  value={filterCanBo}
+  onChange={(e)=>setFilterCanBo(e.target.value)}
+  className="border px-3 py-1"
+>
+  <option value="">-- Tất cả cán bộ --</option>
+  {CAN_BO.map(cb => (
+    <option key={cb}>{cb}</option>
+  ))}
 </select>
 
 <div className="flex gap-2">
@@ -392,7 +403,12 @@ Lưu
 
 <tbody>
 
-{tasks.map((t,i)=>(
+{tasks
+  .filter(t => {
+    if (!filterCanBo) return true;
+    return t.can_bo_tham_muu === filterCanBo;
+  })
+  .map((t,i)=>(
 
 <tr
   key={i}

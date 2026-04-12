@@ -370,7 +370,8 @@ className="cursor-pointer hover:text-yellow-300 cursor-pointer"
 
 <select value={thang}
 onChange={(e)=>setThang(Number(e.target.value))}
-className="border px-3 py-1">
+className="border px-3 py-1"
+>
 {Array.from({length:12}).map((_,i)=>(
 <option key={i} value={i+1}>Tháng {i+1}</option>
 ))}
@@ -382,20 +383,20 @@ className="border px-3 py-1">
 >
   <option value="ALL">Tất cả</option>
   <option value="I. Văn phòng - Tuyên giáo - Xây dựng Đoàn">
-    Văn phòng
+    Văn phòng - Tuyên giáo - Xây dựng Đoàn
   </option>
   <option value="II. Phong trào - Hội LHTN">
-    Phong trào
+    Phong trào - Hội LHTN VN tỉnh
   </option>
   <option value="III. Trường học - Hội Sinh viên">
-    Trường học
+    Trường học - Hội Sinh viên VN tỉnh
   </option>
 </select>
 
 <div className="flex gap-2">
 
 <label className="bg-blue-600 text-white px-4 py-1 cursor-pointer rounded">
-  Import CSV
+  Import Excel
   <input type="file" accept=".csv, .xlsx, .xls" onChange={handleImport} className="hidden"/>
 </label>
 

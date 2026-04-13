@@ -35,8 +35,6 @@ const CAN_BO = [
   "Hồ Như Toán","Võ Văn Đồng","Đỗ Ngọc Hà", "Trịnh Thị Vỹ Cầm", "Nguyễn Thị Thanh Hòa","Bùi Thị Phượng",
   "Nguyễn Trọng Tùng","Nguyễn Đình Hưng Thịnh", "Nguyễn Trọng Văn",
   "Đào Hùng", "Nguyễn Lý Xuân Uyên","Nguyễn Nam Sơn","Nguyễn Linh Phương",
-  
-  
 ];
 
 export default function UserPhongTrao(){

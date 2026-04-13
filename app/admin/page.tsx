@@ -366,61 +366,79 @@ className="cursor-pointer hover:text-yellow-300 cursor-pointer"
 
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
 
-<div className="flex justify-start items-center gap-3 mb-4">
+<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
 
-<select value={thang}
-onChange={(e)=>setThang(Number(e.target.value))}
-className="border px-3 py-1"
->
-{Array.from({length:12}).map((_,i)=>(
-<option key={i} value={i+1}>Tháng {i+1}</option>
-))}
-</select>
-<select
-  value={linhVucFilter}
-  onChange={(e) => setLinhVucFilter(e.target.value)}
-  className="border px-3 py-1"
->
-  <option value="ALL">Tất cả</option>
-  <option value="I. Văn phòng - Tuyên giáo - Xây dựng Đoàn">
-    Văn phòng - Tuyên giáo - Xây dựng Đoàn
-  </option>
-  <option value="II. Phong trào - Hội LHTN">
-    Phong trào - Hội LHTN VN tỉnh
-  </option>
-  <option value="III. Trường học - Hội Sinh viên">
-    Trường học - Hội Sinh viên VN tỉnh
-  </option>
-</select>
+  {/* ===== BÊN TRÁI ===== */}
+  <div className="flex flex-col sm:flex-row gap-2">
 
-<div className="flex gap-2">
+    {/* THÁNG */}
+    <select
+      value={thang}
+      onChange={(e)=>setThang(Number(e.target.value))}
+      className="border px-3 py-1 w-full sm:w-auto"
+    >
+      {Array.from({length:12}).map((_,i)=>(
+        <option key={i} value={i+1}>Tháng {i+1}</option>
+      ))}
+    </select>
 
-<label className="bg-blue-600 text-white px-4 py-1 cursor-pointer rounded">
-  Import Excel
-  <input type="file" accept=".csv, .xlsx, .xls" onChange={handleImport} className="hidden"/>
-</label>
+    {/* LĨNH VỰC */}
+    <select
+      value={linhVucFilter}
+      onChange={(e) => setLinhVucFilter(e.target.value)}
+      className="border px-3 py-1 w-full sm:w-auto"
+    >
+      <option value="ALL">Tất cả</option>
+      <option value="I. Văn phòng - Tuyên giáo - Xây dựng Đoàn">
+        Văn phòng - Tuyên giáo - Xây dựng Đoàn
+      </option>
+      <option value="II. Phong trào - Hội LHTN">
+        Phong trào - Hội LHTN VN tỉnh
+      </option>
+      <option value="III. Trường học - Hội Sinh viên">
+        Trường học - Hội Sinh viên VN tỉnh
+      </option>
+    </select>
 
-<button
-type="button"
-onClick={(e)=>{
-  e.preventDefault();
-  deleteSelected();
-}}
-className="bg-red-600 text-white px-3 py-1 cursor-pointer">
-Xóa chọn
-</button>
+  </div>
 
-<button
-type="button"
-onClick={(e)=>{
-  e.preventDefault();
-  saveAll();
-}}
-className="bg-green-600 text-white px-4 py-1 cursor-pointer">
-Lưu
-</button>
+  {/* ===== BÊN PHẢI ===== */}
+  <div className="flex flex-wrap gap-2">
 
-</div>
+    <label className="bg-blue-600 text-white px-4 py-1 rounded cursor-pointer">
+      Import Excel
+      <input
+        type="file"
+        accept=".csv, .xlsx, .xls"
+        onChange={handleImport}
+        className="hidden"
+      />
+    </label>
+
+    <button
+      type="button"
+      onClick={(e)=>{
+        e.preventDefault();
+        deleteSelected();
+      }}
+      className="bg-red-600 text-white px-3 py-1 cursor-pointer"
+    >
+      Xóa chọn
+    </button>
+
+    <button
+      type="button"
+      onClick={(e)=>{
+        e.preventDefault();
+        saveAll();
+      }}
+      className="bg-green-600 text-white px-4 py-1 cursor-pointer"
+    >
+      Lưu
+    </button>
+
+  </div>
+
 </div>
 
 <div className="overflow-x-auto">

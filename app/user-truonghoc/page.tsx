@@ -332,26 +332,33 @@ className="cursor-pointer hover:text-yellow-300 cursor-pointer"
 <main className="flex-1 flex justify-center p-4">
 
 <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl p-4">
-<div className="flex gap-3 mb-4">
+<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
 
-<select value={thang}
-onChange={(e)=>setThang(Number(e.target.value))}
-className="border px-3 py-1">
-{Array.from({length:12}).map((_,i)=>(
-<option key={i} value={i+1}>Tháng {i+1}</option>
-))}
-</select>
-<select
-  value={filterCanBo}
-  onChange={(e)=>setFilterCanBo(e.target.value)}
-  className="border px-3 py-1"
->
-  <option value="">-- Tất cả cán bộ --</option>
-  {CAN_BO.map(cb => (
-    <option key={cb}>{cb}</option>
-  ))}
-</select>
-<div className="flex gap-2">
+<div className="flex flex-wrap gap-2">
+
+  <select
+    value={thang}
+    onChange={(e)=>setThang(Number(e.target.value))}
+    className="border px-3 py-1 w-full md:w-auto"
+  >
+    {Array.from({length:12}).map((_,i)=>(
+      <option key={i} value={i+1}>Tháng {i+1}</option>
+    ))}
+  </select>
+
+  <select
+    value={filterCanBo}
+    onChange={(e)=>setFilterCanBo(e.target.value)}
+    className="border px-3 py-1 w-full md:w-auto"
+  >
+    <option value="">-- Tất cả cán bộ --</option>
+    {CAN_BO.map(cb => (
+      <option key={cb}>{cb}</option>
+    ))}
+  </select>
+
+</div>
+<div className="flex flex-wrap gap-2 md:justify-end">
 
 <button onClick={addRow} className="bg-blue-600 text-white px-4 py-1 cursor-pointer">
 + Thêm nhiệm vụ

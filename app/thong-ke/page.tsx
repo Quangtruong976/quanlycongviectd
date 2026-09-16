@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Home } from "lucide-react";
+import * as XLSX from "xlsx";
 
 type RawItem = {
   can_bo_tham_muu: string | null;
@@ -35,15 +36,17 @@ export default function ThongKePage() {
   useEffect(() => {
     loadData();
   }, [thang]);
+
   useEffect(() => {
     const reload = () => loadData();
-  
+
     window.addEventListener("nhiem_vu_updated", reload);
-  
+
     return () => {
       window.removeEventListener("nhiem_vu_updated", reload);
     };
   }, [thang]);
+
   const loadData = async () => {
 
     setLoading(true);
@@ -88,11 +91,11 @@ export default function ThongKePage() {
         case "Hoàn thành đúng hạn":
           cb.dungHan++;
           break;
-      
+
         case "Hoàn thành quá hạn":
           cb.quaHan++;
           break;
-      
+
         default:
           cb.chuaHT++;
       }
@@ -100,32 +103,33 @@ export default function ThongKePage() {
     });
 
     // Trong loadData(), khi tính xếp loại
-const result: ThongKe[] = Object.values(map).map((cb) => {
-  // Tính điểm: đúng hạn = 1, quá hạn = 0.5
-  const diem =
-    cb.tong > 0
-      ? Math.round(((cb.dungHan + cb.quaHan * 0.5) / cb.tong) * 100)
-      : 0;
+    const result: ThongKe[] = Object.values(map).map((cb) => {
 
-  let xepLoai = "";
+      // Tính điểm: đúng hạn = 1, quá hạn = 0.5
+      const diem =
+        cb.tong > 0
+          ? Math.round(((cb.dungHan + cb.quaHan * 0.5) / cb.tong) * 100)
+          : 0;
 
-  // Chỉ xét cán bộ đã hoàn thành tất cả nhiệm vụ
-  if (cb.chuaHT === 0) {
-    if (diem >= 90) xepLoai = "HTSXNV";
-    else if (diem >= 75) xepLoai = "HTTNV";
-    else if (diem >= 50) xepLoai = "HTNV";
-    else xepLoai = "Không HTNV";
-  } else {
-    // còn nhiệm vụ chưa hoàn thành → Không HTNV
-    xepLoai = "Không HTNV";
-  }
+      let xepLoai = "";
 
-  return {
-    ...cb,
-    diem,
-    xepLoai,
-  };
-});
+      // Chỉ xét cán bộ đã hoàn thành tất cả nhiệm vụ
+      if (cb.chuaHT === 0) {
+        if (diem >= 90) xepLoai = "HTSXNV";
+        else if (diem >= 75) xepLoai = "HTTNV";
+        else if (diem >= 50) xepLoai = "HTNV";
+        else xepLoai = "Không HTNV";
+      } else {
+        // còn nhiệm vụ chưa hoàn thành → Không HTNV
+        xepLoai = "Không HTNV";
+      }
+
+      return {
+        ...cb,
+        diem,
+        xepLoai,
+      };
+    });
 
     result.sort((a, b) => b.diem - a.diem);
 
@@ -160,16 +164,66 @@ const result: ThongKe[] = Object.values(map).map((cb) => {
   const getColor = (xepLoai: string) => {
 
     const value = xepLoai?.trim().toUpperCase();
-  
+
     const colorMap: Record<string, string> = {
       HTSXNV: "bg-green-100 text-green-700",
       HTTNV: "bg-yellow-100 text-orange-700",
       HTNV: "bg-red-100 text-red-800",
     };
-  
+
     return colorMap[value] || "bg-gray-100 text-gray-700";
-  
+
   };
+
+  // ==========================================
+  // TẢI DANH SÁCH ĐANG HIỂN THỊ VỀ EXCEL
+  // ==========================================
+  function handleDownload() {
+
+    if (filteredData.length === 0) {
+      alert("Không có dữ liệu để tải xuống.");
+      return;
+    }
+
+    const exportData = filteredData.map((cb, index) => ({
+      "STT": index + 1,
+      "Cán bộ": cb.can_bo_tham_muu,
+      "Tổng nhiệm vụ": cb.tong,
+      "NV hoàn thành đúng hạn": cb.dungHan,
+      "NV hoàn thành quá hạn": cb.quaHan,
+      "NV chưa hoàn thành": cb.chuaHT,
+      "Điểm": cb.diem,
+      "Xếp loại": cb.xepLoai,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Độ rộng các cột
+    worksheet["!cols"] = [
+      { wch: 7 },
+      { wch: 30 },
+      { wch: 16 },
+      { wch: 24 },
+      { wch: 24 },
+      { wch: 22 },
+      { wch: 10 },
+      { wch: 18 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      `Tháng ${thang}`
+    );
+
+    const tenFile = selectedCanBo
+      ? `Thong-ke-${selectedCanBo}-Thang-${thang}.xlsx`
+      : `Thong-ke-Thang-${thang}.xlsx`;
+
+    XLSX.writeFile(workbook, tenFile);
+  }
 
   return (
 
@@ -195,25 +249,33 @@ const result: ThongKe[] = Object.values(map).map((cb) => {
 
           <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 
-          <Link href="/" className="text-white hover:text-yellow-300 cursor-pointer">
-  <Home size={20}/>
-</Link>
-<Link href="/tien-do"
-className="text-white hover:text-yellow-300 cursor-pointer">
-Theo dõi tiến độ công việc
-</Link>
+            <Link
+              href="/"
+              className="text-white hover:text-yellow-300 cursor-pointer"
+            >
+              <Home size={20}/>
+            </Link>
 
-<Link href="/thong-ke"
-className="text-white hover:text-yellow-300 cursor-pointer">
-Thống kê chi tiết công việc cá nhân
-</Link>
+            <Link
+              href="/tien-do"
+              className="text-white hover:text-yellow-300 cursor-pointer"
+            >
+              Theo dõi tiến độ công việc
+            </Link>
 
-<Link
-  href="/login"
-  className="text-white hover:text-yellow-300 cursor-pointer"
->
-  Đăng nhập
-</Link>
+            <Link
+              href="/thong-ke"
+              className="text-white hover:text-yellow-300 cursor-pointer"
+            >
+              Thống kê chi tiết công việc cá nhân
+            </Link>
+
+            <Link
+              href="/login"
+              className="text-white hover:text-yellow-300 cursor-pointer"
+            >
+              Đăng nhập
+            </Link>
 
           </div>
 
@@ -282,6 +344,14 @@ Thống kê chi tiết công việc cá nhân
 
             </select>
 
+            {/* NÚT TẢI DANH SÁCH */}
+            <button
+              onClick={handleDownload}
+              className="bg-green-600 text-white px-4 py-2 rounded-xl shadow-sm hover:bg-green-700"
+            >
+              Tải danh sách
+            </button>
+
           </div>
 
           {loading ? (
@@ -317,7 +387,10 @@ Thống kê chi tiết công việc cá nhân
 
                   {filteredData.map((cb, index) => (
 
-                    <tr key={cb.can_bo_tham_muu} className="hover:bg-gray-50">
+                    <tr
+                      key={cb.can_bo_tham_muu}
+                      className="hover:bg-gray-50"
+                    >
 
                       <td className="border px-3 py-2 text-center">
                         {index + 1}
@@ -349,7 +422,9 @@ Thống kê chi tiết công việc cá nhân
 
                       <td className="border px-3 py-2 text-center">
 
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getColor(cb.xepLoai)}`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${getColor(cb.xepLoai)}`}
+                        >
 
                           {cb.xepLoai}
 
@@ -382,3 +457,4 @@ Thống kê chi tiết công việc cá nhân
   );
 
 }
+

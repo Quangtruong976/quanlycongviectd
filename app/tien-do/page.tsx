@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Home } from "lucide-react";
+import * as XLSX from "xlsx";
 
 type NhiemVu = {
   id: string;
@@ -20,6 +21,7 @@ type NhiemVu = {
   thang: number;
   created_by_user?: boolean; // 🔥 thêm dòng này
 };
+
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "";
 
@@ -87,20 +89,98 @@ export default function TienDoPage() {
 
   const getTienDoColor = (tien_do: string | null) => {
     switch (tien_do) {
-  
+
       case "Hoàn thành đúng hạn":
         return "bg-green-100 text-green-700";
-  
+
       case "Hoàn thành quá hạn":
         return "bg-red-100 text-red-700";
-  
+
       case "Chưa hoàn thành":
         return "bg-yellow-100 text-orange-700";
-  
+
       default:
         return "bg-gray-100 text-gray-700";
     }
   };
+
+  // ================================
+  // TẢI DANH SÁCH HIỆN ĐANG HIỂN THỊ
+  // ================================
+  function handleDownload() {
+
+    const exportData: Record<string, string | number>[] = [];
+
+    let sttExcel = 1;
+
+    Object.entries(grouped).forEach(([lvCon, tasks]) => {
+
+      // Dòng lĩnh vực con
+      exportData.push({
+        "STT": "",
+        "Văn bản / Công việc": lvCon,
+        "Ngày giao": "",
+        "Hạn HT": "",
+        "Ngày HT": "",
+        "Sản phẩm": "",
+        "Tiến độ": "",
+        "Cán bộ tham mưu": "",
+        "TT phụ trách": "",
+      });
+
+      tasks.forEach((task) => {
+
+        exportData.push({
+          "STT": sttExcel++,
+          "Văn bản / Công việc": task.ten,
+          "Ngày giao": formatDate(task.ngay_giao),
+          "Hạn HT": formatDate(task.han_hoan_thanh),
+          "Ngày HT": formatDate(task.ngay_hoan_thanh),
+          "Sản phẩm": task.san_pham || "",
+          "Tiến độ": task.tien_do || "Chưa cập nhật",
+          "Cán bộ tham mưu": task.can_bo_tham_muu,
+          "TT phụ trách": task.can_bo_phu_trach,
+        });
+
+      });
+
+    });
+
+    // Nếu không có dữ liệu
+    if (exportData.length === 0) {
+      alert("Không có dữ liệu để tải xuống.");
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Độ rộng các cột
+    worksheet["!cols"] = [
+      { wch: 7 },
+      { wch: 45 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 35 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 25 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      `Tháng ${thang}`
+    );
+
+    const tenFile = linhVucLon
+      ? `Theo-doi-tien-do-Thang-${thang}-Theo-linh-vuc.xlsx`
+      : `Theo-doi-tien-do-Thang-${thang}.xlsx`;
+
+    XLSX.writeFile(workbook, tenFile);
+  }
 
   let stt = 1;
 
@@ -128,25 +208,30 @@ export default function TienDoPage() {
 
           <div className="flex justify-center items-center gap-6 py-2 text-sm font-semibold">
 
-          <Link href="/" className="text-white hover:text-yellow-300 cursor-pointer">
-  <Home size={20}/>
-</Link>
-<Link href="/tien-do"
-className="text-white hover:text-yellow-300 cursor-pointer">
-Theo dõi tiến độ công việc
-</Link>
+            <Link href="/" className="text-white hover:text-yellow-300 cursor-pointer">
+              <Home size={20}/>
+            </Link>
 
-<Link href="/thong-ke"
-className="text-white hover:text-yellow-300 cursor-pointer">
-Thống kê chi tiết công việc cá nhân
-</Link>
+            <Link
+              href="/tien-do"
+              className="text-white hover:text-yellow-300 cursor-pointer"
+            >
+              Theo dõi tiến độ công việc
+            </Link>
 
-<Link
-  href="/login"
-  className="text-white hover:text-yellow-300 cursor-pointer"
->
-  Đăng nhập
-</Link>
+            <Link
+              href="/thong-ke"
+              className="text-white hover:text-yellow-300 cursor-pointer"
+            >
+              Thống kê chi tiết công việc cá nhân
+            </Link>
+
+            <Link
+              href="/login"
+              className="text-white hover:text-yellow-300 cursor-pointer"
+            >
+              Đăng nhập
+            </Link>
 
           </div>
 
@@ -203,6 +288,14 @@ Thống kê chi tiết công việc cá nhân
               ))}
 
             </select>
+
+            {/* NÚT TẢI DANH SÁCH */}
+            <button
+              onClick={handleDownload}
+              className="bg-green-600 text-white px-4 py-2 rounded-xl shadow-sm hover:bg-green-700"
+            >
+              Tải danh sách
+            </button>
 
           </div>
 
@@ -269,12 +362,12 @@ Thống kê chi tiết công việc cá nhân
 
                       {tasks.map((task) => (
 
-<tr
-key={task.id}
-className={`hover:bg-blue-50 ${
-  task.created_by_user ? "text-blue-600 font-medium" : ""
-}`}
->
+                        <tr
+                          key={task.id}
+                          className={`hover:bg-blue-50 ${
+                            task.created_by_user ? "text-blue-600 font-medium" : ""
+                          }`}
+                        >
 
                           <td className="border p-2 text-center">
                             {stt++}
@@ -285,15 +378,15 @@ className={`hover:bg-blue-50 ${
                           </td>
 
                           <td className="border p-2 text-center">
-                          {formatDate(task.ngay_giao)}
+                            {formatDate(task.ngay_giao)}
                           </td>
 
                           <td className="border p-2 text-center">
-                          {formatDate(task.han_hoan_thanh)}
+                            {formatDate(task.han_hoan_thanh)}
                           </td>
 
                           <td className="border p-2 text-center">
-                          {formatDate(task.ngay_hoan_thanh)}
+                            {formatDate(task.ngay_hoan_thanh)}
                           </td>
 
                           <td className="border p-2">
@@ -349,3 +442,4 @@ className={`hover:bg-blue-50 ${
 
   );
 }
+

@@ -1,58 +1,67 @@
-type User = {
-  username: string;
-  password: string;
-  role: string;
-};
 
-const USERS: User[] = [
-  {
-    username: "admin",
-    password: "123",
-    role: "admin",
-  },
-  {
-    username: "vanphong",
-    password: "123",
-    role: "van-phong-xd-tuyen-truyen",
-  },
-  {
-    username: "phongtrao",
-    password: "123",
-    role: "phong-trao-hoi-lhtn",
-  },
-  {
-    username: "truonghoc",
-    password: "123",
-    role: "truong-hoc-hoi-sv",
-  },
-];
+import { supabase } from "@/lib/supabase";
 
 /* =====================================================
-   LOGIN
+   KIỂU DỮ LIỆU NGƯỜI DÙNG
 ===================================================== */
 
-export function login(username: string, password: string) {
-  if (!username || !password) return null;
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  linh_vuc_quan_ly: string;
+};
 
-  const user = USERS.find(
-    (u) =>
-      u.username.trim() === username.trim() &&
-      u.password === password
-  );
+/* =====================================================
+   LẤY THÔNG TIN NGƯỜI DÙNG ĐANG ĐĂNG NHẬP
+===================================================== */
 
-  if (!user) return null;
+export async function getCurrentUser(): Promise<User | null> {
+  const {
+    data: { user: authUser },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-  // Không trả password ra ngoài
+  if (authError || !authUser) return null;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, email, role, linh_vuc_quan_ly, ho_ten")
+    .eq("id", authUser.id)
+    .single();
+
+  if (profileError || !profile) return null;
+
   return {
-    username: user.username,
-    role: user.role,
+    id: authUser.id,
+    email: profile.email || authUser.email || "",
+    name: profile.ho_ten || "",
+    role: profile.role || "user",
+    linh_vuc_quan_ly: profile.linh_vuc_quan_ly || "",
   };
 }
 
 /* =====================================================
-   KIỂM TRA ROLE
+   KIỂM TRA QUYỀN ADMIN
 ===================================================== */
 
-export function isAdmin(role: string) {
+export function isAdmin(role: string | null | undefined) {
   return role === "admin";
+}
+
+/* =====================================================
+   ĐĂNG XUẤT
+===================================================== */
+
+export async function logout() {
+  await supabase.auth.signOut();
+
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("role");
+    localStorage.removeItem("email");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("name");
+    localStorage.removeItem("linh_vuc_quan_ly");
+  }
 }

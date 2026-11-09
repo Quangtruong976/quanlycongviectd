@@ -18,11 +18,15 @@ import {
   CalendarDays,
   ChartNoAxesCombined,
   Monitor,
+  ChevronDown,
+  ChevronUp,
+  CalendarCheck,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
 type RawItem = {
   id: string;
+  ten: string | null;
   nam: number | null;
   quy: number | null;
   thang: number | null;
@@ -87,6 +91,16 @@ const tinhXepLoai = (
   return { diem, xepLoai };
 };
 
+const formatDate = (value: string | null) => {
+  if (!value) return "Chưa cập nhật";
+
+  const date = new Date(`${value}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString("vi-VN");
+};
+
 export default function ThongKePage() {
   const [mode, setMode] = useState<CheDo>("quy");
   const [showPeriodPicker, setShowPeriodPicker] = useState(false);
@@ -103,6 +117,7 @@ export default function ThongKePage() {
 
   const [search, setSearch] = useState("");
   const [selectedCanBo, setSelectedCanBo] = useState("");
+  const [expandedCanBo, setExpandedCanBo] = useState("");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -111,7 +126,7 @@ export default function ThongKePage() {
     const { data, error: queryError } = await supabase
       .from("nhiem_vu")
       .select(
-        "id, nam, quy, thang, loai_nhiem_vu, can_bo, can_bo_tham_muu, can_bo_phu_trach, tien_do, ngay_giao, han_hoan_thanh, ngay_hoan_thanh"
+        "id, ten, nam, quy, thang, loai_nhiem_vu, can_bo, can_bo_tham_muu, can_bo_phu_trach, tien_do, ngay_giao, han_hoan_thanh, ngay_hoan_thanh"
       )
       .eq("nam", namThongKe)
       .limit(5000);
@@ -152,6 +167,16 @@ export default function ThongKePage() {
     });
   }, [rawData, mode, thang, quy]);
 
+  // Xác định cán bộ được thống kê theo nhóm đánh giá.
+  const getCanBo = useCallback(
+    (item: RawItem) => {
+      return nhomDanhGia === "thuc_hien"
+        ? item.can_bo?.trim() || item.can_bo_tham_muu?.trim() || ""
+        : item.can_bo_phu_trach?.trim() || "";
+    },
+    [nhomDanhGia]
+  );
+
   // Tổng hợp riêng theo từng nhóm đánh giá.
   const data = useMemo(() => {
     const map: Record<
@@ -166,10 +191,7 @@ export default function ThongKePage() {
     > = {};
 
     periodData.forEach((item) => {
-      const ten =
-        nhomDanhGia === "thuc_hien"
-          ? item.can_bo?.trim() || item.can_bo_tham_muu?.trim()
-          : item.can_bo_phu_trach?.trim();
+      const ten = getCanBo(item);
 
       if (!ten) return;
 
@@ -226,7 +248,7 @@ export default function ThongKePage() {
     );
 
     return result;
-  }, [periodData, nhomDanhGia]);
+  }, [periodData, getCanBo]);
 
   const allCanBo = useMemo(
     () => data.map((item) => item.can_bo_tham_muu),
@@ -244,12 +266,32 @@ export default function ThongKePage() {
   }, [search, allCanBo, selectedCanBo]);
 
   const filteredData = useMemo(() => {
-    if (!selectedCanBo) return data;
+    if (selectedCanBo) {
+      return data.filter(
+        (item) => item.can_bo_tham_muu === selectedCanBo
+      );
+    }
 
-    return data.filter(
-      (item) => item.can_bo_tham_muu === selectedCanBo
+    const keyword = search.trim().toLocaleLowerCase("vi");
+
+    if (!keyword) return data;
+
+    return data.filter((item) =>
+      item.can_bo_tham_muu
+        .toLocaleLowerCase("vi")
+        .includes(keyword)
     );
-  }, [data, selectedCanBo]);
+  }, [data, search, selectedCanBo]);
+
+  // Lấy danh sách nhiệm vụ cụ thể của cán bộ đang chọn.
+  const getTasksForCanBo = useCallback(
+    (name: string) => {
+      return periodData.filter(
+        (item) => getCanBo(item) === name
+      );
+    },
+    [periodData, getCanBo]
+  );
 
   const totals = useMemo(() => {
     return filteredData.reduce(
@@ -288,7 +330,7 @@ export default function ThongKePage() {
       "Hoàn thành đúng hạn": item.dungHan,
       "Hoàn thành quá hạn": item.quaHan,
       "Chưa hoàn thành": item.chuaHT,
-      "Điểm": item.diem,
+      Điểm: item.diem,
       "Xếp loại": item.xepLoai,
     }));
 
@@ -322,12 +364,17 @@ export default function ThongKePage() {
   const resetFilter = () => {
     setSearch("");
     setSelectedCanBo("");
+    setExpandedCanBo("");
   };
 
   const changeMode = (value: CheDo) => {
     setMode(value);
     setShowPeriodPicker(true);
     resetFilter();
+  };
+
+  const toggleCanBo = (name: string) => {
+    setExpandedCanBo((current) => current === name ? "" : name);
   };
 
   const tenKy =
@@ -339,6 +386,138 @@ export default function ThongKePage() {
     nhomDanhGia === "thuc_hien"
       ? "Cán bộ thực hiện"
       : "Thường trực phụ trách";
+
+  // Thành phần hiển thị chi tiết nhiệm vụ.
+  const renderTaskDetails = (name: string) => {
+    const tasks = getTasksForCanBo(name);
+
+    const dungHan = tasks.filter(
+      (item) => item.tien_do === "Hoàn thành đúng hạn"
+    );
+
+    const quaHan = tasks.filter(
+      (item) => item.tien_do === "Hoàn thành quá hạn"
+    );
+
+    const chuaHT = tasks.filter(
+      (item) =>
+        item.tien_do !== "Hoàn thành đúng hạn" &&
+        item.tien_do !== "Hoàn thành quá hạn"
+    );
+
+    const renderGroup = (
+      title: string,
+      items: RawItem[],
+      color: string,
+      icon: React.ReactNode,
+      emptyText: string
+    ) => (
+      <div className="mb-4 last:mb-0">
+        <div className={`flex items-center gap-2 mb-2 font-bold text-sm ${color}`}>
+          {icon}
+          <span>{title}</span>
+          <span className="rounded-full bg-white/80 px-2 py-0.5 text-xs">
+            {items.length}
+          </span>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="text-xs text-slate-400 italic pl-6">
+            {emptyText}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((task, index) => (
+              <div
+                key={task.id}
+                className="rounded-lg border border-slate-200 bg-white p-3"
+              >
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 text-xs font-bold text-slate-400 mt-0.5">
+                    {index + 1}.
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-slate-800 break-words">
+                      {task.ten || "Chưa có tên nhiệm vụ"}
+                    </div>
+
+                    {task.tien_do && (
+                      <div className="mt-1 text-xs text-slate-500">
+                        Tiến độ: {task.tien_do}
+                      </div>
+                    )}
+
+                    <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1 text-xs text-slate-500">
+                      <div>
+                        <span className="font-medium text-slate-600">
+                          Ngày giao:{" "}
+                        </span>
+                        {formatDate(task.ngay_giao)}
+                      </div>
+
+                      <div>
+                        <span className="font-medium text-slate-600">
+                          Hạn hoàn thành:{" "}
+                        </span>
+                        {formatDate(task.han_hoan_thanh)}
+                      </div>
+
+                      <div>
+                        <span className="font-medium text-slate-600">
+                          Ngày hoàn thành:{" "}
+                        </span>
+                        {formatDate(task.ngay_hoan_thanh)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+
+    return (
+      <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 sm:p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div className="font-bold text-sm text-emerald-900">
+            <ClipboardList size={16} className="inline mr-2" />
+            DANH SÁCH NHIỆM VỤ: {name}
+          </div>
+
+          <span className="text-xs text-emerald-700">
+            {tenKy}/2026 · {tasks.length} nhiệm vụ
+          </span>
+        </div>
+
+        {renderGroup(
+          "HOÀN THÀNH ĐÚNG HẠN",
+          dungHan,
+          "text-emerald-700",
+          <CheckCircle2 size={16} />,
+          "Không có nhiệm vụ hoàn thành đúng hạn."
+        )}
+
+        {renderGroup(
+          "HOÀN THÀNH QUÁ HẠN",
+          quaHan,
+          "text-amber-700",
+          <Clock3 size={16} />,
+          "Không có nhiệm vụ hoàn thành quá hạn."
+        )}
+
+        {renderGroup(
+          "CHƯA HOÀN THÀNH",
+          chuaHT,
+          "text-rose-700",
+          <AlertCircle size={16} />,
+          "Không có nhiệm vụ chưa hoàn thành."
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col text-slate-700">
@@ -622,6 +801,7 @@ export default function ThongKePage() {
                   onChange={(e) => {
                     setSearch(e.target.value);
                     setSelectedCanBo("");
+                    setExpandedCanBo("");
                   }}
                   className="w-full h-11 border border-slate-300 rounded-lg pl-10 pr-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 />
@@ -636,6 +816,7 @@ export default function ThongKePage() {
                           onClick={() => {
                             setSelectedCanBo(name);
                             setSearch(name);
+                            setExpandedCanBo("");
                           }}
                           className="w-full text-left px-3 py-2.5 text-sm hover:bg-emerald-50"
                         >
@@ -762,125 +943,163 @@ export default function ThongKePage() {
             </div>
           ) : (
             <>
-              {/* MOBILE: KHÔNG CÓ KHUNG BAO TỪNG CÁN BỘ */}
-        
-{/* MOBILE: GIỮ KHUNG NGOÀI, BỎ VIỀN CÁC CHỈ SỐ BÊN TRONG */}
-<div className="block md:hidden">
-  {filteredData.map((cb, index) => (
-    <div
-      key={cb.can_bo_tham_muu}
-      className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-xs text-slate-400 shrink-0">
-          {index + 1}.
-        </span>
-        <div className="font-bold text-sm text-slate-800 break-words">
-          {cb.can_bo_tham_muu}
-        </div>
-      </div>
+              {/* MOBILE */}
+              <div className="block md:hidden">
+                {filteredData.map((cb, index) => {
+                  const isExpanded = expandedCanBo === cb.can_bo_tham_muu;
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <div>
-          <div className="text-[11px] text-slate-500">
-            Tổng nhiệm vụ
-          </div>
-          <div className="mt-0.5 text-sm font-bold text-slate-800">
-            {cb.tong}
-          </div>
-        </div>
+                  return (
+                    <div
+                      key={cb.can_bo_tham_muu}
+                      className={`mb-3 rounded-xl border p-3 transition ${
+                        isExpanded
+                          ? "border-emerald-400 bg-emerald-50"
+                          : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleCanBo(cb.can_bo_tham_muu)}
+                        aria-expanded={isExpanded}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-sm font-bold text-emerald-700 shrink-0">
+                              {index + 1}.
+                            </span>
+                            <div className="font-bold text-sm text-slate-800 break-words">
+                              {cb.can_bo_tham_muu}
+                            </div>
+                          </div>
 
-        <div>
-          <div className="text-[11px] text-slate-500">
-            Hoàn thành đúng hạn
-          </div>
-          <div className="mt-0.5 text-sm font-bold text-slate-800">
-            {cb.dungHan}
-          </div>
-        </div>
+                          <div className="shrink-0 text-emerald-700">
+                            {isExpanded ? (
+                              <ChevronUp size={19} />
+                            ) : (
+                              <ChevronDown size={19} />
+                            )}
+                          </div>
+                        </div>
 
-        <div>
-          <div className="text-[11px] text-slate-500">
-            Hoàn thành quá hạn
-          </div>
-          <div className="mt-0.5 text-sm font-bold text-slate-800">
-            {cb.quaHan}
-          </div>
-        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                          <div>
+                            <div className="text-[11px] text-slate-500">
+                              Tổng nhiệm vụ
+                            </div>
+                            <div className="mt-0.5 text-sm font-bold text-slate-800">
+                              {cb.tong}
+                            </div>
+                          </div>
 
-        <div>
-          <div className="text-[11px] text-slate-500">
-            Điểm
-          </div>
-          <div className="mt-0.5 text-sm font-bold text-slate-800">
-            {cb.diem}/100
-          </div>
-        </div>
+                          <div>
+                            <div className="text-[11px] text-slate-500">
+                              Hoàn thành đúng hạn
+                            </div>
+                            <div className="mt-0.5 text-sm font-bold text-emerald-700">
+                              {cb.dungHan}
+                            </div>
+                          </div>
 
-        <div className="col-span-2">
-          <div className="text-[11px] text-slate-500 mb-1">
-            Đánh giá
-          </div>
-          <span
-            className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getColor(
-              cb.xepLoai
-            )}`}
-          >
-            {cb.xepLoai}
-          </span>
-        </div>
-      </div>
-    </div>
-  ))}
+                          <div>
+                            <div className="text-[11px] text-slate-500">
+                              Hoàn thành quá hạn
+                            </div>
+                            <div className="mt-0.5 text-sm font-bold text-amber-700">
+                              {cb.quaHan}
+                            </div>
+                          </div>
 
-  {/* TỔNG CỘNG TRÊN ĐIỆN THOẠI */}
-  <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-    <div className="font-bold text-sm text-slate-800 mb-3">
-      TỔNG CỘNG
-    </div>
+                          <div>
+                            <div className="text-[11px] text-slate-500">
+                              Chưa hoàn thành
+                            </div>
+                            <div className="mt-0.5 text-sm font-bold text-rose-700">
+                              {cb.chuaHT}
+                            </div>
+                          </div>
 
-    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-      <div>
-        <div className="text-[11px] text-slate-500">
-          Tổng nhiệm vụ
-        </div>
-        <div className="mt-0.5 text-sm font-bold text-slate-800">
-          {totals.tong}
-        </div>
-      </div>
+                          <div>
+                            <div className="text-[11px] text-slate-500">
+                              Điểm
+                            </div>
+                            <div className="mt-0.5 text-sm font-bold text-slate-800">
+                              {cb.diem}/100
+                            </div>
+                          </div>
 
-      <div>
-        <div className="text-[11px] text-slate-500">
-          Hoàn thành đúng hạn
-        </div>
-        <div className="mt-0.5 text-sm font-bold text-slate-800">
-          {totals.dungHan}
-        </div>
-      </div>
+                          <div>
+                            <div className="text-[11px] text-slate-500 mb-1">
+                              Đánh giá
+                            </div>
+                            <span
+                              className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getColor(
+                                cb.xepLoai
+                              )}`}
+                            >
+                              {cb.xepLoai}
+                            </span>
+                          </div>
+                        </div>
 
-      <div>
-        <div className="text-[11px] text-slate-500">
-          Hoàn thành quá hạn
-        </div>
-        <div className="mt-0.5 text-sm font-bold text-slate-800">
-          {totals.quaHan}
-        </div>
-      </div>
+                        <div className="mt-3 pt-2 border-t border-emerald-100 flex items-center justify-center gap-1 text-xs font-semibold text-emerald-700">
+                          <ClipboardList size={14} />
+                          {isExpanded ? "Thu gọn nhiệm vụ" : "Nhấn để xem nhiệm vụ"}
+                        </div>
+                      </button>
 
-      <div>
-        <div className="text-[11px] text-slate-500">
-          Chưa hoàn thành
-        </div>
-        <div className="mt-0.5 text-sm font-bold text-slate-800">
-          {totals.chuaHT}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                      {isExpanded && renderTaskDetails(cb.can_bo_tham_muu)}
+                    </div>
+                  );
+                })}
 
+                {/* TỔNG CỘNG TRÊN ĐIỆN THOẠI */}
+                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="font-bold text-sm text-slate-800 mb-3">
+                    TỔNG CỘNG
+                  </div>
 
-              {/* DESKTOP: GIỮ NGUYÊN BẢNG 8 CỘT */}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div>
+                      <div className="text-[11px] text-slate-500">
+                        Tổng nhiệm vụ
+                      </div>
+                      <div className="mt-0.5 text-sm font-bold text-slate-800">
+                        {totals.tong}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[11px] text-slate-500">
+                        Hoàn thành đúng hạn
+                      </div>
+                      <div className="mt-0.5 text-sm font-bold text-emerald-700">
+                        {totals.dungHan}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[11px] text-slate-500">
+                        Hoàn thành quá hạn
+                      </div>
+                      <div className="mt-0.5 text-sm font-bold text-amber-700">
+                        {totals.quaHan}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[11px] text-slate-500">
+                        Chưa hoàn thành
+                      </div>
+                      <div className="mt-0.5 text-sm font-bold text-rose-700">
+                        {totals.chuaHT}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* DESKTOP */}
               <div className="hidden md:block overflow-x-auto rounded-lg border border-slate-200">
                 <table className="min-w-[850px] w-full text-sm">
                   <thead>
@@ -915,43 +1134,73 @@ export default function ThongKePage() {
                   </thead>
 
                   <tbody>
-                    {filteredData.map((cb, index) => (
-                      <tr
-                        key={cb.can_bo_tham_muu}
-                        className="hover:bg-emerald-50/50"
-                      >
-                        <td className="border-b border-slate-100 px-3 py-3 text-center text-slate-500">
-                          {index + 1}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-3 font-medium text-slate-800">
-                          {cb.can_bo_tham_muu}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold">
-                          {cb.tong}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-emerald-700">
-                          {cb.dungHan}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-amber-700">
-                          {cb.quaHan}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-rose-700">
-                          {cb.chuaHT}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-3 text-center font-bold text-emerald-800">
-                          {cb.diem}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-3 text-center">
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getColor(
-                              cb.xepLoai
-                            )}`}
+                    {filteredData.map((cb, index) => {
+                      const isExpanded = expandedCanBo === cb.can_bo_tham_muu;
+
+                      return (
+                        <>
+                          <tr
+                            key={cb.can_bo_tham_muu}
+                            onClick={() => toggleCanBo(cb.can_bo_tham_muu)}
+                            aria-expanded={isExpanded}
+                            className={`cursor-pointer transition ${
+                              isExpanded
+                                ? "bg-emerald-100"
+                                : "hover:bg-emerald-50/70"
+                            }`}
                           >
-                            {cb.xepLoai}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                            <td className="border-b border-slate-100 px-3 py-3 text-center font-bold text-emerald-700">
+                              {index + 1}
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-3 font-medium text-slate-800">
+                              <span className="flex items-center gap-2">
+                                {cb.can_bo_tham_muu}
+                                {isExpanded ? (
+                                  <ChevronUp size={16} className="text-emerald-700" />
+                                ) : (
+                                  <ChevronDown size={16} className="text-slate-400" />
+                                )}
+                              </span>
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold">
+                              {cb.tong}
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-emerald-700">
+                              {cb.dungHan}
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-amber-700">
+                              {cb.quaHan}
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-rose-700">
+                              {cb.chuaHT}
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-3 text-center font-bold text-emerald-800">
+                              {cb.diem}
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-3 text-center">
+                              <span
+                                className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getColor(
+                                  cb.xepLoai
+                                )}`}
+                              >
+                                {cb.xepLoai}
+                              </span>
+                            </td>
+                          </tr>
+
+                          {isExpanded && (
+                            <tr key={`${cb.can_bo_tham_muu}-details`}>
+                              <td
+                                colSpan={8}
+                                className="border-b border-emerald-200 px-4 py-3 bg-emerald-50/50"
+                              >
+                                {renderTaskDetails(cb.can_bo_tham_muu)}
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      );
+                    })}
                   </tbody>
 
                   <tfoot>

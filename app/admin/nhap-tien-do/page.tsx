@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -174,6 +173,25 @@ export default function NhapTienDoPage() {
       router.replace("/login");
     }
   }, [router]);
+
+  // Đóng menu bằng phím Escape và khóa cuộn trang khi menu đang mở.
+  useEffect(() => {
+    if (!mobileMenu) return;
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobileMenu(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenu]);
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -475,7 +493,22 @@ export default function NhapTienDoPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f7f6]">
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col border-r border-slate-200 bg-white">
+      {/* Lớp nền tối: chạm bên ngoài để đóng menu trên điện thoại */}
+      {mobileMenu && (
+        <button
+          type="button"
+          aria-label="Đóng menu"
+          onClick={() => setMobileMenu(false)}
+          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[1px] lg:hidden"
+        />
+      )}
+
+      {/* Menu cố định trên máy tính, ẩn mặc định trên điện thoại */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 ease-in-out lg:z-40 lg:translate-x-0 lg:shadow-none ${
+          mobileMenu ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="flex h-[74px] items-center gap-3 border-b border-slate-100 px-5">
           <img
             src="/logo-doan.png"

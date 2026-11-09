@@ -471,11 +471,13 @@ export default function ThongKePage() {
                   <ClipboardList size={17} />
                   Cán bộ thực hiện
                 </span>
-                <span className={`block mt-1 text-xs font-normal ${
-                  nhomDanhGia === "thuc_hien"
-                    ? "text-emerald-100"
-                    : "text-slate-400"
-                }`}>
+                <span
+                  className={`block mt-1 text-xs font-normal ${
+                    nhomDanhGia === "thuc_hien"
+                      ? "text-emerald-100"
+                      : "text-slate-400"
+                  }`}
+                >
                   Đánh giá kết quả tham mưu, triển khai
                 </span>
               </button>
@@ -495,11 +497,13 @@ export default function ThongKePage() {
                   <Award size={17} />
                   Thường trực phụ trách
                 </span>
-                <span className={`block mt-1 text-xs font-normal ${
-                  nhomDanhGia === "phu_trach"
-                    ? "text-emerald-100"
-                    : "text-slate-400"
-                }`}>
+                <span
+                  className={`block mt-1 text-xs font-normal ${
+                    nhomDanhGia === "phu_trach"
+                      ? "text-emerald-100"
+                      : "text-slate-400"
+                  }`}
+                >
                   Đánh giá trách nhiệm theo dõi, chỉ đạo
                 </span>
               </button>
@@ -717,7 +721,7 @@ export default function ThongKePage() {
             </div>
           </div>
 
-          {/* TABLE */}
+          {/* TABLE TITLE */}
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <h3 className="font-bold text-slate-800">
@@ -757,109 +761,233 @@ export default function ThongKePage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
-              <table className="min-w-[850px] w-full text-sm">
-                <thead>
-                  <tr className="bg-emerald-50 text-emerald-900">
-                    <th className="border-b border-slate-200 px-3 py-3 text-center w-12">
-                      STT
-                    </th>
-                    <th className="border-b border-slate-200 px-3 py-3 text-left">
-                      {nhomDanhGia === "thuc_hien"
-                        ? "Cán bộ thực hiện"
-                        : "Thường trực phụ trách"}
-                    </th>
-                    <th className="border-b border-slate-200 px-3 py-3 text-center">
-                      Tổng NV
-                    </th>
-                    <th className="border-b border-slate-200 px-3 py-3 text-center">
-                      Đúng hạn
-                    </th>
-                    <th className="border-b border-slate-200 px-3 py-3 text-center">
-                      Quá hạn
-                    </th>
-                    <th className="border-b border-slate-200 px-3 py-3 text-center">
-                      Chưa HT
-                    </th>
-                    <th className="border-b border-slate-200 px-3 py-3 text-center">
-                      Điểm
-                    </th>
-                    <th className="border-b border-slate-200 px-3 py-3 text-center">
-                      Đánh giá
-                    </th>
-                  </tr>
-                </thead>
+            <>
+              {/* MOBILE: HIỂN THỊ DẠNG THẺ DỌC */}
+              <div className="block md:hidden space-y-3">
+                {filteredData.map((cb, index) => (
+                  <div
+                    key={cb.can_bo_tham_muu}
+                    className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-slate-400 mb-1">
+                          CÁN BỘ SỐ {index + 1}
+                        </div>
+                        <div className="font-bold text-slate-800 text-base break-words">
+                          {cb.can_bo_tham_muu}
+                        </div>
+                      </div>
 
-                <tbody>
-                  {filteredData.map((cb, index) => (
-                    <tr
-                      key={cb.can_bo_tham_muu}
-                      className="hover:bg-emerald-50/50"
-                    >
-                      <td className="border-b border-slate-100 px-3 py-3 text-center text-slate-500">
-                        {index + 1}
+                      <span
+                        className={`shrink-0 inline-block px-2.5 py-1 rounded-full text-xs font-bold ${getColor(
+                          cb.xepLoai
+                        )}`}
+                      >
+                        {cb.xepLoai}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-3 pt-3">
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <div className="text-xs text-slate-500">
+                          Tổng nhiệm vụ
+                        </div>
+                        <div className="mt-1 text-xl font-bold text-slate-800">
+                          {cb.tong}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg bg-emerald-50 p-3">
+                        <div className="text-xs text-emerald-700">
+                          Hoàn thành đúng hạn
+                        </div>
+                        <div className="mt-1 text-xl font-bold text-emerald-700">
+                          {cb.dungHan}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg bg-amber-50 p-3">
+                        <div className="text-xs text-amber-700">
+                          Hoàn thành quá hạn
+                        </div>
+                        <div className="mt-1 text-xl font-bold text-amber-700">
+                          {cb.quaHan}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg bg-rose-50 p-3">
+                        <div className="text-xs text-rose-700">
+                          Chưa hoàn thành
+                        </div>
+                        <div className="mt-1 text-xl font-bold text-rose-700">
+                          {cb.chuaHT}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-3">
+                      <span className="text-sm font-semibold text-emerald-900">
+                        Điểm đánh giá
+                      </span>
+                      <span className="text-xl font-extrabold text-emerald-800">
+                        {cb.diem}/100
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* TỔNG CỘNG TRÊN ĐIỆN THOẠI */}
+                <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-3">
+                  <div className="font-bold text-emerald-900 mb-3">
+                    TỔNG CỘNG
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs text-slate-500">
+                        Tổng nhiệm vụ
+                      </div>
+                      <div className="text-xl font-bold text-slate-800">
+                        {totals.tong}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-emerald-700">
+                        Hoàn thành đúng hạn
+                      </div>
+                      <div className="text-xl font-bold text-emerald-700">
+                        {totals.dungHan}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-amber-700">
+                        Hoàn thành quá hạn
+                      </div>
+                      <div className="text-xl font-bold text-amber-700">
+                        {totals.quaHan}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-rose-700">
+                        Chưa hoàn thành
+                      </div>
+                      <div className="text-xl font-bold text-rose-700">
+                        {totals.chuaHT}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* DESKTOP: GIỮ NGUYÊN BẢNG 8 CỘT */}
+              <div className="hidden md:block overflow-x-auto rounded-lg border border-slate-200">
+                <table className="min-w-[850px] w-full text-sm">
+                  <thead>
+                    <tr className="bg-emerald-50 text-emerald-900">
+                      <th className="border-b border-slate-200 px-3 py-3 text-center w-12">
+                        STT
+                      </th>
+                      <th className="border-b border-slate-200 px-3 py-3 text-left">
+                        {nhomDanhGia === "thuc_hien"
+                          ? "Cán bộ thực hiện"
+                          : "Thường trực phụ trách"}
+                      </th>
+                      <th className="border-b border-slate-200 px-3 py-3 text-center">
+                        Tổng NV
+                      </th>
+                      <th className="border-b border-slate-200 px-3 py-3 text-center">
+                        Đúng hạn
+                      </th>
+                      <th className="border-b border-slate-200 px-3 py-3 text-center">
+                        Quá hạn
+                      </th>
+                      <th className="border-b border-slate-200 px-3 py-3 text-center">
+                        Chưa HT
+                      </th>
+                      <th className="border-b border-slate-200 px-3 py-3 text-center">
+                        Điểm
+                      </th>
+                      <th className="border-b border-slate-200 px-3 py-3 text-center">
+                        Đánh giá
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredData.map((cb, index) => (
+                      <tr
+                        key={cb.can_bo_tham_muu}
+                        className="hover:bg-emerald-50/50"
+                      >
+                        <td className="border-b border-slate-100 px-3 py-3 text-center text-slate-500">
+                          {index + 1}
+                        </td>
+                        <td className="border-b border-slate-100 px-3 py-3 font-medium text-slate-800">
+                          {cb.can_bo_tham_muu}
+                        </td>
+                        <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold">
+                          {cb.tong}
+                        </td>
+                        <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-emerald-700">
+                          {cb.dungHan}
+                        </td>
+                        <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-amber-700">
+                          {cb.quaHan}
+                        </td>
+                        <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-rose-700">
+                          {cb.chuaHT}
+                        </td>
+                        <td className="border-b border-slate-100 px-3 py-3 text-center font-bold text-emerald-800">
+                          {cb.diem}
+                        </td>
+                        <td className="border-b border-slate-100 px-3 py-3 text-center">
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getColor(
+                              cb.xepLoai
+                            )}`}
+                          >
+                            {cb.xepLoai}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+
+                  <tfoot>
+                    <tr className="bg-slate-50 font-bold text-slate-800">
+                      <td
+                        colSpan={2}
+                        className="border-t border-slate-200 px-3 py-3 text-right"
+                      >
+                        Tổng cộng
                       </td>
-                      <td className="border-b border-slate-100 px-3 py-3 font-medium text-slate-800">
-                        {cb.can_bo_tham_muu}
+                      <td className="border-t border-slate-200 px-3 py-3 text-center">
+                        {totals.tong}
                       </td>
-                      <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold">
-                        {cb.tong}
+                      <td className="border-t border-slate-200 px-3 py-3 text-center text-emerald-700">
+                        {totals.dungHan}
                       </td>
-                      <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-emerald-700">
-                        {cb.dungHan}
+                      <td className="border-t border-slate-200 px-3 py-3 text-center text-amber-700">
+                        {totals.quaHan}
                       </td>
-                      <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-amber-700">
-                        {cb.quaHan}
+                      <td className="border-t border-slate-200 px-3 py-3 text-center text-rose-700">
+                        {totals.chuaHT}
                       </td>
-                      <td className="border-b border-slate-100 px-3 py-3 text-center font-semibold text-rose-700">
-                        {cb.chuaHT}
-                      </td>
-                      <td className="border-b border-slate-100 px-3 py-3 text-center font-bold text-emerald-800">
-                        {cb.diem}
-                      </td>
-                      <td className="border-b border-slate-100 px-3 py-3 text-center">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getColor(
-                            cb.xepLoai
-                          )}`}
-                        >
-                          {cb.xepLoai}
-                        </span>
+                      <td
+                        colSpan={2}
+                        className="border-t border-slate-200 px-3 py-3 text-center"
+                      >
+                        —
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-
-                <tfoot>
-                  <tr className="bg-slate-50 font-bold text-slate-800">
-                    <td
-                      colSpan={2}
-                      className="border-t border-slate-200 px-3 py-3 text-right"
-                    >
-                      Tổng cộng
-                    </td>
-                    <td className="border-t border-slate-200 px-3 py-3 text-center">
-                      {totals.tong}
-                    </td>
-                    <td className="border-t border-slate-200 px-3 py-3 text-center text-emerald-700">
-                      {totals.dungHan}
-                    </td>
-                    <td className="border-t border-slate-200 px-3 py-3 text-center text-amber-700">
-                      {totals.quaHan}
-                    </td>
-                    <td className="border-t border-slate-200 px-3 py-3 text-center text-rose-700">
-                      {totals.chuaHT}
-                    </td>
-                    <td
-                      colSpan={2}
-                      className="border-t border-slate-200 px-3 py-3 text-center"
-                    >
-                      —
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+                  </tfoot>
+                </table>
+              </div>
+            </>
           )}
 
           <div className="mt-4 flex flex-wrap items-start gap-2 text-xs text-slate-500">

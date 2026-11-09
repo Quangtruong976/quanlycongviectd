@@ -763,115 +763,122 @@ export default function ThongKePage() {
           ) : (
             <>
               {/* MOBILE: KHÔNG CÓ KHUNG BAO TỪNG CÁN BỘ */}
-              <div className="block md:hidden">
-                {filteredData.map((cb, index) => (
-                  <div
-                    key={cb.can_bo_tham_muu}
-                    className="py-3 border-b border-slate-200 last:border-b-0"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs text-slate-400 shrink-0">
-                        {index + 1}.
-                      </span>
-                      <div className="font-bold text-sm text-slate-800 break-words">
-                        {cb.can_bo_tham_muu}
-                      </div>
-                    </div>
+        
+{/* MOBILE: GIỮ KHUNG NGOÀI, BỎ VIỀN CÁC CHỈ SỐ BÊN TRONG */}
+<div className="block md:hidden">
+  {filteredData.map((cb, index) => (
+    <div
+      key={cb.can_bo_tham_muu}
+      className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xs text-slate-400 shrink-0">
+          {index + 1}.
+        </span>
+        <div className="font-bold text-sm text-slate-800 break-words">
+          {cb.can_bo_tham_muu}
+        </div>
+      </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2">
-                        <div className="text-[11px] text-slate-500 leading-tight">
-                          Tổng nhiệm vụ
-                        </div>
-                        <div className="mt-1 text-base font-bold text-slate-800">
-                          {cb.tong}
-                        </div>
-                      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+        <div>
+          <div className="text-[11px] text-slate-500">
+            Tổng nhiệm vụ
+          </div>
+          <div className="mt-0.5 text-sm font-bold text-slate-800">
+            {cb.tong}
+          </div>
+        </div>
 
-                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2">
-                        <div className="text-[11px] text-slate-500 leading-tight">
-                          Hoàn thành đúng hạn
-                        </div>
-                        <div className="mt-1 text-base font-bold text-slate-800">
-                          {cb.dungHan}
-                        </div>
-                      </div>
+        <div>
+          <div className="text-[11px] text-slate-500">
+            Hoàn thành đúng hạn
+          </div>
+          <div className="mt-0.5 text-sm font-bold text-slate-800">
+            {cb.dungHan}
+          </div>
+        </div>
 
-                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2">
-                        <div className="text-[11px] text-slate-500 leading-tight">
-                          Hoàn thành quá hạn
-                        </div>
-                        <div className="mt-1 text-base font-bold text-slate-800">
-                          {cb.quaHan}
-                        </div>
-                      </div>
+        <div>
+          <div className="text-[11px] text-slate-500">
+            Hoàn thành quá hạn
+          </div>
+          <div className="mt-0.5 text-sm font-bold text-slate-800">
+            {cb.quaHan}
+          </div>
+        </div>
 
-                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2">
-                        <div className="text-[11px] text-slate-500 leading-tight">
-                          Điểm
-                        </div>
-                        <div className="mt-1 text-base font-bold text-slate-800">
-                          {cb.diem}/100
-                        </div>
-                      </div>
+        <div>
+          <div className="text-[11px] text-slate-500">
+            Điểm
+          </div>
+          <div className="mt-0.5 text-sm font-bold text-slate-800">
+            {cb.diem}/100
+          </div>
+        </div>
 
-                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2 col-span-2">
-                        <div className="text-[11px] text-slate-500 leading-tight">
-                          Đánh giá
-                        </div>
-                        <div className="mt-1 text-sm font-bold text-slate-800">
-                          {cb.xepLoai}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        <div className="col-span-2">
+          <div className="text-[11px] text-slate-500 mb-1">
+            Đánh giá
+          </div>
+          <span
+            className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getColor(
+              cb.xepLoai
+            )}`}
+          >
+            {cb.xepLoai}
+          </span>
+        </div>
+      </div>
+    </div>
+  ))}
 
-                {/* TỔNG CỘNG TRÊN ĐIỆN THOẠI */}
-                <div className="mt-3 border-t border-slate-200 pt-3">
-                  <div className="font-bold text-sm text-slate-800 mb-2">
-                    TỔNG CỘNG
-                  </div>
+  {/* TỔNG CỘNG TRÊN ĐIỆN THOẠI */}
+  <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <div className="font-bold text-sm text-slate-800 mb-3">
+      TỔNG CỘNG
+    </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2">
-                      <div className="text-[11px] text-slate-500">
-                        Tổng nhiệm vụ
-                      </div>
-                      <div className="text-base font-bold text-slate-800 mt-1">
-                        {totals.tong}
-                      </div>
-                    </div>
+    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+      <div>
+        <div className="text-[11px] text-slate-500">
+          Tổng nhiệm vụ
+        </div>
+        <div className="mt-0.5 text-sm font-bold text-slate-800">
+          {totals.tong}
+        </div>
+      </div>
 
-                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2">
-                      <div className="text-[11px] text-slate-500">
-                        Hoàn thành đúng hạn
-                      </div>
-                      <div className="text-base font-bold text-slate-800 mt-1">
-                        {totals.dungHan}
-                      </div>
-                    </div>
+      <div>
+        <div className="text-[11px] text-slate-500">
+          Hoàn thành đúng hạn
+        </div>
+        <div className="mt-0.5 text-sm font-bold text-slate-800">
+          {totals.dungHan}
+        </div>
+      </div>
 
-                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2">
-                      <div className="text-[11px] text-slate-500">
-                        Hoàn thành quá hạn
-                      </div>
-                      <div className="text-base font-bold text-slate-800 mt-1">
-                        {totals.quaHan}
-                      </div>
-                    </div>
+      <div>
+        <div className="text-[11px] text-slate-500">
+          Hoàn thành quá hạn
+        </div>
+        <div className="mt-0.5 text-sm font-bold text-slate-800">
+          {totals.quaHan}
+        </div>
+      </div>
 
-                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2">
-                      <div className="text-[11px] text-slate-500">
-                        Chưa hoàn thành
-                      </div>
-                      <div className="text-base font-bold text-slate-800 mt-1">
-                        {totals.chuaHT}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      <div>
+        <div className="text-[11px] text-slate-500">
+          Chưa hoàn thành
+        </div>
+        <div className="mt-0.5 text-sm font-bold text-slate-800">
+          {totals.chuaHT}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
               {/* DESKTOP: GIỮ NGUYÊN BẢNG 8 CỘT */}
               <div className="hidden md:block overflow-x-auto rounded-lg border border-slate-200">

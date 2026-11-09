@@ -762,120 +762,110 @@ export default function ThongKePage() {
             </div>
           ) : (
             <>
-              {/* MOBILE: HIỂN THỊ DẠNG THẺ DỌC */}
-              <div className="block md:hidden space-y-3">
+              {/* MOBILE: KHÔNG CÓ KHUNG BAO TỪNG CÁN BỘ */}
+              <div className="block md:hidden">
                 {filteredData.map((cb, index) => (
                   <div
                     key={cb.can_bo_tham_muu}
-                    className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                    className="py-3 border-b border-slate-200 last:border-b-0"
                   >
-                    <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold text-slate-400 mb-1">
-                          CÁN BỘ SỐ {index + 1}
-                        </div>
-                        <div className="font-bold text-slate-800 text-base break-words">
-                          {cb.can_bo_tham_muu}
-                        </div>
-                      </div>
-
-                      <span
-                        className={`shrink-0 inline-block px-2.5 py-1 rounded-full text-xs font-bold ${getColor(
-                          cb.xepLoai
-                        )}`}
-                      >
-                        {cb.xepLoai}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs text-slate-400 shrink-0">
+                        {index + 1}.
                       </span>
+                      <div className="font-bold text-sm text-slate-800 break-words">
+                        {cb.can_bo_tham_muu}
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-3 pt-3">
-                      <div className="rounded-lg bg-slate-50 p-3">
-                        <div className="text-xs text-slate-500">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2">
+                        <div className="text-[11px] text-slate-500 leading-tight">
                           Tổng nhiệm vụ
                         </div>
-                        <div className="mt-1 text-xl font-bold text-slate-800">
+                        <div className="mt-1 text-base font-bold text-slate-800">
                           {cb.tong}
                         </div>
                       </div>
 
-                      <div className="rounded-lg bg-emerald-50 p-3">
-                        <div className="text-xs text-emerald-700">
+                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2">
+                        <div className="text-[11px] text-slate-500 leading-tight">
                           Hoàn thành đúng hạn
                         </div>
-                        <div className="mt-1 text-xl font-bold text-emerald-700">
+                        <div className="mt-1 text-base font-bold text-slate-800">
                           {cb.dungHan}
                         </div>
                       </div>
 
-                      <div className="rounded-lg bg-amber-50 p-3">
-                        <div className="text-xs text-amber-700">
+                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2">
+                        <div className="text-[11px] text-slate-500 leading-tight">
                           Hoàn thành quá hạn
                         </div>
-                        <div className="mt-1 text-xl font-bold text-amber-700">
+                        <div className="mt-1 text-base font-bold text-slate-800">
                           {cb.quaHan}
                         </div>
                       </div>
 
-                      <div className="rounded-lg bg-rose-50 p-3">
-                        <div className="text-xs text-rose-700">
-                          Chưa hoàn thành
+                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2">
+                        <div className="text-[11px] text-slate-500 leading-tight">
+                          Điểm
                         </div>
-                        <div className="mt-1 text-xl font-bold text-rose-700">
-                          {cb.chuaHT}
+                        <div className="mt-1 text-base font-bold text-slate-800">
+                          {cb.diem}/100
                         </div>
                       </div>
-                    </div>
 
-                    <div className="mt-3 flex items-center justify-between rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-3">
-                      <span className="text-sm font-semibold text-emerald-900">
-                        Điểm đánh giá
-                      </span>
-                      <span className="text-xl font-extrabold text-emerald-800">
-                        {cb.diem}/100
-                      </span>
+                      <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2 py-2 col-span-2">
+                        <div className="text-[11px] text-slate-500 leading-tight">
+                          Đánh giá
+                        </div>
+                        <div className="mt-1 text-sm font-bold text-slate-800">
+                          {cb.xepLoai}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
 
                 {/* TỔNG CỘNG TRÊN ĐIỆN THOẠI */}
-                <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-3">
-                  <div className="font-bold text-emerald-900 mb-3">
+                <div className="mt-3 border-t border-slate-200 pt-3">
+                  <div className="font-bold text-sm text-slate-800 mb-2">
                     TỔNG CỘNG
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-slate-500">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2">
+                      <div className="text-[11px] text-slate-500">
                         Tổng nhiệm vụ
                       </div>
-                      <div className="text-xl font-bold text-slate-800">
+                      <div className="text-base font-bold text-slate-800 mt-1">
                         {totals.tong}
                       </div>
                     </div>
 
-                    <div>
-                      <div className="text-xs text-emerald-700">
+                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2">
+                      <div className="text-[11px] text-slate-500">
                         Hoàn thành đúng hạn
                       </div>
-                      <div className="text-xl font-bold text-emerald-700">
+                      <div className="text-base font-bold text-slate-800 mt-1">
                         {totals.dungHan}
                       </div>
                     </div>
 
-                    <div>
-                      <div className="text-xs text-amber-700">
+                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2">
+                      <div className="text-[11px] text-slate-500">
                         Hoàn thành quá hạn
                       </div>
-                      <div className="text-xl font-bold text-amber-700">
+                      <div className="text-base font-bold text-slate-800 mt-1">
                         {totals.quaHan}
                       </div>
                     </div>
 
-                    <div>
-                      <div className="text-xs text-rose-700">
+                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2">
+                      <div className="text-[11px] text-slate-500">
                         Chưa hoàn thành
                       </div>
-                      <div className="text-xl font-bold text-rose-700">
+                      <div className="text-base font-bold text-slate-800 mt-1">
                         {totals.chuaHT}
                       </div>
                     </div>
